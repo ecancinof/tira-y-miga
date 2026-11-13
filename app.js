@@ -192,9 +192,12 @@
       b.onclick = () => { cart.set(id, Math.min(MAXQ, q + 1)); guardarCarrito(); pintarCarrito(); };
       inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, v); guardarCarrito(); pintarCarrito(); };
       st.append(a, inp, b);
-      const r = el('div', 'ci-r'), del = el('button', 'ci-del', 'Quitar'); del.type = 'button';
+      const r = el('div', 'ci-r'), del = el('button', 'ci-del'), ctrl = el('div', 'ci-ctrl'); del.type = 'button';
+      del.setAttribute('aria-label', 'Quitar ' + p.nombre); del.title = 'Quitar';
+      del.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>';
       del.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); };
-      r.append(el('strong', null, money(q * p.precio)), st, del);
+      ctrl.append(st, del);
+      r.append(el('strong', null, money(q * p.precio)), ctrl);
       li.append(img, mid, r); ul.append(li);
     }
     const { pz, t } = totales();

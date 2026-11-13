@@ -91,17 +91,19 @@ h1 em { color: var(--caramel); font-style: normal; }
 .card h3 { font-size: 22px; }
 .precio { font-weight: 700; font-size: 18px; white-space: nowrap; }
 .card-desc { color: var(--muted); font-size: 14px; flex: 1; }
-.card-acc { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+.card-acc { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: nowrap; }
+.card-acc .stepper button { width: 32px; height: 40px; font-size: 18px; }
+.card-acc .stepper output { width: 26px; min-width: 26px; }
 .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; }
 .stepper button { border: 0; background: none; width: 38px; height: 40px; font-size: 20px; cursor: pointer; border-radius: 50%; }
 .stepper button:hover:not(:disabled) { background: var(--cream); }
 .stepper button:disabled { opacity: .35; cursor: default; }
 .stepper output, .stepper input { min-width: 30px; width: 40px; text-align: center; font-weight: 600; border: 0; background: none; -moz-appearance: textfield; }
 .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.add { flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 11px 12px; background: var(--ink); color: var(--paper); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s; }
-.add:hover:not(:disabled) { background: var(--ink-2); }
+.add { flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 11px 8px; font-size: 15px; background: var(--ink); color: var(--paper); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s; }
+@media (hover: hover) { .add:hover:not(:disabled):not(.ok) { background: var(--ink-2); } }
 .add:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
-.add.ok { background: var(--caramel-d); color: #fff; pointer-events: none; animation: okPop .35s ease; }
+.add.ok, .add.ok:hover, .add.ok:active, .add.ok:focus { background: var(--caramel-d); color: #fff; pointer-events: none; animation: okPop .35s ease; }
 @keyframes okPop { 40% { transform: scale(1.06); } }
 
 /* ---------- Ubicación ---------- */
@@ -143,7 +145,6 @@ address { font-style: normal; font-size: 18px; }
 .ci-p { font-size: 13px; color: var(--muted); }
 .ci-r { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .ci .stepper button { width: 32px; height: 32px; font-size: 18px; }
-.ci-del { border: 0; background: none; font-size: 13px; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; }
 .ci.agot .ci-n::after { content: ' · agotado'; color: var(--err); font-weight: 600; }
 .total-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 18px; padding: 4px 0; }
 .total-row strong { font-size: 24px; }
@@ -223,3 +224,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .centro { text-align: center; }
 .lbl-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .cotiza { font-style: normal; font-weight: 700; font-size: 13px; color: var(--caramel-d); }
+
+/* Carrito: cantidad + botón de eliminar en la misma fila */
+.ci-ctrl { display: flex; align-items: center; gap: 6px; }
+.ci-del { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--muted); cursor: pointer; padding: 0; text-decoration: none; }
+.ci-del:hover { color: var(--err); border-color: var(--err); background: #fbe9e5; }
