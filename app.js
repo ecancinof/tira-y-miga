@@ -10,7 +10,7 @@
 
   // ---------- Estado ----------
   let menu = [];               // [{ id, nombre, precio, seccion, orden, agotado, desc, foto }]
-  let pausa = false, avisoPausa = '', conEnvio = true, menuEnVivo = false;
+  let pausa = false, avisoPausa = '', conEnvio = true, menuEnVivo = false, datosPago = C.datosPago || '';
   const cart = new Map();      // id -> cantidad
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
@@ -80,7 +80,7 @@
   function pintarHorario() {
     const R = resumenHorario();
     const abiertos = R.filter(g => !g.cerrado), cerrados = R.filter(g => g.cerrado);
-    const lineaCorta = abiertos.map(g => `${may(g.dias)} · ${rango(g.i)}`).join(' | ') + (cerrados.length ? ` · ${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado` : '');
+    const lineaCorta = abiertos.map(g => `${may(g.dias)} ${rango(g.i)}`).join(' · ') + (cerrados.length ? ` · ${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado` : '');
     $('#hb-horas').textContent = lineaCorta;
     const box = $('#horario-dias'); box.replaceChildren();
     abiertos.forEach(g => { const p = el('p'); p.append(may(g.dias), el('br'), el('b', null, rango(g.i))); box.append(p); });
@@ -166,7 +166,7 @@
       if (!d.sinMenu && Array.isArray(d.productos) && d.productos.length) { menu = normalizar(d.productos); menuEnVivo = true; }
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
-      usarHorario(d.horario); pintarHorario();
+      usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
       pintarMenu(); pintarCarrito(); pintarEstadoHoy(); if (drawer.open) llenarFechas();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -299,6 +299,16 @@
     $('#listo-txt').textContent = (dom ? '🛵 Vamos a cotizar tu envío con nuestro repartidor y en breve te mandamos por WhatsApp el costo del envío y el total de tu pedido. ' : '')
       + (registrado ? 'Último paso: toca el botón para mandarnos el resumen por WhatsApp' + (dom ? '.' : ' y te confirmamos disponibilidad y hora.') : 'Toca el botón para mandarnos tu pedido por WhatsApp y te lo confirmamos.');
     $('#listo-wa').href = linkWA(mensajeWA(d, folio));
+    const pb = $('#pago-box'), transf = d.pago === 'Transferencia' && !!datosPago.trim();
+    pb.hidden = !transf;
+    if (transf) {
+      const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0);
+      $('#pago-datos').textContent = datosPago.trim();
+      $('#pago-nota').textContent = dom ? 'Haz tu transferencia cuando te confirmemos el total con el envío.' : `Total a transferir: ${money(tot)}. Mándanos tu comprobante por WhatsApp.`;
+      const clabe = (datosPago.match(/\d[\d\s-]{14,}\d/) || [''])[0].replace(/\D/g, '');
+      const bc = $('#pago-copiar'); bc.hidden = !clabe; bc.textContent = 'Copiar CLABE';
+      bc.onclick = async () => { try { await navigator.clipboard.writeText(clabe); bc.textContent = '✓ CLABE copiada'; } catch (x) { toast('CLABE: ' + clabe); } };
+    }
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = '';
     mostrarPaso('listo'); $('#listo-wa').focus();
   });

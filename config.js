@@ -5,6 +5,8 @@
 window.TM_CONFIG = {
   api: 'https://script.google.com/macros/s/AKfycbxJoiLIrP0w5jGY5XmA9HV8pPzUvM-hOyqrVAi8kzXPOtFOXshEVTj-YCAMd-tBGOYk/exec',
   whatsapp: '523341016194',
+  // Datos para transferencia (los que pongas en la app los reemplazan)
+  datosPago: 'CLABE: 170180019435675074\nBanco: REVOLUT\nA nombre de: Esteban Cancino',
   // Días: 0 = domingo, 1 = lunes, 2 = martes … 6 = sábado
   diasCerrado: [2],
   abre: '17:00',

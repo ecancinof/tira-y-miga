@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -28,10 +28,10 @@
     <img src="assets/logo.webp" alt="" width="64" height="64">
     <span class="brand-txt"><small>Tira &amp; Miga</small><b>Bakehouse</b><i>Panadería y repostería</i></span>
   </a>
-  <a class="horario-badge" id="horario-badge" href="#ubicacion" aria-live="polite">
+  <div class="horario-badge" id="horario-badge" aria-live="polite">
     <span class="hb-dot" aria-hidden="true"></span>
     <span class="hb-txt"><b id="hb-estado">Horario de servicio</b><small id="hb-horas"></small></span>
-  </a>
+  </div>
   <nav class="nav" aria-label="Secciones">
     <a href="#menu">Sabores</a>
     <a href="#ubicacion">Ubicación</a>
@@ -146,14 +146,20 @@
       <h3 id="listo-t">¡Recibimos tu pedido!</h3>
       <p id="listo-folio" class="folio"></p>
       <p id="listo-txt">Último paso: mándanos el resumen por WhatsApp para confirmarte disponibilidad y hora.</p>
+      <div class="pago-box" id="pago-box" hidden>
+        <b>💳 Datos para tu transferencia</b>
+        <pre id="pago-datos"></pre>
+        <p class="small muted" id="pago-nota"></p>
+        <button class="btn-copiar" type="button" id="pago-copiar">Copiar CLABE</button>
+      </div>
       <a class="wa-btn ancho" id="listo-wa" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a>
       <button class="btn-texto" type="button" id="btn-otro">Hacer otro pedido</button>
     </div>
   </div>
 </dialog>
 
-<script src="config.js?v=4"></script>
-<script src="catalogo.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=6"></script>
+<script src="catalogo.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
