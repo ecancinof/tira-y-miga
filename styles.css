@@ -98,10 +98,11 @@ h1 em { color: var(--caramel); font-style: normal; }
 .stepper button:disabled { opacity: .35; cursor: default; }
 .stepper output, .stepper input { min-width: 30px; width: 40px; text-align: center; font-weight: 600; border: 0; background: none; -moz-appearance: textfield; }
 .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.add { flex: 1; border: 0; border-radius: 999px; padding: 11px 14px; background: var(--ink); color: var(--paper); font-weight: 600; cursor: pointer; }
+.add { flex: 1; min-width: 0; border: 0; border-radius: 999px; padding: 11px 12px; background: var(--ink); color: var(--paper); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s; }
 .add:hover:not(:disabled) { background: var(--ink-2); }
 .add:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
-.add.ok { background: var(--ok); }
+.add.ok { background: var(--caramel-d); color: #fff; pointer-events: none; animation: okPop .35s ease; }
+@keyframes okPop { 40% { transform: scale(1.06); } }
 
 /* ---------- Ubicación ---------- */
 .ubicacion { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; padding: 72px 5%; background: var(--cream); }
@@ -205,8 +206,10 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .card h3 { font-size: 19px; }
   .card-top { flex-direction: column; gap: 2px; }
   .card-desc { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .card-acc { flex-wrap: wrap; gap: 8px; }
-  .add { padding: 10px; }
+  .card-acc { flex-wrap: nowrap; gap: 6px; }
+  .card-acc .stepper button { width: 30px; height: 36px; font-size: 18px; }
+  .card-acc .stepper output { width: 24px; min-width: 24px; }
+  .add { padding: 10px 6px; font-size: 14px; }
   .drawer-in { padding: 18px; }
   .campos { grid-template-columns: 1fr; }
 }

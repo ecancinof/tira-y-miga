@@ -145,9 +145,13 @@
     st.append(menos, out, mas); upd();
     const add = el('button', 'add', p.agotado ? 'Agotado' : 'Añadir');
     add.type = 'button'; add.disabled = p.agotado || pausa;
+    let ocupado = false;
     add.onclick = () => {
+      if (ocupado || pausa || p.agotado) return; // mientras dice "Añadido" no vuelve a sumar
+      ocupado = true;
       const n = Math.min(MAXQ, (cart.get(p.id) || 0) + q); cart.set(p.id, n); guardarCarrito(); pintarCarrito();
-      add.textContent = '✓ Añadido'; add.classList.add('ok'); setTimeout(() => { add.textContent = 'Añadir'; add.classList.remove('ok'); }, 1300);
+      add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
+      setTimeout(() => { add.textContent = 'Añadir'; add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; }, 1300);
       const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       toast(`${q} × ${p.nombre} en tu pedido`); q = 1; upd();
     };
