@@ -230,7 +230,7 @@
     return [
       `Hola, Tira & Miga 👋 Soy ${d.nombre}.`, folio ? `Hice el pedido *${folio}* en su página:` : 'Quiero hacer este pedido:', '',
       ...lineas, '', `*Total de productos: ${money(tot)}*`,
-      d.entregaTipo === 'domicilio' ? `🛵 A domicilio: ${d.direccion}` : '🏠 Paso a recoger',
+      d.entregaTipo === 'domicilio' ? `🛵 A domicilio: ${d.direccion}\n(Quedo en espera de la cotización del envío)` : '🏠 Paso a recoger',
       `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
       d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?'
     ].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
@@ -257,9 +257,9 @@
     btn.disabled = false; btn.textContent = 'Hacer mi pedido';
     $('#listo-t').textContent = registrado ? '¡Recibimos tu pedido!' : 'Tu pedido está listo para enviar';
     $('#listo-folio').textContent = folio ? `Folio ${folio}` : '';
-    $('#listo-txt').textContent = registrado
-      ? 'Último paso: mándanos el resumen por WhatsApp y te confirmamos disponibilidad, hora' + (d.entregaTipo === 'domicilio' ? ' y costo de envío.' : '.')
-      : 'Toca el botón para mandarnos tu pedido por WhatsApp y te lo confirmamos.';
+    const dom = d.entregaTipo === 'domicilio';
+    $('#listo-txt').textContent = (dom ? '🛵 Vamos a cotizar tu envío con nuestro repartidor y en breve te mandamos por WhatsApp el costo del envío y el total de tu pedido. ' : '')
+      + (registrado ? 'Último paso: toca el botón para mandarnos el resumen por WhatsApp' + (dom ? '.' : ' y te confirmamos disponibilidad y hora.') : 'Toca el botón para mandarnos tu pedido por WhatsApp y te lo confirmamos.');
     $('#listo-wa').href = linkWA(mensajeWA(d, folio));
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = '';
     mostrarPaso('listo'); $('#listo-wa').focus();
