@@ -3,7 +3,7 @@
    de Google (termina en /exec). Si "api" está vacío, la página sigue
    funcionando: los pedidos se mandan solo por WhatsApp. */
 window.TM_CONFIG = {
-  api: '',
+  api: 'https://script.google.com/macros/s/AKfycbxJoiLIrP0w5jGY5XmA9HV8pPzUvM-hOyqrVAi8kzXPOtFOXshEVTj-YCAMd-tBGOYk/exec',
   whatsapp: '523341016194',
   // Días: 0 = domingo, 1 = lunes, 2 = martes … 6 = sábado
   diasCerrado: [2],
