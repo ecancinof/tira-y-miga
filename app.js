@@ -106,7 +106,7 @@
   function normalizar(lista) {
     return lista.map((p, i) => ({
       id: String(p.id), nombre: String(p.nombre || ''), precio: Number(p.precio) || 0,
-      seccion: p.seccion || 'Rellenas', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
+      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
   function pintarMenu() {
@@ -270,11 +270,16 @@
   }
   function fechaTexto(f) { const [y, m, d] = f.split('-').map(Number), dt = new Date(y, m - 1, d); return `${DIAS[dt.getDay()]} ${d} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1]}`; }
   function mensajeWA(d, folio) {
-    const lineas = d.items.map(i => `• ${i.cant} × ${i.nombre} — ${money(i.cant * i.precio)}`);
+    // Mismo formato que la confirmación de la app: categoría en mayúsculas, línea punteada y "• *2*  Sabor - $56.00"
+    const m2 = v => '$' + (Number(v) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const grupos = new Map();
+    d.items.forEach(i => { const c = ((prod(i.id) || {}).categoria || 'Conchas').toUpperCase(); if (!grupos.has(c)) grupos.set(c, []); grupos.get(c).push(i); });
+    const lineas = [];
+    [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, '┈┈┈┈┈┈┈┈┈┈┈┈', ...its.map(i => `• *${i.cant}*  ${i.nombre} - ${m2(i.cant * i.precio)}`)); });
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0);
     return [
       `Hola👋, Soy ${d.nombre} y quiero realizar el siguiente pedido:`, '',
-      ...lineas, '', `*Total de productos: ${money(tot)}*`,
+      ...lineas, '', `*Total de productos: ${m2(tot)}*`,
       d.entregaTipo === 'domicilio' ? `🛵 A domicilio *[Cotizando]*‼️: ${d.direccion}` : '🏠 Paso a recoger',
       `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
       d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?'
