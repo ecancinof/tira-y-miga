@@ -273,13 +273,11 @@
     const lineas = d.items.map(i => `• ${i.cant} × ${i.nombre} — ${money(i.cant * i.precio)}`);
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0);
     return [
-      `Hola, Tira & Miga 👋 Soy ${d.nombre}.`, folio ? `Hice el pedido *${folio}* en su página:` : 'Quiero hacer este pedido:', '',
+      `Hola👋, Soy ${d.nombre} y quiero realizar el siguiente pedido:`, '',
       ...lineas, '', `*Total de productos: ${money(tot)}*`,
       d.entregaTipo === 'domicilio' ? `🛵 A domicilio *[Cotizando]*‼️: ${d.direccion}` : '🏠 Paso a recoger',
       `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
-      d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?',
-      ...(d.pago === 'Transferencia' && datosPago.trim() ? ['', '━━━━━━━━━━━━', '💳 *Datos para transferencia*', datosPago.trim(), '',
-        d.entregaTipo === 'domicilio' ? '⚠️ *Realiza tu transferencia hasta que te confirmemos el costo del envío y el total.*' : '⚠️ *Realiza tu transferencia hasta que te confirmemos tu pedido.*'] : [])
+      d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?'
     ].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
