@@ -26,19 +26,30 @@
     clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('ver'), 2600);
   }
 
-  // ---------- Horario ----------
+  // ---------- Horario (lo publica la app; si no, el de config.js) ----------
   const hm = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + (m || 0); };
-  const hora12 = min => { const h = Math.floor(min / 60), m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`; };
+  const hora12 = min => { const h = Math.floor(min / 60) % 24, m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`; };
+  const hCorta = min => { const h = Math.floor(min / 60) % 24, m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')}`; };
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const cerradoDia = d => (C.diasCerrado || []).includes(d.getDay());
   const minAhora = () => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); };
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const DIAS_C = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const horarioDeConfig = () => ({
+    dias: [0, 1, 2, 3, 4, 5, 6].map(i => ({ a: !(C.diasCerrado || []).includes(i), abre: C.abre || '17:00', cierra: C.cierra || '22:00' })),
+    ultimoMin: Math.max(0, hm(C.cierra || '22:00') - hm(C.ultimoPedidoHoy || '21:00')), prepMin: C.minutosPreparacion || 45
+  });
+  let H = horarioDeConfig();
+  const dia = d => H.dias[d.getDay()] || { a: false };
+  const abiertoDia = d => !!dia(d).a;
+  const abreDe = d => hm(dia(d).abre), cierraDe = d => hm(dia(d).cierra);
 
   function horasDe(fecha) {
-    const out = [], ini = hm(C.abre || '17:00'), fin = hm(C.cierra || '22:00') - 30;
+    const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
+    if (!abiertoDia(d)) return [];
+    const out = [], ini = abreDe(d), fin = cierraDe(d) - 30;
     let desde = ini;
-    if (fecha === ymd(new Date())) desde = Math.max(ini, Math.ceil((minAhora() + (C.minutosPreparacion || 45)) / 30) * 30);
+    if (fecha === ymd(new Date())) desde = Math.max(ini, Math.ceil((minAhora() + (H.prepMin || 45)) / 30) * 30);
     for (let m = desde; m <= fin; m += 30) out.push(m);
     return out;
   }
@@ -46,23 +57,49 @@
     const out = [], hoy = new Date();
     for (let i = 0; i <= (C.diasAdelante || 14); i++) {
       const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i);
-      if (cerradoDia(d)) continue;
+      if (!abiertoDia(d)) continue;
       const f = ymd(d);
-      if (i === 0 && (minAhora() > hm(C.ultimoPedidoHoy || '21:00') || !horasDe(f).length)) continue;
+      if (i === 0 && (minAhora() > cierraDe(d) - (H.ultimoMin ?? 60) || !horasDe(f).length)) continue;
       const etiqueta = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1);
       out.push({ f, txt: `${etiqueta} · ${d.getDate()} ${MESES[d.getMonth()]}` });
     }
     return out;
   }
+  // Resumen tipo "Mié a lun · 5 – 10 pm" y "Martes cerrado" (semana de lunes a domingo, agrupando días seguidos iguales)
+  function resumenHorario() {
+    const orden = [1, 2, 3, 4, 5, 6, 0], clave = i => H.dias[i].a ? H.dias[i].abre + '-' + H.dias[i].cierra : 'x';
+    if (orden.every(i => clave(i) === clave(orden[0]))) return H.dias[1].a ? [{ dias: 'Todos los días', i: 1 }] : [{ dias: 'Cerrado', i: 1, cerrado: true }];
+    let ini = orden.findIndex((i, k) => clave(i) !== clave(orden[(k + 6) % 7]));
+    const grupos = [];
+    for (let k = 0; k < 7; k++) { const i = orden[(ini + k) % 7], g = grupos[grupos.length - 1]; if (g && g.k === clave(i)) g.l.push(i); else grupos.push({ k: clave(i), l: [i] }); }
+    return grupos.map(g => ({ dias: g.l.length === 1 ? DIAS[g.l[0]] : g.l.length === 2 ? `${DIAS_C[g.l[0]]} y ${DIAS_C[g.l[1]].toLowerCase()}` : `${DIAS_C[g.l[0]]} a ${DIAS_C[g.l[g.l.length - 1]].toLowerCase()}`, i: g.l[0], cerrado: g.k === 'x' }))
+      .sort((a, b) => a.cerrado - b.cerrado);
+  }
+  const rango = i => { const a = hm(H.dias[i].abre), c = hm(H.dias[i].cierra), mismo = (a < 720) === (c % 1440 < 720); return mismo ? `${hCorta(a)} – ${hora12(c)}` : `${hora12(a)} – ${hora12(c)}`; };
+  const may = t => t[0].toUpperCase() + t.slice(1);
+  function pintarHorario() {
+    const R = resumenHorario();
+    const abiertos = R.filter(g => !g.cerrado), cerrados = R.filter(g => g.cerrado);
+    const lineaCorta = abiertos.map(g => `${may(g.dias)} · ${rango(g.i)}`).join(' | ') + (cerrados.length ? ` · ${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado` : '');
+    $('#hb-horas').textContent = lineaCorta;
+    const box = $('#horario-dias'); box.replaceChildren();
+    abiertos.forEach(g => { const p = el('p'); p.append(may(g.dias), el('br'), el('b', null, rango(g.i))); box.append(p); });
+    cerrados.forEach(g => box.append(el('p', 'muted', `${may(g.dias)} cerrado`)));
+  }
   function pintarEstadoHoy() {
-    const e = $('#estado-hoy'), d = new Date(), m = minAhora(), a = hm(C.abre || '17:00'), c = hm(C.cierra || '22:00');
-    e.classList.remove('abierto');
-    if (pausa) { e.textContent = 'Pedidos en línea en pausa'; return; }
-    if (!cerradoDia(d) && m >= a && m < c) { e.classList.add('abierto'); e.textContent = `Abierto ahora · hasta las ${hora12(c)}`; return; }
-    if (!cerradoDia(d) && m < a) { e.textContent = `Abrimos hoy a las ${hora12(a)} · ya puedes hacer tu pedido`; return; }
-    let k = 1; while (k < 8 && cerradoDia(new Date(d.getFullYear(), d.getMonth(), d.getDate() + k))) k++;
+    const e = $('#hb-estado'), bx = $('#horario-badge'), d = new Date(), m = minAhora();
+    bx.classList.remove('abierto', 'pausa');
+    if (pausa) { bx.classList.add('pausa'); e.textContent = 'Pedidos en línea en pausa'; return; }
+    if (abiertoDia(d) && m >= abreDe(d) && m < cierraDe(d)) { bx.classList.add('abierto'); e.textContent = `Abierto ahora · hasta las ${hora12(cierraDe(d))}`; return; }
+    if (abiertoDia(d) && m < abreDe(d)) { e.textContent = `Hoy abrimos a las ${hora12(abreDe(d))}`; return; }
+    let k = 1; while (k < 8 && !abiertoDia(new Date(d.getFullYear(), d.getMonth(), d.getDate() + k))) k++;
+    if (k >= 8) { e.textContent = 'Cerrado por ahora'; return; }
     const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k);
-    e.textContent = `Cerrado ahora · abrimos ${k === 1 ? 'mañana' : 'el ' + DIAS[dd.getDay()]} a las ${hora12(a)}`;
+    e.textContent = `Cerrado · abrimos ${k === 1 ? 'mañana' : 'el ' + DIAS[dd.getDay()]} a las ${hora12(abreDe(dd))}`;
+  }
+  function usarHorario(h) {
+    if (!h || !Array.isArray(h.dias) || h.dias.length !== 7) return;
+    H = { dias: h.dias.map(x => ({ a: !!x.a, abre: /^\d{2}:\d{2}$/.test(x.abre) ? x.abre : '17:00', cierra: /^\d{2}:\d{2}$/.test(x.cierra) ? x.cierra : '22:00' })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45) };
   }
 
   // ---------- Menú ----------
@@ -129,7 +166,8 @@
       if (!d.sinMenu && Array.isArray(d.productos) && d.productos.length) { menu = normalizar(d.productos); menuEnVivo = true; }
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
-      pintarMenu(); pintarCarrito(); pintarEstadoHoy();
+      usarHorario(d.horario); pintarHorario();
+      pintarMenu(); pintarCarrito(); pintarEstadoHoy(); if (drawer.open) llenarFechas();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
 
@@ -267,6 +305,6 @@
 
   // ---------- Inicio ----------
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
-  leerCarrito(); pintarEstadoHoy(); cargarMenu();
+  leerCarrito(); pintarHorario(); pintarEstadoHoy(); cargarMenu();
   setInterval(pintarEstadoHoy, 60000);
 })();

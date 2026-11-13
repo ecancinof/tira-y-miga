@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -27,6 +27,10 @@
   <a class="brand" href="#inicio" aria-label="Tira &amp; Miga, inicio">
     <img src="assets/logo.webp" alt="" width="64" height="64">
     <span class="brand-txt"><small>Tira &amp; Miga</small><b>Bakehouse</b><i>Panadería y repostería</i></span>
+  </a>
+  <a class="horario-badge" id="horario-badge" href="#ubicacion" aria-live="polite">
+    <span class="hb-dot" aria-hidden="true"></span>
+    <span class="hb-txt"><b id="hb-estado">Horario de servicio</b><small id="hb-horas"></small></span>
   </a>
   <nav class="nav" aria-label="Secciones">
     <a href="#menu">Sabores</a>
@@ -45,7 +49,6 @@
       <h1>Un clásico.<br>Delicioso<br><em>relleno.</em></h1>
       <p class="hero-desc">Tu concha de siempre, con un centro que se roba el antojo. Arma tu pedido aquí y pásalo a recoger o te lo llevamos.</p>
       <a class="btn btn-light" href="#menu">Arma tu pedido <span aria-hidden="true">→</span></a>
-      <p class="estado-hoy" id="estado-hoy" aria-live="polite"></p>
     </div>
     <div class="hero-img"><img src="assets/conchas-surtidas.webp" alt="Conchas gourmet rellenas de varios sabores servidas en platos" width="1100" height="825"></div>
   </section>
@@ -67,8 +70,7 @@
       <address>Av. Colinas de San Patricio 505<br>Colinas de San Patricio, C.P. 20196<br>Aguascalientes, Ags.</address>
       <div class="horario">
         <h3>Horario de servicio</h3>
-        <p>Miércoles a lunes<br><b>5:00 pm – 10:00 pm</b></p>
-        <p class="muted">Martes cerrado</p>
+        <div id="horario-dias"><p>Miércoles a lunes<br><b>5:00 pm – 10:00 pm</b></p><p class="muted">Martes cerrado</p></div>
       </div>
       <a class="link-flecha" href="https://www.google.com/maps/dir/?api=1&amp;destination=21.8865077%2C-102.2344649" target="_blank" rel="noopener">Cómo llegar <span aria-hidden="true">↗</span></a>
       <div class="apps">
@@ -150,8 +152,8 @@
   </div>
 </dialog>
 
-<script src="config.js?v=3"></script>
-<script src="catalogo.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="config.js?v=4"></script>
+<script src="catalogo.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
