@@ -268,7 +268,7 @@
     return [
       `Hola, Tira & Miga 👋 Soy ${d.nombre}.`, folio ? `Hice el pedido *${folio}* en su página:` : 'Quiero hacer este pedido:', '',
       ...lineas, '', `*Total de productos: ${money(tot)}*`,
-      d.entregaTipo === 'domicilio' ? `🛵 A domicilio: ${d.direccion}\n‼️ *[Cotizando]* ‼️` : '🏠 Paso a recoger',
+      d.entregaTipo === 'domicilio' ? `🛵 A domicilio *[Cotizando]*‼️: ${d.direccion}` : '🏠 Paso a recoger',
       `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
       d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?',
       ...(d.pago === 'Transferencia' && datosPago.trim() ? ['', '━━━━━━━━━━━━', '💳 *Datos para transferencia*', datosPago.trim(), '',
