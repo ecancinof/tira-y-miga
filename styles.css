@@ -211,3 +211,12 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .campos { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Botón de pedido (WhatsApp) */
+.btn-pedido { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; border-radius: 999px; padding: 15px 20px; font-size: 16px; font-weight: 700; background: var(--wa); color: #fff; cursor: pointer; transition: background .2s, filter .2s; }
+.btn-pedido:hover:not(:disabled) { filter: brightness(.94); }
+.btn-pedido:disabled { background: #cfc8c2; color: #fff; cursor: not-allowed; }
+.btn-pedido.enviando { cursor: wait; }
+.centro { text-align: center; }
+.lbl-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cotiza { font-style: normal; font-weight: 700; font-size: 13px; color: var(--caramel-d); }

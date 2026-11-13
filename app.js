@@ -205,7 +205,6 @@
   // ---------- Panel ----------
   const drawer = $('#drawer');
   function abrir() {
-    if (!$('#paso-listo').hidden && cart.size) mostrarPaso('pedido');
     llenarFechas(); if (!drawer.open) drawer.showModal();
   }
   function cerrar() {
@@ -217,8 +216,6 @@
   $('#drawer-close').onclick = cerrar;
   drawer.addEventListener('cancel', e => { e.preventDefault(); cerrar(); });
   drawer.addEventListener('click', e => { if (e.target === drawer) cerrar(); if (e.target.closest('[data-cerrar]')) { e.preventDefault(); cerrar(); if (e.target.matches('a')) location.hash = '#menu'; } });
-  const mostrarPaso = p => { $('#paso-pedido').hidden = p !== 'pedido'; $('#paso-listo').hidden = p !== 'listo'; };
-  $('#btn-otro').onclick = () => { mostrarPaso('pedido'); cerrar(); location.hash = '#menu'; };
 
   // ---------- Formulario ----------
   const form = $('#form-pedido');
@@ -235,9 +232,12 @@
   }
   $('#sel-fecha').onchange = llenarHoras;
   form.addEventListener('change', e => {
-    if (e.target.name === 'entregaTipo') { const dom = form.entregaTipo.value === 'domicilio'; $('#campo-dir').hidden = !dom; $('#nota-envio').hidden = !dom; }
+    if (e.target.name === 'entregaTipo') { const dom = form.entregaTipo.value === 'domicilio'; $('#campo-dir').hidden = !dom; }
   });
-  (() => { const c = leerCliente(); if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = c.tel; if (c.direccion) form.direccion.value = c.direccion; })();
+  const listoParaPedir = () => form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10;
+  function revisarBoton() { const ok = listoParaPedir(); $('#btn-enviar').disabled = !ok; $('#falta-datos').hidden = ok; }
+  form.addEventListener('input', e => { if (e.target.name === 'nombre' || e.target.name === 'tel') revisarBoton(); });
+  (() => { const c = leerCliente(); if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = c.tel; if (c.direccion) form.direccion.value = c.direccion; revisarBoton(); })();
 
   const fmtTel = t => t.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
   function datosForm() {
@@ -270,7 +270,9 @@
       ...lineas, '', `*Total de productos: ${money(tot)}*`,
       d.entregaTipo === 'domicilio' ? `🛵 A domicilio: ${d.direccion}\n(Quedo en espera de la cotización del envío)` : '🏠 Paso a recoger',
       `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
-      d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?'
+      d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?',
+      ...(d.pago === 'Transferencia' && datosPago.trim() ? ['', '━━━━━━━━━━━━', '💳 *Datos para transferencia*', datosPago.trim(), '',
+        d.entregaTipo === 'domicilio' ? '⚠️ *Realiza tu transferencia hasta que te confirmemos el costo del envío y el total.*' : '⚠️ *Realiza tu transferencia hasta que te confirmemos tu pedido.*'] : [])
     ].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
@@ -282,35 +284,22 @@
     const d = datosForm(), m = validar(d);
     if (m) { err.textContent = m; err.hidden = false; return; }
     guardarCliente(d);
-    btn.disabled = true; btn.textContent = 'Enviando…';
+    btn.disabled = true; btn.classList.add('enviando'); $('#btn-enviar-t').textContent = 'Enviando…';
     let folio = '', registrado = false;
     if (C.api && !d.web) {
       try {
         const r = await fetch(C.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'pedido', pedido: d }) });
         const res = await r.json();
-        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.disabled = false; btn.textContent = 'Hacer mi pedido'; if (/disponible|agot/i.test(res.error || '')) cargarMenu(); return; }
+        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton(); if (/disponible|agot/i.test(res.error || '')) cargarMenu(); return; }
         folio = res.folio; registrado = true;
       } catch (x) { registrado = false; }
     }
-    btn.disabled = false; btn.textContent = 'Hacer mi pedido';
-    $('#listo-t').textContent = registrado ? '¡Recibimos tu pedido!' : 'Tu pedido está listo para enviar';
-    $('#listo-folio').textContent = folio ? `Folio ${folio}` : '';
-    const dom = d.entregaTipo === 'domicilio';
-    $('#listo-txt').textContent = (dom ? '🛵 Vamos a cotizar tu envío con nuestro repartidor y en breve te mandamos por WhatsApp el costo del envío y el total de tu pedido. ' : '')
-      + (registrado ? 'Último paso: toca el botón para mandarnos el resumen por WhatsApp' + (dom ? '.' : ' y te confirmamos disponibilidad y hora.') : 'Toca el botón para mandarnos tu pedido por WhatsApp y te lo confirmamos.');
-    $('#listo-wa').href = linkWA(mensajeWA(d, folio));
-    const pb = $('#pago-box'), transf = d.pago === 'Transferencia' && !!datosPago.trim();
-    pb.hidden = !transf;
-    if (transf) {
-      const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0);
-      $('#pago-datos').textContent = datosPago.trim();
-      $('#pago-nota').textContent = dom ? 'Haz tu transferencia cuando te confirmemos el total con el envío.' : `Total a transferir: ${money(tot)}. Mándanos tu comprobante por WhatsApp.`;
-      const clabe = (datosPago.match(/\d[\d\s-]{14,}\d/) || [''])[0].replace(/\D/g, '');
-      const bc = $('#pago-copiar'); bc.hidden = !clabe; bc.textContent = 'Copiar CLABE';
-      bc.onclick = async () => { try { await navigator.clipboard.writeText(clabe); bc.textContent = '✓ CLABE copiada'; } catch (x) { toast('CLABE: ' + clabe); } };
-    }
+    const link = linkWA(mensajeWA(d, folio));
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = '';
-    mostrarPaso('listo'); $('#listo-wa').focus();
+    btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton();
+    cerrar();
+    toast(folio ? `¡Pedido ${folio} recibido! Abriendo WhatsApp…` : 'Abriendo WhatsApp…');
+    setTimeout(() => { location.href = link; }, 400);
   });
 
   // ---------- Inicio ----------
