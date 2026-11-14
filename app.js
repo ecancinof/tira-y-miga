@@ -317,13 +317,13 @@
     const grupos = new Map();
     d.items.forEach(i => { const c = ((prod(i.id) || {}).categoria || 'Conchas').toUpperCase(); if (!grupos.has(c)) grupos.set(c, []); grupos.get(c).push(i); });
     const lineas = [];
-    [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, ...its.map(i => `• ${i.cant}  ${i.nombre} — ${m2(i.cant * i.precio)}`)); });
+    [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, ...its.map(i => `• ${i.cant}  ${i.nombre} - ${m2(i.cant * i.precio)}`)); });
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
     const L = [`Hola 👋 Soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
-    if (dom) L.push('*Entrega:* a domicilio', d.direccion, '*Envío:* por cotizar ⏳');
-    else L.push('*Entrega:* paso a recoger');
-    L.push(`*Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `*Pago:* ${String(d.pago).toLowerCase()}`);
-    if (d.notas) L.push(`*Nota:* ${d.notas}`);
+    if (dom) L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`, '• *Envío:* por cotizar ⏳');
+    else L.push('• *Entrega:* paso a recoger');
+    L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
+    if (d.notas) L.push(`• *Nota:* ${d.notas}`);
     L.push('', dom ? 'Quedo pendiente de la cotización del envío y del total. ¡Gracias!' : '¿Me confirman, por favor? ¡Gracias!');
     return L.join('\n');
   }
