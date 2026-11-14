@@ -308,3 +308,14 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .det-body { padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); }
   .tabs { margin: 0 -4% 22px; padding: 8px 4%; }
 }
+
+/* ---------- Stock de hoy ---------- */
+.stk-tag { background: var(--caramel-d); color: #fff; }
+.stk-tag.cero { background: var(--ink); }
+.card .agotado-tag + .stk-tag { top: 46px; }
+.ci.excede { border-bottom-color: var(--err); }
+.ci.excede .stepper { border-color: var(--err); }
+.ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); }
+.det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
+.card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
+.card.sin-hoy .add { background: var(--muted); }
