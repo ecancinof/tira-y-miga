@@ -41,8 +41,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header .horario-badge { margin: 0 auto; }
 .brand img { --logo: 65px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc(var(--logo) * -.11); max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
 .brand-txt { display: flex; flex-direction: column; line-height: 1.15; border-left: 1px solid var(--line); padding-left: 14px; }
-.brand-txt small { font: 500 12px var(--serif); letter-spacing: .3em; text-transform: uppercase; color: var(--caramel-d); }
-.brand-txt b { font: 500 26px var(--serif); letter-spacing: .08em; text-transform: uppercase; }
+.brand-txt b { font: 500 26px var(--serif); letter-spacing: .08em; text-transform: uppercase; }                /* marca: Tira & Miga */
+.brand-txt small { font: 500 12px var(--serif); letter-spacing: .3em; text-transform: uppercase; color: var(--caramel-d); margin-top: 1px; } /* Bakehouse */
 .brand-txt i { font: 400 14px var(--serif); }
 .nav { display: flex; gap: 28px; }
 .nav a { text-decoration: none; font-size: var(--fs-sm); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
