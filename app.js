@@ -135,8 +135,8 @@
   function pintarHorario() {
     const R = resumenHorario();
     const abiertos = R.filter(g => !g.cerrado), cerrados = R.filter(g => g.cerrado);
-    $('#hb-horas').replaceChildren(...abiertos.map(g => el('span', 'hb-g', `${may(g.dias)} ${rango(g.i)}`)),
-      ...(cerrados.length ? [el('span', 'hb-g hb-cerr', `${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado`)] : []));
+    document.querySelectorAll('.hb-horas').forEach(n => n.replaceChildren(...abiertos.map(g => el('span', 'hb-g', `${may(g.dias)} ${rango(g.i)}`)),
+      ...(cerrados.length ? [el('span', 'hb-g hb-cerr', `${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado`)] : [])));
   }
   function usarHorario(h) {
     if (!h || !Array.isArray(h.dias) || h.dias.length !== 7) return;
@@ -180,7 +180,10 @@
     for (const p of [...menu].sort((a, b) => a.orden - b.orden)) { if (!grupos.has(p.seccion)) grupos.set(p.seccion, []); grupos.get(p.seccion).push(p); }
     const claves = [...grupos.keys()].sort((a, b) => (ORDEN_SEC.indexOf(a) + 99) % 99 - (ORDEN_SEC.indexOf(b) + 99) % 99 || a.localeCompare(b));
     // ⭐ Las favoritas (las marcas en la app): van primero
-    const favs = menu.filter(p => p.destacado).sort((a, b) => a.orden - b.orden);
+    // Solo entran las que sí se pueden pedir hoy (no agotadas y con stock); si ninguna, la sección no se muestra
+    const hayHoy = p => !p.agotado && !(limitaHoy() && (fechasDisponibles()[0] || {}).f === hoyYmd() && maxHoy(p.id, []) <= 0);
+    const favs = menu.filter(p => p.destacado && hayHoy(p)).sort((a, b) => a.orden - b.orden);
+    const favIds = new Set(favs.map(p => p.id));
     const lista = claves.map(s => ({ s, info: K.secciones[s] || { eyebrow: '', titulo: s, texto: '' }, prods: grupos.get(s), pre: '' }));
     if (favs.length) lista.unshift({ s: 'Favoritas', info: { eyebrow: 'Lo más pedido', titulo: 'Las favoritas', texto: 'Las que más se piden. Si no sabes cuál elegir, empieza por aquí.' }, prods: favs, pre: 'fav-', fav: true });
     const tabs = [];
@@ -192,7 +195,7 @@
       h.append(el('h2', null, info.titulo));
       if (info.texto) h.append(el('p', null, info.texto));
       const g = el('div', 'grid');
-      prods.forEach((p, k) => { const t = tarjeta(p); revelar(t, pre + p.id, k); g.append(t); });
+      prods.forEach((p, k) => { const t = tarjeta(p); if (!fav && favIds.has(p.id)) t.classList.add('es-fav'); revelar(t, pre + p.id, k); g.append(t); });
       revelar(h, 'sec-' + s);
       sec.append(h, g); cont.append(sec);
     }
@@ -205,6 +208,7 @@
     img.src = foto(p); img.alt = p.nombre; img.loading = 'lazy'; img.width = 560; img.height = 420;
     fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy'));
     const stg = el('span', 'agotado-tag stk-tag'); stg.hidden = true; fi.append(stg);
+    const fv = el('span', 'fav-tag', '★ Favorita'); fv.title = 'Una de las más pedidas'; fi.append(fv);
     fi.append(el('span', 'ver-mas', 'Ver')); fi.tabIndex = 0; fi.setAttribute('role', 'button'); fi.setAttribute('aria-label', 'Ver detalles de ' + p.nombre);
     fi.onclick = () => abrirDetalle(p); fi.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirDetalle(p); } };
     const b = el('div', 'card-body'), top = el('div', 'card-top'), h3 = el('h3'), tb = el('button', 'card-tit', p.nombre);

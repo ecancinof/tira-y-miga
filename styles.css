@@ -180,6 +180,9 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 140%); background: var(--ink); color: var(--paper); padding: 12px 20px; border-radius: 999px; font-size: var(--fs-sm); font-weight: 600; transition: transform .25s, opacity .25s, visibility .25s; opacity: 0; visibility: hidden; z-index: 60; max-width: calc(100% - 32px); text-align: center; }
 .toast.ver { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
 
+/* Horario debajo del encabezado (solo celular; en computadora va dentro del encabezado) */
+.horario-movil { display: none; }
+
 /* ---------- Celular y tableta ---------- */
 @media (max-width: 900px) {
   .nav { gap: 18px; }
@@ -190,15 +193,18 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .ubicacion { grid-template-columns: 1fr; gap: 32px; }
 }
 @media (max-width: 600px) {
-  .header { gap: 12px; padding: 10px 4%; }
-  .brand img { --logo: 50px; }
-  .brand-txt { padding-left: 10px; }
-  .brand-txt b { font-size: 19px; }
+  /* Encabezado fijo compacto: una sola fila (≈60 px). El horario sale del encabezado y se desplaza con la página */
+  .header { gap: 12px; padding: 8px 4%; }
+  .brand img { --logo: 44px; }
+  .brand-txt { padding-left: 10px; line-height: 1.1; }
+  .brand-txt b { font-size: 18px; }
   .brand-txt small, .brand-txt i { font-size: 11px; }
   .nav { display: none; }
-  .header { flex-wrap: wrap; }
   .brand { margin-right: auto; }
-  .header .horario-badge { order: 3; width: 100%; max-width: none; margin: 0; padding: 8px 14px; border-radius: 12px; }
+  .header .horario-badge { display: none; }
+  .horario-movil { display: block; padding: 10px 4% 0; background: var(--paper); }
+  .horario-movil .horario-badge { width: 100%; max-width: none; margin: 0 0 10px; padding: 8px 14px; border-radius: 12px; }
+  .horario-movil .hb-txt small { font-size: var(--fs-sm); }
   .menu { padding: 56px 4% 32px; }
   .grid { grid-template-columns: 1fr; gap: 18px; }
   .card { flex-direction: row; }
@@ -264,6 +270,11 @@ legend { font-weight: 600; margin-bottom: 8px; }
 /* Favoritas */
 .sec-fav .sec-head h2::before { content: '★ '; color: var(--caramel-d); }
 .sec-fav .card { border-color: var(--caramel); }
+/* En su sección normal, la favorita solo lleva una estrella (la tarjeta completa ya está arriba) */
+.fav-tag { display: none; position: absolute; top: 12px; right: 12px; background: var(--caramel); color: var(--ink); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.card.es-fav .fav-tag { display: inline-block; }
+/* En celular la foto es angosta: la estrella va arriba a la izquierda y "Hoy quedan" baja un renglón */
+@media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 36px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
 
 
 /* Fuera de horario */
@@ -306,7 +317,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
   @keyframes detEntra { from { transform: translateY(100%); } }
   @keyframes detSale { to { transform: translateY(100%); } }
   .det-body { padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); }
-  .tabs { margin: 0 -4% 22px; padding: 8px 4%; }
+  .tabs { margin: 0 -4% 22px; padding: 6px 4%; }
+  .tab { padding: 7px 14px; }
 }
 
 /* ---------- Stock de hoy ---------- */
