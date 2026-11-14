@@ -16,14 +16,19 @@
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
   // ¿Para cuándo es el pedido? Se elige una sola vez (chip en las pestañas o "Día" en el carrito) y manda en toda la página
-  let fechaSel = ''; try { fechaSel = localStorage.getItem('tm-fecha') || ''; } catch (e) {}
+  let fechaSel = '', horaSel = ''; try { fechaSel = localStorage.getItem('tm-fecha') || ''; horaSel = localStorage.getItem('tm-hora') || ''; } catch (e) {}
   const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; };
   const paraHoy = () => limitaHoy() && fechaPedido() === hoyYmd(); // true = el pedido es para hoy y aplica el stock del día
-  function ponFecha(f, origen) {
-    if (!fechasDisponibles().some(o => o.f === f) || f === fechaSel) return;
-    fechaSel = f; try { localStorage.setItem('tm-fecha', f); } catch (e) {}
+  const minTxt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; // 630 → "10:30"
+  // Hora elegida (valor "HH:MM"); si ya no cabe en el horario del día, la primera disponible
+  const horaPedido = () => { const hs = horasDe(fechaPedido() || hoyYmd()).map(minTxt); if (!hs.length) return ''; if (!hs.includes(horaSel)) horaSel = hs[0]; return horaSel; };
+  function ponFecha(f, origen, hora) {
+    if (!fechasDisponibles().some(o => o.f === f)) return;
+    const cambia = f !== fechaSel; fechaSel = f; if (hora) horaSel = hora;
+    try { localStorage.setItem('tm-fecha', f); if (hora) localStorage.setItem('tm-hora', hora); } catch (e) {}
     if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; llenarHoras(); }
-    pintarDiaChip(); pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
+    pintarCuando(); if (!cambia) return;
+    pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
   }
   const leerCliente = () => { try { return JSON.parse(localStorage.getItem('tm-cliente') || '{}'); } catch (e) { return {}; } };
   const guardarCliente = d => { try { localStorage.setItem('tm-cliente', JSON.stringify({ nombre: d.nombre, tel: d.tel, direccion: d.direccion, entregaTipo: d.entregaTipo, pago: d.pago })); } catch (e) {} };
@@ -413,7 +418,7 @@
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
       STK = d.stock && typeof d.stock === 'object' ? d.stock : {}; stockFecha = d.stockFecha || '';
-      pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); pintarDiaChip(); if (drawer.open) llenarFechas();
+      pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); pintarCuando(); if (drawer.open) llenarFechas();
       cargarFotos();
     } catch (e) { console.error(e); }
   }
@@ -482,20 +487,84 @@
     sel.value = fechaPedido(); // misma fecha que el chip "¿Para cuándo?"
     llenarHoras();
   }
-  // Chip "¿Para cuándo?" en la barra de pestañas (y espejo del select del carrito)
-  function pintarDiaChip() {
-    const sel = $('#dia-menu'); if (!sel) return;
-    const fs = fechasDisponibles(), f = fechaPedido(); sel.replaceChildren();
-    for (const o of fs) { const op = el('option', null, o.txt); op.value = o.f; sel.append(op); }
-    sel.value = f; $('#dia-chip').hidden = fs.length < 2 || pausa;
-    const cur = fs.find(o => o.f === f); $('#dia-txt').textContent = cur ? cur.txt.split(' · ')[0] : '';
+  // ---------- "Para hoy | Agendar" (barra de pestañas) ----------
+  const hayHoyDisponible = () => fechasDisponibles().some(o => o.f === hoyYmd());
+  function pintarCuando() {
+    const box = $('#cuando'); if (!box) return;
+    const fs = fechasDisponibles(), f = fechaPedido(), hoy = hoyYmd(), esHoy = f === hoy;
+    box.hidden = !fs.length || pausa;
+    const bh = $('#cu-hoy'), ba = $('#cu-agendar');
+    bh.disabled = !hayHoyDisponible(); bh.title = bh.disabled ? 'Por hoy ya no recibimos pedidos' : '';
+    bh.classList.toggle('on', esHoy); ba.classList.toggle('on', !esHoy);
+    bh.setAttribute('aria-pressed', esHoy); ba.setAttribute('aria-pressed', !esHoy);
+    const cur = fs.find(o => o.f === f);
+    $('#cu-agendar-t').textContent = esHoy || !cur ? 'Agendar' : `${cur.txt.split(' · ')[0]} · ${hora12(hm(horaPedido()))}`;
   }
-  $('#dia-menu').onchange = e => { const v = e.target.value; ponFecha(v); const o = fechasDisponibles().find(x => x.f === v); if (o) toast(`📅 Tu pedido es para ${o.txt.toLowerCase()}`); };
+  $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) return; const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
+  $('#cu-agendar').onclick = () => abrirAgenda();
+
+  // Ventana flotante: minicalendario + hora (respeta el horario que se publica desde la app)
+  const agenda = $('#agenda'); let agF = '', agH = '', agMes = null; // selección provisional y mes visible
+  const fechaDeYmd = f => { const [y, m, d] = f.split('-').map(Number); return new Date(y, m - 1, d); };
+  function abrirAgenda() {
+    const fs = fechasDisponibles(); if (!fs.length) { toast('Por ahora no hay días disponibles'); return; }
+    const f0 = fechaPedido(), hoy = hoyYmd();
+    // Si el pedido está "para hoy", propone el siguiente día disponible; si no, el que ya tiene
+    const prop = f0 !== hoy ? f0 : (fs.find(o => o.f !== hoy) || fs[0]).f;
+    agF = prop; agH = f0 === prop ? horaPedido() : (horasDe(prop).map(minTxt)[0] || '');
+    const d = fechaDeYmd(agF); agMes = new Date(d.getFullYear(), d.getMonth(), 1);
+    pintarCal(); pintarHorasAg();
+    if (!agenda.open) agenda.showModal();
+  }
+  function cerrarAgenda() { if (!agenda.open) return; agenda.classList.add('sale'); setTimeout(() => { agenda.close(); agenda.classList.remove('sale'); }, 170); }
+  function pintarCal() {
+    const fs = fechasDisponibles(), disp = new Set(fs.map(o => o.f)), hoy = new Date(), y = agMes.getFullYear(), m = agMes.getMonth();
+    const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $('#cal-mes').textContent = `${MESES_L[m][0].toUpperCase() + MESES_L[m].slice(1)} ${y}`;
+    // Solo se puede navegar entre el mes de hoy y el del último día disponible
+    const ult = fechaDeYmd(fs[fs.length - 1].f), primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1), ultimo = new Date(ult.getFullYear(), ult.getMonth(), 1);
+    $('#cal-prev').disabled = agMes <= primero; $('#cal-next').disabled = agMes >= ultimo;
+    const g = $('#cal-dias'); g.replaceChildren();
+    const off = (new Date(y, m, 1).getDay() + 6) % 7; // lunes = 0
+    for (let i = 0; i < off; i++) g.append(el('span', 'cal-vacio'));
+    const nd = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= nd; d++) {
+      const f = ymd(new Date(y, m, d)), b = el('button', 'cal-d', String(d)); b.type = 'button'; b.setAttribute('role', 'gridcell');
+      const ok = disp.has(f); b.disabled = !ok;
+      if (f === ymd(hoy)) b.classList.add('hoy');
+      if (f === agF) { b.classList.add('sel'); b.setAttribute('aria-selected', 'true'); }
+      if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : 'Fuera del plazo para agendar'; }
+      b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = hs[0] || ''; pintarCal(); pintarHorasAg(); };
+      g.append(b);
+    }
+  }
+  function pintarHorasAg() {
+    const box = $('#ag-horas'); box.replaceChildren();
+    const d = fechaDeYmd(agF), hs = horasDe(agF);
+    const tramos = abiertoDia(d) ? dia(d).t.map(t => `${hora12(t.a)} – ${hora12(t.c)}`).join(' y ') : 'cerrado';
+    $('#ag-horario').textContent = `· ${DIAS_C[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}: ${tramos}`;
+    if (!hs.length) box.append(el('p', 'muted small', 'No hay horas disponibles ese día.'));
+    for (const mnt of hs) {
+      const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), hora12(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
+      b.onclick = () => { agH = v; pintarHorasAg(); };
+      box.append(b);
+    }
+    const ok = $('#ag-ok'), cur = fechasDisponibles().find(o => o.f === agF);
+    ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? 'Agendar' : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${hora12(hm(agH))}`;
+  }
+  $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}, ${hora12(hm(agH))}`); };
+  $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
+  $('#cal-prev').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() - 1, 1); pintarCal(); };
+  $('#cal-next').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() + 1, 1); pintarCal(); };
+  agenda.addEventListener('cancel', e => { e.preventDefault(); cerrarAgenda(); });
+  agenda.addEventListener('click', e => { if (e.target === agenda) cerrarAgenda(); });
+
   function llenarHoras() {
-    const sel = $('#sel-hora'), prev = sel.value; sel.replaceChildren();
-    for (const m of horasDe($('#sel-fecha').value)) { const v = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; const op = el('option', null, hora12(m)); op.value = v; sel.append(op); }
-    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+    const sel = $('#sel-hora'); sel.replaceChildren();
+    for (const m of horasDe($('#sel-fecha').value)) { const op = el('option', null, hora12(m)); op.value = minTxt(m); sel.append(op); }
+    const h = $('#sel-fecha').value === fechaPedido() ? horaPedido() : ''; if ([...sel.options].some(o => o.value === h)) sel.value = h;
   }
+  $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; try { localStorage.setItem('tm-hora', horaSel); } catch (e) {} pintarCuando(); };
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
   const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); });
@@ -617,8 +686,8 @@
 
   // ---------- Inicio ----------
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
-  leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); pintarDiaChip(); evento('visita');
-  setInterval(() => { pintarProgramar(); pintarDiaChip(); }, 60000);
+  leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); pintarCuando(); evento('visita');
+  setInterval(() => { pintarProgramar(); pintarCuando(); }, 60000);
   setInterval(refrescarMenu, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescarMenu(); });
 })();

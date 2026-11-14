@@ -93,9 +93,8 @@ h1 em { color: var(--caramel); font-style: normal; }
 .aviso-pausa { background: var(--caramel); color: var(--ink); text-align: center; padding: 14px 5%; font-weight: 600; }
 
 /* ---------- Menú ---------- */
-.menu { padding: 88px 5% 56px; max-width: 1240px; margin: 0 auto; }
-.menu-head { text-align: center; display: grid; gap: 8px; margin-bottom: 48px; }
-.menu-head h2, .sec-head h2, .ubicacion h2, .footer h2 { font-size: var(--fs-3xl); }
+.menu { padding: 40px 5% 56px; max-width: 1240px; margin: 0 auto; }
+.sec-head h2, .ubicacion h2, .footer h2 { font-size: var(--fs-3xl); }
 .sec { margin-bottom: 64px; }
 .sec-head { display: grid; gap: 8px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .sec-head p:not(.eyebrow) { color: var(--muted); max-width: 560px; font-size: var(--fs-base); }
@@ -221,7 +220,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .horario-movil { display: block; padding: 10px 4% 0; background: var(--paper); }
   .horario-movil .horario-badge { width: 100%; max-width: none; margin: 0 0 10px; padding: 8px 14px; border-radius: 12px; }
   .horario-movil .hb-txt small { font-size: var(--fs-sm); }
-  .menu { padding: 56px 4% 32px; }
+  .menu { padding: 24px 4% 32px; }
   .grid { grid-template-columns: 1fr; gap: 18px; }
   .card { flex-direction: row; }
   .card-img { width: 38%; aspect-ratio: auto; flex-shrink: 0; }
@@ -298,17 +297,49 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 42px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
 
 
-/* Chip "¿Para cuándo?" en la barra de pestañas: es un <select> disfrazado para que en el celular abra el selector nativo */
+/* "Para hoy | Agendar" en la barra de pestañas */
 .tabs { display: flex; align-items: center; gap: 10px; }
 .tabs-in { flex: 1; min-width: 0; }
-.dia-chip { position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px 8px 10px; border-radius: 999px; background: var(--caramel); color: var(--ink); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s; }
-.dia-chip:hover { background: #e3ab6a; }
-.dia-chip .dc-l { color: #6b4a2a; font-weight: 500; }
-.dia-chip b { font-weight: 700; }
-.dia-chip .dc-flecha { font-size: 11px; margin-left: -2px; }
-.dia-chip select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; } /* 16px evita el zoom de iOS */
-.dia-chip:has(select:focus-visible) { outline: 3px solid var(--caramel-d); outline-offset: 3px; }
-@media (max-width: 600px) { .dia-chip .dc-l { display: none; } .dia-chip { padding: 7px 10px 7px 9px; } }
+.cuando { flex-shrink: 0; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--cream); border: 1px solid var(--line); }
+.cu-btn { border: 0; background: none; color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .25s, color .25s; }
+.cu-btn:hover:not(:disabled) { background: #e8dbc8; }
+.cu-btn.on { background: var(--caramel); color: var(--ink); box-shadow: 0 1px 2px rgba(56, 34, 29, .15); }
+.cu-btn:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 600px) { .cu-btn { padding: 6px 10px; font-size: 13px; } }
+
+/* Ventana flotante de agenda */
+.agenda { width: min(400px, calc(100% - 24px)); max-height: calc(100dvh - 24px); border: 0; padding: 20px 22px 22px; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5); overflow: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 16px; }
+.agenda:not([open]) { display: none; }
+.agenda::-webkit-scrollbar { display: none; }
+.agenda::backdrop { background: rgba(30, 18, 14, .55); }
+.agenda[open] { animation: detEntra .25s cubic-bezier(.2,.8,.2,1); }
+.agenda.sale { animation: detSale .17s ease-in forwards; }
+.ag-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.ag-top h2 { font-size: var(--fs-2xl); }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-mes { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 500; }
+.cal-flecha { border: 1px solid var(--line); background: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; line-height: 1; cursor: pointer; }
+.cal-flecha:hover:not(:disabled) { background: var(--cream); }
+.cal-flecha:disabled { opacity: .3; cursor: default; }
+.cal-sem, .cal-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-sem span { text-align: center; font-size: var(--fs-xs); font-weight: 700; color: var(--muted); padding: 4px 0; }
+.cal-d { aspect-ratio: 1; border: 0; border-radius: 50%; background: none; font-weight: 600; font-size: var(--fs-sm); cursor: pointer; transition: background .15s, transform .15s; }
+.cal-d:hover:not(:disabled) { background: var(--cream); }
+.cal-d:disabled { color: #c9bcae; cursor: default; text-decoration: line-through; text-decoration-color: #ddd2c4; }
+.cal-d.hoy { box-shadow: inset 0 0 0 1.5px var(--caramel-d); }
+.cal-d.sel { background: var(--ink); color: var(--paper); transform: scale(1.04); }
+.ag-lbl { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; margin-bottom: 8px; }
+.horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 164px; overflow: auto; padding-right: 2px; }
+.hora { border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 4px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.hora:hover { border-color: var(--ink); }
+.hora.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.ag-acc { display: grid; gap: 4px; }
+.ag-acc .btn { align-self: stretch; }
+@media (max-width: 600px) {
+  .agenda { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
+  .horas { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* Enlace "Pedir para mañana →" cuando ya no hay para hoy */
 .otro-dia { align-self: flex-start; border: 0; background: none; padding: 2px 0; margin-top: -2px; font: 600 var(--fs-xs)/1.4 var(--sans); color: var(--caramel-d); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .otro-dia:hover { color: var(--ink); }
