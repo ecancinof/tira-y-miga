@@ -95,10 +95,10 @@
     }
     return out;
   }
-  // Resumen corto del horario para el encabezado: "Mar a jue 5–10 pm · Vie 9 am–2 pm y 5–10 pm · Lunes cerrado"
+  // Resumen corto del horario para el encabezado: "Mar a Dom 9am - 2pm y 5pm - 10pm · Lunes cerrado"
   const hNum = m => { const h = Math.floor(m / 60) % 24, mi = m % 60; return `${((h + 11) % 12) + 1}${mi ? ':' + String(mi).padStart(2, '0') : ''}`; };
   const ap = m => (Math.floor(m / 60) % 24) < 12 ? 'am' : 'pm';
-  const tramoTxt = t => ap(t.a) === ap(t.c) ? `${hNum(t.a)}–${hNum(t.c)} ${ap(t.c)}` : `${hNum(t.a)} ${ap(t.a)}–${hNum(t.c)} ${ap(t.c)}`;
+  const tramoTxt = t => `${hNum(t.a)}${ap(t.a)} - ${hNum(t.c)}${ap(t.c)}`; // "9am - 2pm"
   const rango = i => { const l = H.dias[i].t.map(tramoTxt); return l.length > 1 ? l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1] : l[0]; };
   function resumenHorario() {
     const orden = [1, 2, 3, 4, 5, 6, 0], clave = i => abiertoDia({ getDay: () => i }) ? H.dias[i].t.map(t => t.a + '-' + t.c).join(',') : 'x';
@@ -106,7 +106,7 @@
     let ini = orden.findIndex((i, k) => clave(i) !== clave(orden[(k + 6) % 7]));
     const grupos = [];
     for (let k = 0; k < 7; k++) { const i = orden[(ini + k) % 7], g = grupos[grupos.length - 1]; if (g && g.k === clave(i)) g.l.push(i); else grupos.push({ k: clave(i), l: [i] }); }
-    return grupos.map(g => ({ dias: g.l.length === 1 ? DIAS[g.l[0]] : g.l.length === 2 ? `${DIAS_C[g.l[0]]} y ${DIAS_C[g.l[1]].toLowerCase()}` : `${DIAS_C[g.l[0]]} a ${DIAS_C[g.l[g.l.length - 1]].toLowerCase()}`, i: g.l[0], cerrado: g.k === 'x' }))
+    return grupos.map(g => ({ dias: g.l.length === 1 ? DIAS[g.l[0]] : g.l.length === 2 ? `${DIAS_C[g.l[0]]} y ${DIAS_C[g.l[1]]}` : `${DIAS_C[g.l[0]]} a ${DIAS_C[g.l[g.l.length - 1]]}`, i: g.l[0], cerrado: g.k === 'x' }))
       .sort((a, b) => a.cerrado - b.cerrado || [1, 2, 3, 4, 5, 6, 0].indexOf(a.i) - [1, 2, 3, 4, 5, 6, 0].indexOf(b.i));
   }
   const may = t => t[0].toUpperCase() + t.slice(1);
