@@ -307,37 +307,51 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .cu-btn:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-width: 600px) { .cu-btn { padding: 6px 10px; font-size: 13px; } }
 
-/* Ventana flotante de agenda */
-.agenda { width: min(400px, calc(100% - 24px)); max-height: calc(100dvh - 24px); border: 0; padding: 20px 22px 22px; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5); overflow: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 16px; }
+/* Ventana flotante de agenda: calendario compacto + horas; el botón de confirmar siempre queda a la vista */
+.agenda { width: min(420px, calc(100% - 24px)); max-height: calc(100dvh - 24px); border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5); overflow: hidden; }
 .agenda:not([open]) { display: none; }
-.agenda::-webkit-scrollbar { display: none; }
-.agenda::backdrop { background: rgba(30, 18, 14, .55); }
-.agenda[open] { animation: detEntra .25s cubic-bezier(.2,.8,.2,1); }
+.agenda[open] { display: flex; flex-direction: column; animation: detEntra .25s cubic-bezier(.2,.8,.2,1); }
 .agenda.sale { animation: detSale .17s ease-in forwards; }
-.ag-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.ag-top h2 { font-size: var(--fs-2xl); }
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.cal-mes { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 500; }
-.cal-flecha { border: 1px solid var(--line); background: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; line-height: 1; cursor: pointer; }
+.agenda::backdrop { background: rgba(30, 18, 14, .55); }
+.ag-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px 0; }
+.ag-top h2 { font-size: var(--fs-xl); }
+.ag-top .icon-btn { width: 34px; height: 34px; font-size: 22px; flex-shrink: 0; }
+.ag-cuerpo { display: flex; flex-direction: column; gap: 10px; padding: 10px 18px 0; min-height: 0; flex: 1; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.cal-mes { font-family: var(--serif); font-size: var(--fs-base); font-weight: 500; }
+.cal-flecha { border: 1px solid var(--line); background: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 18px; line-height: 1; cursor: pointer; }
 .cal-flecha:hover:not(:disabled) { background: var(--cream); }
 .cal-flecha:disabled { opacity: .3; cursor: default; }
-.cal-sem, .cal-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal-sem span { text-align: center; font-size: var(--fs-xs); font-weight: 700; color: var(--muted); padding: 4px 0; }
-.cal-d { aspect-ratio: 1; border: 0; border-radius: 50%; background: none; font-weight: 600; font-size: var(--fs-sm); cursor: pointer; transition: background .15s, transform .15s; }
+.cal-sem, .cal-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; justify-items: center; }
+.cal-sem span { font-size: 11px; font-weight: 700; color: var(--muted); padding: 2px 0; }
+.cal-d { width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; font-weight: 600; font-size: var(--fs-sm); cursor: pointer; transition: background .15s, transform .15s; }
 .cal-d:hover:not(:disabled) { background: var(--cream); }
 .cal-d:disabled { color: #c9bcae; cursor: default; text-decoration: line-through; text-decoration-color: #ddd2c4; }
 .cal-d.hoy { box-shadow: inset 0 0 0 1.5px var(--caramel-d); }
 .cal-d.sel { background: var(--ink); color: var(--paper); transform: scale(1.04); }
-.ag-lbl { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; margin-bottom: 8px; }
-.horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 164px; overflow: auto; padding-right: 2px; }
-.hora { border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 4px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.ag-horas { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.ag-lbl { display: flex; flex-direction: column; gap: 1px; margin-bottom: 8px; line-height: 1.35; }
+.ag-lbl b { font-size: var(--fs-sm); }
+.ag-lbl span { color: var(--caramel-d); font-weight: 600; }
+.horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-content: start; overflow: auto; min-height: 96px; padding: 2px 2px 6px; scrollbar-width: thin; }
+.hora { border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 7px 4px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
 .hora:hover { border-color: var(--ink); }
 .hora.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.ag-acc { display: grid; gap: 4px; }
-.ag-acc .btn { align-self: stretch; }
+.ag-acc { display: grid; gap: 2px; padding: 10px 18px 14px; border-top: 1px solid var(--line); background: var(--paper); }
+.ag-acc .btn { align-self: stretch; padding: 13px 20px; }
+.ag-acc .btn-texto { padding: 8px; }
+/* Computadora: calendario a la izquierda y horas a la derecha */
+@media (min-width: 601px) {
+  .agenda { width: min(640px, calc(100% - 24px)); }
+  .ag-cuerpo { display: grid; grid-template-columns: 300px 1fr; gap: 22px; align-items: start; }
+  .horas { grid-template-columns: repeat(3, 1fr); max-height: 268px; }
+}
+/* Celular: hoja desde abajo; el calendario ocupa como media pantalla y las horas quedan a la vista */
 @media (max-width: 600px) {
-  .agenda { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
-  .horas { grid-template-columns: repeat(3, 1fr); }
+  .agenda { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; }
+  .ag-acc { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .cal-d { width: 32px; height: 32px; font-size: 13px; }
+  .horas { grid-template-columns: repeat(3, 1fr); max-height: 172px; }
 }
 
 /* Enlace "Pedir para mañana →" cuando ya no hay para hoy */

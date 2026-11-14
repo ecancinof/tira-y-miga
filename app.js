@@ -542,7 +542,7 @@
     const box = $('#ag-horas'); box.replaceChildren();
     const d = fechaDeYmd(agF), hs = horasDe(agF);
     const tramos = abiertoDia(d) ? dia(d).t.map(t => `${hora12(t.a)} – ${hora12(t.c)}`).join(' y ') : 'cerrado';
-    $('#ag-horario').textContent = `· ${DIAS_C[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]}: ${tramos}`;
+    $('#ag-horario').textContent = `${DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1)} ${d.getDate()} ${MESES[d.getMonth()]} · ${tramos}`;
     if (!hs.length) box.append(el('p', 'muted small', 'No hay horas disponibles ese día.'));
     for (const mnt of hs) {
       const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), hora12(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
