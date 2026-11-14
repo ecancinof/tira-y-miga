@@ -18,7 +18,21 @@
   const guardarCliente = d => { try { localStorage.setItem('tm-cliente', JSON.stringify({ nombre: d.nombre, tel: d.tel, direccion: d.direccion })); } catch (e) {} };
 
   const prod = id => menu.find(p => p.id === id);
-  const foto = p => (K.productos[p.id] && K.productos[p.id].foto) || K.fotoGeneral;
+  // Fotos: la que publica la app (se guarda en este navegador por versión) > la de catalogo.js > la general
+  const fotosApp = {};
+  const fotoCache = (id, v) => { try { return localStorage.getItem('tm-foto-' + id + '-' + v) || ''; } catch (e) { return ''; } };
+  const foto = p => (p.fotoV && (fotosApp[p.id + p.fotoV] || (fotosApp[p.id + p.fotoV] = fotoCache(p.id, p.fotoV)))) || (K.productos[p.id] && K.productos[p.id].foto) || K.fotoGeneral;
+  async function cargarFotos() {
+    const faltan = menu.filter(p => p.fotoV && !fotosApp[p.id + p.fotoV] && !fotoCache(p.id, p.fotoV));
+    if (!faltan.length || !C.api) return;
+    try {
+      const d = await (await fetch(C.api + '?accion=fotos&ids=' + encodeURIComponent(faltan.map(p => p.id).join(',')), { cache: 'no-store' })).json();
+      if (!d.ok) return;
+      for (const [id, f] of Object.entries(d.fotos || {})) { if (!f.data) continue; fotosApp[id + f.v] = f.data;
+        try { Object.keys(localStorage).filter(k => k.startsWith('tm-foto-' + id + '-')).forEach(k => localStorage.removeItem(k)); localStorage.setItem('tm-foto-' + id + '-' + f.v, f.data); } catch (e) {} }
+      pintarMenu(); pintarCarrito();
+    } catch (e) {}
+  }
   const desc = p => p.desc || (K.productos[p.id] && K.productos[p.id].desc) || '';
 
   function toast(msg) {
@@ -106,7 +120,7 @@
   function normalizar(lista) {
     return lista.map((p, i) => ({
       id: String(p.id), nombre: String(p.nombre || ''), precio: Number(p.precio) || 0,
-      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
+      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
   function pintarMenu() {
@@ -172,6 +186,7 @@
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
       pintarMenu(); pintarCarrito(); pintarEstadoHoy(); if (drawer.open) llenarFechas();
+      cargarFotos();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
 
