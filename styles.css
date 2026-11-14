@@ -271,19 +271,6 @@ legend { font-weight: 600; margin-bottom: 8px; }
   body.con-barra .toast { bottom: 96px; }
 }
 @keyframes subeBarra { from { transform: translateY(120%); } }
-
-/* Botón flotante de WhatsApp: solo en celular y tableta (en computadora ya está en el pie) */
-.wa-flota { display: none; }
-@media (max-width: 900px) {
-  .wa-flota { display: grid; place-items: center; position: fixed; right: 14px; bottom: max(16px, env(safe-area-inset-bottom)); width: 54px; height: 54px; border-radius: 50%; background: var(--wa); color: #fff; box-shadow: 0 10px 24px -8px rgba(18, 90, 45, .6); z-index: 39; transition: bottom .3s cubic-bezier(.2,.8,.2,1), transform .15s; animation: waWiggle 10s ease-in-out 4s infinite; }
-  .wa-flota:active { transform: scale(.94); }
-  body.con-barra .wa-flota { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px); } /* se sube cuando aparece la barra "Ver mi pedido" */
-  /* El aviso flotante se corre a la izquierda para no taparse con el botón de WhatsApp */
-  .toast { left: 16px; right: 82px; max-width: none; transform: translateY(140%); }
-  .toast.ver { transform: none; }
-}
-/* Cada 10 s se sacude un poquito (solo durante el primer medio segundo del ciclo) */
-@keyframes waWiggle { 0%, 6%, 100% { transform: rotate(0); } 1% { transform: rotate(-12deg); } 2% { transform: rotate(10deg); } 3% { transform: rotate(-8deg); } 4% { transform: rotate(6deg); } 5% { transform: rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; } }
 
 /* ---------- v22: flujo de pedido ---------- */

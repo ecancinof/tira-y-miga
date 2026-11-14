@@ -616,7 +616,7 @@
   })();
 
   // ---------- Inicio ----------
-  $('#wa-contacto').href = $('#wa-flota').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
+  $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
   leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); pintarDiaChip(); evento('visita');
   setInterval(() => { pintarProgramar(); pintarDiaChip(); }, 60000);
   setInterval(refrescarMenu, 60000);
