@@ -11,6 +11,7 @@
   // ---------- Estado ----------
   let menu = [];               // [{ id, nombre, precio, seccion, orden, agotado, desc, foto }]
   let pausa = false, avisoPausa = '', conEnvio = true, menuEnVivo = false, datosPago = C.datosPago || '';
+  let STK = {}, stockFecha = ''; // stock de HOY que publica la app (piezas por concha base)
   const cart = new Map();      // id -> cantidad
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
@@ -25,6 +26,26 @@
   }
 
   const prod = id => menu.find(p => p.id === id);
+  // ---------- Stock de hoy (solo limita pedidos PARA HOY) ----------
+  const hoyYmd = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const limitaHoy = () => !!stockFecha && stockFecha === hoyYmd() && Object.keys(STK).length > 0;
+  // Cuántas piezas de "id" caben hoy, tomando en cuenta lo demás del carrito (sabores que comparten la misma concha base)
+  function maxHoy(id, entradas) {
+    const p = prod(id); if (!limitaHoy() || !p || !p.usa.length) return Infinity;
+    const uso = {}; for (const [k, q] of entradas) { if (k === id) continue; const o = prod(k); if (o) o.usa.forEach(u => { uso[u.id] = (uso[u.id] || 0) + q * u.por; }); }
+    let m = Infinity; p.usa.forEach(u => { if (u.id in STK) m = Math.min(m, Math.floor((STK[u.id] - (uso[u.id] || 0)) / u.por + 1e-9)); });
+    return Math.max(0, m);
+  }
+  // Bases que no alcanzan para hoy con lo que hay en el carrito: [{ disp, ids }]
+  function conflictosHoy(entradas) {
+    if (!limitaHoy()) return [];
+    const uso = {}, quien = {};
+    for (const [k, q] of entradas) { const o = prod(k); if (!o) continue; o.usa.forEach(u => { if (!(u.id in STK)) return; uso[u.id] = (uso[u.id] || 0) + q * u.por; (quien[u.id] = quien[u.id] || []).push({ id: k, por: u.por }); }); }
+    return Object.keys(uso).filter(b => uso[b] > STK[b] + 1e-9).map(b => ({ disp: Math.max(0, Math.floor(STK[b] / Math.min(...quien[b].map(x => x.por)) + 1e-9)), ids: quien[b].map(x => x.id) }));
+  }
+  const textoConflicto = c => c.ids.length > 1 ? `Entre ${c.ids.map(i => prod(i).nombre).join(' y ')} solo alcanzan ${c.disp} para hoy (salen de la misma concha)`
+    : c.disp <= 0 ? `${prod(c.ids[0]).nombre} ya se agotó para hoy` : `Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp} de ${prod(c.ids[0]).nombre}`;
+  const quedanHoy = id => maxHoy(id, [...cart]) - (cart.get(id) || 0); // cuántas más puede agregar para hoy
   // Fotos: la que publica la app (se guarda en este navegador por versión) > la de catalogo.js > la general
   const fotosApp = {};
   const fotoCache = (id, v) => { try { return localStorage.getItem('tm-foto-' + id + '-' + v) || ''; } catch (e) { return ''; } };
@@ -123,7 +144,8 @@
   function normalizar(lista) {
     return lista.map((p, i) => ({
       id: String(p.id), nombre: String(p.nombre || ''), precio: Number(p.precio) || 0,
-      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, destacado: !!p.destacado, desc: p.desc || ''
+      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, destacado: !!p.destacado, desc: p.desc || '',
+      usa: Array.isArray(p.usa) ? p.usa.filter(u => u && u.id && Number(u.por) > 0).map(u => ({ id: String(u.id), por: Number(u.por) })) : []
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
   // ---------- Animaciones ----------
@@ -171,14 +193,15 @@
       revelar(h, 'sec-' + s);
       sec.append(h, g); cont.append(sec);
     }
-    pintarTabs(tabs);
+    pintarTabs(tabs); pintarStockTags();
     if (!menu.length) cont.append(el('p', 'vacio', 'Estamos actualizando el menú. Escríbenos por WhatsApp para hacer tu pedido.'));
   }
   function tarjeta(p) {
-    const c = el('article', 'card' + (p.agotado ? ' agotado' : ''));
+    const c = el('article', 'card' + (p.agotado ? ' agotado' : '')); c.dataset.id = p.id;
     const fi = el('div', 'card-img'), img = el('img');
     img.src = foto(p); img.alt = p.nombre; img.loading = 'lazy'; img.width = 560; img.height = 420;
     fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy'));
+    const stg = el('span', 'agotado-tag stk-tag'); stg.hidden = true; fi.append(stg);
     fi.append(el('span', 'ver-mas', 'Ver')); fi.tabIndex = 0; fi.setAttribute('role', 'button'); fi.setAttribute('aria-label', 'Ver detalles de ' + p.nombre);
     fi.onclick = () => abrirDetalle(p); fi.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirDetalle(p); } };
     const b = el('div', 'card-body'), top = el('div', 'card-top'), h3 = el('h3'), tb = el('button', 'card-tit', p.nombre);
@@ -207,10 +230,23 @@
     c.append(fi, b);
     return c;
   }
+  // Etiqueta en la foto: "Hoy quedan 2" / "Agotado para hoy" (solo si hoy se puede pedir)
+  function pintarStockTags() {
+    const hoyAbre = (fechasDisponibles()[0] || {}).f === hoyYmd();
+    document.querySelectorAll('.card[data-id]').forEach(c => {
+      const p = prod(c.dataset.id), t = c.querySelector('.stk-tag'); if (!t || !p) return;
+      const r = hoyAbre && !p.agotado ? quedanHoy(p.id) : Infinity;
+      t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = r > 0 ? `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}` : maxHoy(p.id, []) <= 0 ? 'Agotado para hoy' : 'Ya no quedan más hoy'; t.classList.toggle('cero', r <= 0); }
+    });
+  }
   function agregar(p, q, img) {
+    const r = (fechasDisponibles()[0] || {}).f === hoyYmd() ? quedanHoy(p.id) : Infinity;
     cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + q)); guardarCarrito(); pintarCarrito(); evento('agrega');
     if (sinMov || !img || !img.animate) { const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } else volarAlCarrito(img);
-    toast(`${q} × ${p.nombre} en tu pedido`);
+    // "Disponible hoy: dos" (en palabras del 1 al 10)
+    const enLetra = n => ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'][n] || String(n);
+    if (q > r) toast(`${p.nombre} · Disponible hoy: ${enLetra(Math.max(0, r + (cart.get(p.id) || 0) - q))}`);
+    else toast(`${q} × ${p.nombre} en tu pedido`);
   }
   const slug = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -245,7 +281,10 @@
     detP = p; detQ = 1;
     const im = $('#det-img'); im.src = foto(p); im.alt = p.nombre; det.classList.toggle('agotado', p.agotado); $('#det-ag').hidden = !p.agotado;
     $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
-    $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p); detUpd();
+    $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
+    const r = !p.agotado && (fechasDisponibles()[0] || {}).f === hoyYmd() ? quedanHoy(p.id) : Infinity, ds = $('#det-stk');
+    ds.hidden = !(r <= 5); if (!ds.hidden) ds.textContent = r <= 0 ? 'Agotado para hoy · la puedes pedir para otro día' : `Para hoy ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`;
+    detUpd();
     if (!det.open) det.showModal();
   }
   function cerrarDetalle() { if (!det.open) return; det.classList.add('sale'); setTimeout(() => { det.close(); det.classList.remove('sale'); }, 170); }
@@ -269,6 +308,16 @@
     np.textContent = `📅 Tu pedido quedará programado. Lo más pronto es ${cuando}; elige el día y la hora que prefieras.`; np.hidden = false;
   }
 
+  // La página se actualiza sola (stock, agotados, precios) cada minuto y al volver a la pestaña; solo redibuja si algo cambió
+  let firmaMenu = '';
+  async function refrescarMenu() {
+    if (!C.api || document.hidden) return;
+    try {
+      const d = await (await fetch(C.api + '?accion=menu', { cache: 'no-store' })).json(); if (!d.ok) return;
+      const f = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.productos]);
+      if (f !== firmaMenu) { firmaMenu = f; aplicarMenu(d); }
+    } catch (e) {}
+  }
   async function cargarMenu() {
     menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito();
     if (!C.api) return;
@@ -276,14 +325,21 @@
       const r = await fetch(C.api + '?accion=menu', { cache: 'no-store' });
       const d = await r.json();
       if (!d.ok) return;
+      firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.productos]);
+      aplicarMenu(d);
+    } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
+  }
+  function aplicarMenu(d) {
+    try {
       pausa = !!d.pausa; avisoPausa = d.avisoPausa || ''; conEnvio = d.envio !== false;
       if (!d.sinMenu && Array.isArray(d.productos) && d.productos.length) { menu = normalizar(d.productos); menuEnVivo = true; }
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
+      STK = d.stock && typeof d.stock === 'object' ? d.stock : {}; stockFecha = d.stockFecha || '';
       pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
       cargarFotos();
-    } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
+    } catch (e) { console.error(e); }
   }
 
   // ---------- Carrito ----------
@@ -295,6 +351,7 @@
       const p = prod(id), li = el('li', 'ci' + (p.agotado ? ' agot' : ''));
       const img = el('img'); img.src = foto(p); img.alt = '';
       const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`));
+      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.ids.length > 1 ? `Comparte concha: para hoy alcanzan ${c.disp} en total` : c.disp <= 0 ? 'Agotado para hoy' : `Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
       const st = el('div', 'stepper'), a = el('button', null, '−'), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; a.setAttribute('aria-label', 'Menos ' + p.nombre); b.setAttribute('aria-label', 'Más ' + p.nombre);
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
@@ -319,13 +376,14 @@
     $('#cart-empty').hidden = cart.size > 0;
     $('#form-pedido').hidden = cart.size === 0;
     const bp = $('#barra-pedido');
+    pintarStockTags(); if (typeof revisarBoton === 'function' && $('#sel-fecha')) try { revisarBoton(); } catch (e) {}
     if (bp) { bp.hidden = !pz; $('#bp-num').textContent = pz; $('#bp-txt').textContent = `${pz} ${pz === 1 ? 'pieza' : 'piezas'} · ${money(t)}`; document.body.classList.toggle('con-barra', !!pz); }
   }
 
   // ---------- Panel ----------
   const drawer = $('#drawer');
   function abrir() {
-    llenarFechas(); if (!drawer.open) drawer.showModal(); if (cart.size) evento('abre');
+    llenarFechas(); if (!drawer.open) drawer.showModal(); pintarCarrito(); if (cart.size) evento('abre');
   }
   function cerrar() {
     if (!drawer.open) return;
@@ -351,11 +409,18 @@
     for (const m of horasDe($('#sel-fecha').value)) { const v = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; const op = el('option', null, hora12(m)); op.value = v; sel.append(op); }
     if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
   }
-  $('#sel-fecha').onchange = llenarHoras;
+  $('#sel-fecha').onchange = () => { llenarHoras(); pintarCarrito(); };
   const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); });
+  const fechaElegida = () => $('#sel-fecha').value || (fechasDisponibles()[0] || {}).f || '';
+  const esParaHoy = () => limitaHoy() && fechaElegida() === hoyYmd();
+  const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   const listoParaPedir = () => form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10;
-  function revisarBoton() { const ok = listoParaPedir(); $('#btn-enviar').disabled = !ok; $('#falta-datos').hidden = ok; }
+  function revisarBoton() {
+    const ok = listoParaPedir(), ex = excedidos().length > 0;
+    $('#btn-enviar').disabled = !ok || ex; $('#falta-datos').hidden = ok;
+    const a = $('#stk-aviso'); if (a) { a.hidden = !ex; if (ex) a.textContent = '⚠️ Para hoy no alcanza el stock de lo marcado en rojo. Baja la cantidad o elige otro día.'; }
+  }
   form.addEventListener('input', e => { if (e.target.name === 'nombre' || e.target.name === 'tel') revisarBoton(); });
   // 1) Si ya pidió antes, sus datos aparecen llenos (se guardan solo en su celular)
   let clienteAplicado = false;
@@ -399,6 +464,7 @@
     if (d.tel.length !== 10) return mal(form.tel, 'Escribe tu número de WhatsApp a 10 dígitos.');
     if (d.entregaTipo === 'domicilio' && d.direccion.length < 8) return mal(form.direccion, 'Escribe la dirección de entrega.');
     if (!d.fecha) return mal(form.fecha, 'Elige el día.');
+    if (limitaHoy() && d.fecha === hoyYmd()) { const c = conflictosHoy([...cart])[0]; if (c) return textoConflicto(c) + '. Cambia la cantidad o elige otro día.'; }
     if (!d.hora) return mal(form.hora, 'Elige la hora.');
     return '';
   }
@@ -434,7 +500,7 @@
       try {
         const r = await fetch(C.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'pedido', pedido: d }) });
         const res = await r.json();
-        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton(); if (/disponible|agot/i.test(res.error || '')) cargarMenu(); return; }
+        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton(); if (res.stock || /disponible|agot|quedan/i.test(res.error || '')) cargarMenu(); return; }
         folio = res.folio; registrado = true;
       } catch (x) { registrado = false; }
     }
@@ -467,4 +533,6 @@
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
   leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); evento('visita');
   setInterval(pintarProgramar, 60000);
+  setInterval(refrescarMenu, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescarMenu(); });
 })();
