@@ -90,10 +90,16 @@ h1 em { color: var(--caramel); font-style: normal; }
 .sec-head { display: grid; gap: 8px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .sec-head p:not(.eyebrow) { color: var(--muted); max-width: 560px; font-size: var(--fs-base); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
-.card { background: #fff; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }
-.card:hover { box-shadow: 0 14px 30px -18px rgba(56, 34, 29, .45); transform: translateY(-2px); }
+.card { background: #fff; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .3s ease, transform .3s cubic-bezier(.2,.7,.2,1), border-color .3s; }
 .card-img { position: relative; aspect-ratio: 4 / 3; background: var(--cream); overflow: hidden; }
-.card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.7,.2,1); transform-origin: center; }
+/* Con mouse: la tarjeta se eleva con sombra cálida y la foto hace un zoom suave */
+@media (hover: hover) {
+  .card:hover { box-shadow: 0 18px 36px -16px rgba(56, 34, 29, .35), 0 4px 10px -6px rgba(56, 34, 29, .15); transform: translateY(-4px); border-color: #d6c3ad; }
+  .card:hover .card-img img { transform: scale(1.05); }
+  .card.agotado:hover .card-img img, .card.sin-hoy:hover .card-img img { transform: none; }
+  .sec-fav .card:hover { border-color: var(--caramel-d); }
+}
 .agotado-tag { position: absolute; top: 12px; left: 12px; background: var(--ink); color: var(--paper); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
 .card.agotado .card-img img { filter: grayscale(.85) opacity(.7); }
 .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
@@ -260,11 +266,16 @@ legend { font-weight: 600; margin-bottom: 8px; }
 /* ---------- v22: flujo de pedido ---------- */
 /* Pestañas de categorías: se quedan fijas debajo del encabezado */
 .tabs { position: sticky; top: var(--hdr, 88px); z-index: 15; margin: 0 0 28px; padding: 10px 0; background: rgba(252, 248, 241, .96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
-.tabs-in { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tabs-in { position: relative; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .tabs-in::-webkit-scrollbar { display: none; }
-.tab { flex-shrink: 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 16px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+.tab { position: relative; z-index: 1; flex-shrink: 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 16px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, color .2s .12s, border-color .2s; } /* el texto cambia a claro un instante después, cuando la píldora ya llegó */
 .tab:hover { border-color: var(--ink); }
-.tab.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tab.on { color: var(--paper); border-color: transparent; background: transparent; }
+/* La píldora oscura se desliza de una pestaña a otra (la mueve app.js) */
+.tab-pill { position: absolute; top: 0; left: 0; height: 100%; width: 0; border-radius: 999px; background: var(--ink); z-index: 0; pointer-events: none; opacity: 0; }
+.tab-pill.lista { opacity: 1; transition: transform .35s cubic-bezier(.2,.8,.2,1), width .35s cubic-bezier(.2,.8,.2,1); }
+/* Sin píldora (p. ej. sin JS o movimiento reducido): la pestaña activa se pinta sola */
+.tabs-in.sin-pill .tab.on { background: var(--ink); border-color: var(--ink); }
 .sec { scroll-margin-top: 150px; }
 
 /* Favoritas */

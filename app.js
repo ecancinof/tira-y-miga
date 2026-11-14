@@ -268,6 +268,14 @@
   // ---------- Pestañas de categorías (fijas arriba al bajar) ----------
   const tabsBox = $('#tabs'), tabsIn = $('#tabs-in');
   const altoFijo = () => $('.header').offsetHeight + (tabsBox.hidden ? 0 : tabsBox.offsetHeight) + 8;
+  // Píldora oscura que se desliza hasta la pestaña activa
+  let pill = null;
+  const moverPildora = b => {
+    if (!pill || !b) return;
+    pill.style.width = b.offsetWidth + 'px'; pill.style.transform = `translateX(${b.offsetLeft}px)`;
+    if (!pill.classList.contains('lista')) requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.add('lista'))); // la primera vez aparece ya en su lugar, sin deslizarse desde cero
+  };
+  const tabsBtns = () => [...tabsIn.querySelectorAll('.tab')];
   function pintarTabs(tabs) {
     tabsIn.replaceChildren(); tabsBox.hidden = tabs.length < 2;
     for (const t of tabs) {
@@ -275,15 +283,20 @@
       b.onclick = () => { const s = document.getElementById(t.id); if (!s) return; window.scrollTo({ top: s.getBoundingClientRect().top + scrollY - altoFijo() + 1, behavior: sinMov ? 'auto' : 'smooth' }); };
       tabsIn.append(b);
     }
-    marcarTab();
+    if (sinMov) { tabsIn.classList.add('sin-pill'); pill = null; }
+    else { pill = el('span', 'tab-pill'); pill.setAttribute('aria-hidden', 'true'); tabsIn.append(pill); }
+    marcarTab(true);
   }
-  function marcarTab() {
+  function marcarTab(forzar) {
     if (tabsBox.hidden) return;
-    const lim = altoFijo() + 40; let act = null;
-    for (const b of tabsIn.children) { const s = document.getElementById(b.dataset.sec); if (s && s.getBoundingClientRect().top <= lim) act = b; }
-    act = act || tabsIn.children[0];
-    for (const b of tabsIn.children) { const on = b === act; if (b.classList.contains('on') !== on) { b.classList.toggle('on', on); if (on) { b.setAttribute('aria-current', 'true'); tabsIn.scrollTo({ left: b.offsetLeft - (tabsIn.clientWidth - b.offsetWidth) / 2, behavior: sinMov ? 'auto' : 'smooth' }); } else b.removeAttribute('aria-current'); } }
+    const lim = altoFijo() + 40; let act = null; const btns = tabsBtns();
+    for (const b of btns) { const s = document.getElementById(b.dataset.sec); if (s && s.getBoundingClientRect().top <= lim) act = b; }
+    act = act || btns[0];
+    for (const b of btns) { const on = b === act; if (b.classList.contains('on') !== on || (on && forzar)) { b.classList.toggle('on', on); if (on) { b.setAttribute('aria-current', 'true'); moverPildora(b); tabsIn.scrollTo({ left: b.offsetLeft - (tabsIn.clientWidth - b.offsetWidth) / 2, behavior: sinMov ? 'auto' : 'smooth' }); } else b.removeAttribute('aria-current'); } }
   }
+  // Si cambia el ancho (giro del celular, carga de la fuente), la píldora se reacomoda
+  const reacomodarPildora = () => moverPildora(tabsIn.querySelector('.tab.on'));
+  addEventListener('resize', reacomodarPildora); if (document.fonts && document.fonts.ready) document.fonts.ready.then(reacomodarPildora);
   let tabRaf = 0; addEventListener('scroll', () => { if (!tabRaf) tabRaf = requestAnimationFrame(() => { tabRaf = 0; marcarTab(); }); }, { passive: true });
   const ponAltoHeader = () => document.documentElement.style.setProperty('--hdr', $('.header').offsetHeight + 'px');
   ponAltoHeader(); addEventListener('resize', ponAltoHeader); if ('ResizeObserver' in window) new ResizeObserver(ponAltoHeader).observe($('.header'));
