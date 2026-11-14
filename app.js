@@ -16,9 +16,6 @@
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
   const leerCliente = () => { try { return JSON.parse(localStorage.getItem('tm-cliente') || '{}'); } catch (e) { return {}; } };
   const guardarCliente = d => { try { localStorage.setItem('tm-cliente', JSON.stringify({ nombre: d.nombre, tel: d.tel, direccion: d.direccion, entregaTipo: d.entregaTipo, pago: d.pago })); } catch (e) {} };
-  // Último pedido (para el botón "Repetir mi pedido")
-  const leerUltimo = () => { try { const o = JSON.parse(localStorage.getItem('tm-ultimo') || 'null'); return o && Array.isArray(o.items) ? o : null; } catch (e) { return null; } };
-  const guardarUltimo = items => { try { localStorage.setItem('tm-ultimo', JSON.stringify({ ts: Date.now(), items: items.map(i => ({ id: i.id, cant: i.cant })) })); } catch (e) {} };
 
   // ---------- Métricas: cuántos visitan, agregan, abren el pedido (una vez por visita) ----------
   function evento(t) {
@@ -259,22 +256,6 @@
   det.addEventListener('click', e => { if (e.target === det) cerrarDetalle(); });
   $('#det-add').onclick = () => { if (!detP || detP.agotado || pausa) return; agregar(detP, detQ, $('#det-img')); cerrarDetalle(); };
 
-  // ---------- Repetir mi último pedido ----------
-  function pintarRepetir() {
-    const u = leerUltimo(), box = $('#repetir');
-    const ok = u ? u.items.filter(i => { const p = prod(i.id); return p && !p.agotado && i.cant > 0; }) : [];
-    box.hidden = !ok.length || pausa; if (box.hidden) return;
-    const nombre = (leerCliente().nombre || '').split(' ')[0];
-    $('#rep-tit').textContent = nombre ? `¿Lo de siempre, ${nombre}?` : '¿Lo de siempre?';
-    const tot = ok.reduce((a, i) => a + i.cant * prod(i.id).precio, 0), faltan = u.items.length - ok.length;
-    $('#rep-lista').textContent = ok.map(i => `${i.cant} ${prod(i.id).nombre}`).join(' · ') + ` — ${money(tot)}` + (faltan ? ` (${faltan === 1 ? '1 producto ya no está disponible' : faltan + ' productos ya no están disponibles'})` : '');
-  }
-  $('#rep-btn').onclick = () => {
-    const u = leerUltimo(); if (!u || pausa) return;
-    let n = 0; for (const i of u.items) { const p = prod(i.id); if (p && !p.agotado && i.cant > 0) { cart.set(i.id, Math.min(MAXQ, i.cant | 0)); n++; } }
-    if (!n) return; guardarCarrito(); pintarCarrito(); evento('agrega'); abrir();
-  };
-
   // ---------- Fuera de horario: se puede programar ----------
   function pintarProgramar() {
     const av = $('#aviso-cerrado'), np = $('#nota-prog'), hoy = ymd(new Date()), fs = fechasDisponibles();
@@ -289,7 +270,7 @@
   }
 
   async function cargarMenu() {
-    menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito(); pintarRepetir();
+    menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito();
     if (!C.api) return;
     try {
       const r = await fetch(C.api + '?accion=menu', { cache: 'no-store' });
@@ -300,7 +281,7 @@
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
-      pintarMenu(); pintarCarrito(); pintarRepetir(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
+      pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
       cargarFotos();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -396,7 +377,7 @@
   $('#saludo-no').onclick = () => {
     try { localStorage.removeItem('tm-cliente'); localStorage.removeItem('tm-ultimo'); } catch (e) {}
     form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.selectedIndex = 0; form.entregaTipo.value = 'recoge'; ponDir();
-    $('#saludo').hidden = true; $('#repetir').hidden = true; revisarBoton(); form.nombre.focus();
+    $('#saludo').hidden = true; revisarBoton(); form.nombre.focus();
   };
 
   const fmtTel = t => t.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
@@ -446,7 +427,7 @@
     if (pausa) { err.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.'; err.hidden = false; return; }
     const d = datosForm(), m = validar(d);
     if (m) { err.textContent = m; err.hidden = false; return; }
-    guardarCliente(d); guardarUltimo(d.items);
+    guardarCliente(d);
     btn.disabled = true; btn.classList.add('enviando'); $('#btn-enviar-t').textContent = 'Enviando…';
     let folio = '', registrado = false;
     if (C.api && !d.web) {
@@ -458,7 +439,7 @@
       } catch (x) { registrado = false; }
     }
     const link = linkWA(mensajeWA(d, folio));
-    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; pintarRepetir(); aplicarCliente();
+    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente();
     btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton();
     cerrar();
     toast(folio ? `¡Pedido ${folio} recibido! Abriendo WhatsApp…` : 'Abriendo WhatsApp…');
