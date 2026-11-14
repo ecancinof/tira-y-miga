@@ -312,20 +312,20 @@
   }
   function fechaTexto(f) { const [y, m, d] = f.split('-').map(Number), dt = new Date(y, m - 1, d); return `${DIAS[dt.getDay()]} ${d} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1]}`; }
   function mensajeWA(d, folio) {
-    // Mismo formato que la confirmación de la app: categoría en mayúsculas, línea punteada y "• *2*  Sabor - $56.00"
+    // Mensaje que el cliente nos manda: claro, con etiquetas en negritas y pocos emojis
     const m2 = v => '$' + (Number(v) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const grupos = new Map();
     d.items.forEach(i => { const c = ((prod(i.id) || {}).categoria || 'Conchas').toUpperCase(); if (!grupos.has(c)) grupos.set(c, []); grupos.get(c).push(i); });
     const lineas = [];
-    [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, '┈┈┈┈┈┈┈┈┈┈┈┈', ...its.map(i => `• *${i.cant}*  ${i.nombre} - ${m2(i.cant * i.precio)}`)); });
-    const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0);
-    return [
-      `Hola👋, Soy ${d.nombre} y quiero realizar el siguiente pedido:`, '',
-      ...lineas, '', `*Total de productos: ${m2(tot)}*`,
-      d.entregaTipo === 'domicilio' ? `🛵 A domicilio *[Cotizando]*‼️: ${d.direccion}` : '🏠 Paso a recoger',
-      `📅 ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `💳 Pago: ${d.pago}`,
-      d.notas ? `📝 ${d.notas}` : '', '', '¿Me confirman, por favor?'
-    ].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
+    [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, ...its.map(i => `• ${i.cant}  ${i.nombre} — ${m2(i.cant * i.precio)}`)); });
+    const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
+    const L = [`Hola 👋 Soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
+    if (dom) L.push('*Entrega:* a domicilio', d.direccion, '*Envío:* por cotizar ⏳');
+    else L.push('*Entrega:* paso a recoger');
+    L.push(`*Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `*Pago:* ${String(d.pago).toLowerCase()}`);
+    if (d.notas) L.push(`*Nota:* ${d.notas}`);
+    L.push('', dom ? 'Quedo pendiente de la cotización del envío y del total. ¡Gracias!' : '¿Me confirman, por favor? ¡Gracias!');
+    return L.join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
 
