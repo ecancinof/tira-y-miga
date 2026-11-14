@@ -229,3 +229,27 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci-ctrl { display: flex; align-items: center; gap: 6px; }
 .ci-del { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--muted); cursor: pointer; padding: 0; text-decoration: none; }
 .ci-del:hover { color: var(--err); border-color: var(--err); background: #fbe9e5; }
+
+/* ---------- Animaciones (v16) ---------- */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .6s ease var(--d, 0ms), transform .6s cubic-bezier(.2,.7,.2,1) var(--d, 0ms); }
+.rv.visible { opacity: 1; transform: none; }
+.vuela { position: fixed; z-index: 80; object-fit: cover; border-radius: 50%; box-shadow: 0 8px 20px rgba(56, 34, 29, .35); pointer-events: none; }
+.horario-badge.abierto .hb-dot { animation: pulso 2s ease-out infinite; }
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(47, 168, 102, .55); } 70% { box-shadow: 0 0 0 9px rgba(47, 168, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(47, 168, 102, 0); } }
+
+/* Barra fija "Ver mi pedido" (solo celular y tableta) */
+.barra-pedido { display: none; }
+@media (max-width: 900px) {
+  .barra-pedido:not([hidden]) { display: flex; align-items: center; gap: 12px; position: fixed; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 40; border: 0; border-radius: 18px; padding: 12px 16px; background: var(--ink); color: var(--paper); box-shadow: 0 12px 30px -8px rgba(30, 18, 14, .55); cursor: pointer; text-align: left; animation: subeBarra .35s cubic-bezier(.2,.8,.2,1); }
+  .bp-ico { position: relative; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: rgba(255, 255, 255, .12); flex-shrink: 0; }
+  .bp-ico b { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--caramel); color: var(--ink); font-size: 12px; display: grid; place-items: center; }
+  .bp-ico b.pop { animation: pop .45s ease; }
+  .bp-t { display: flex; flex-direction: column; flex: 1; line-height: 1.25; }
+  .bp-t b { font-size: 16px; }
+  .bp-t small { font-size: 13px; color: #e7dbcf; }
+  .bp-flecha { font-size: 20px; }
+  body.con-barra { padding-bottom: 88px; }
+  body.con-barra .toast { bottom: 96px; }
+}
+@keyframes subeBarra { from { transform: translateY(120%); } }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; } }

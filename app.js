@@ -123,6 +123,29 @@
       seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
+  // ---------- Animaciones ----------
+  const sinMov = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const vistos = new Set(); // lo que ya apareció no se vuelve a animar al refrescar el menú
+  const io = !sinMov && 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; e.target.classList.add('visible'); vistos.add(e.target.dataset.rv); io.unobserve(e.target);
+  }), { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }) : null;
+  function revelar(nodo, clave, k = 0) {
+    nodo.classList.add('rv'); nodo.dataset.rv = clave; nodo.style.setProperty('--d', (k % 3) * 70 + 'ms');
+    if (!io || vistos.has(clave)) nodo.classList.add('visible'); else io.observe(nodo);
+  }
+  // Mini foto que vuela de la tarjeta al carrito
+  function volarAlCarrito(img) {
+    if (sinMov || !img || !img.animate) return;
+    const barra = $('#barra-pedido'), dest = (barra && !barra.hidden && barra.offsetParent ? $('#bp-ico') : $('#cart-open')).getBoundingClientRect(), o = img.getBoundingClientRect();
+    const f = img.cloneNode(); f.removeAttribute('loading'); f.className = 'vuela';
+    const t = Math.min(o.width, o.height, 140);
+    Object.assign(f.style, { left: o.left + o.width / 2 - t / 2 + 'px', top: o.top + o.height / 2 - t / 2 + 'px', width: t + 'px', height: t + 'px' });
+    document.body.append(f);
+    const dx = dest.left + dest.width / 2 - (o.left + o.width / 2), dy = dest.top + dest.height / 2 - (o.top + o.height / 2);
+    f.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 60}px) scale(.55)`, opacity: 1, offset: 0.55 }, { transform: `translate(${dx}px, ${dy}px) scale(.12)`, opacity: .4 }],
+      { duration: 750, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => { f.remove(); for (const id of ['#cart-count', '#bp-num']) { const b = $(id); if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } } };
+  }
+
   function pintarMenu() {
     const cont = $('#menu-secciones'); cont.replaceChildren();
     const grupos = new Map();
@@ -136,7 +159,8 @@
       h.append(el('h2', null, info.titulo));
       if (info.texto) h.append(el('p', null, info.texto));
       const g = el('div', 'grid');
-      grupos.get(s).forEach(p => g.append(tarjeta(p)));
+      grupos.get(s).forEach((p, k) => { const t = tarjeta(p); revelar(t, p.id, k); g.append(t); });
+      revelar(h, 'sec-' + s);
       sec.append(h, g); cont.append(sec);
     }
     if (!menu.length) cont.append(el('p', 'vacio', 'Estamos actualizando el menú. Escríbenos por WhatsApp para hacer tu pedido.'));
@@ -166,7 +190,7 @@
       const n = Math.min(MAXQ, (cart.get(p.id) || 0) + q); cart.set(p.id, n); guardarCarrito(); pintarCarrito();
       add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
       setTimeout(() => { add.textContent = 'Añadir'; add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; }, 1300);
-      const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      if (sinMov || !img.animate) { const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } else volarAlCarrito(img);
       toast(`${q} × ${p.nombre} en tu pedido`); q = 1; upd();
     };
     acc.append(st, add); b.append(acc);
@@ -222,6 +246,8 @@
     $('#cart-total').textContent = money(t);
     $('#cart-empty').hidden = cart.size > 0;
     $('#form-pedido').hidden = cart.size === 0;
+    const bp = $('#barra-pedido');
+    if (bp) { bp.hidden = !pz; $('#bp-num').textContent = pz; $('#bp-txt').textContent = `${pz} ${pz === 1 ? 'pieza' : 'piezas'} · ${money(t)}`; document.body.classList.toggle('con-barra', !!pz); }
   }
 
   // ---------- Panel ----------
@@ -235,6 +261,7 @@
     setTimeout(() => { drawer.close(); drawer.classList.remove('sale'); }, 190);
   }
   $('#cart-open').onclick = abrir;
+  $('#barra-pedido').onclick = abrir;
   $('#drawer-close').onclick = cerrar;
   drawer.addEventListener('cancel', e => { e.preventDefault(); cerrar(); });
   drawer.addEventListener('click', e => { if (e.target === drawer) cerrar(); if (e.target.closest('[data-cerrar]')) { e.preventDefault(); cerrar(); if (e.target.matches('a')) location.hash = '#menu'; } });
