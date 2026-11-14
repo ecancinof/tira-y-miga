@@ -252,22 +252,12 @@
       agregar(p, Math.min(q, t), img); q = 1; upd();
     };
     acc.append(st, add); b.append(acc);
-    // Si ya no hay para hoy: enlace para cambiar el pedido al siguiente día disponible (solo se ve con .sin-hoy)
-    const otro = el('button', 'otro-dia', ''); otro.type = 'button'; otro.onclick = () => cambiarAOtroDia(p);
-    b.append(otro);
     c.append(fi, b);
     return c;
   }
   // Etiqueta en la foto: "Hoy quedan 2" / "Agotado para hoy" (solo si hoy se puede pedir)
-  // Siguiente día disponible después del elegido (para el enlace "Pedir para otro día")
-  const siguienteDia = () => { const fs = fechasDisponibles(), i = fs.findIndex(o => o.f === fechaPedido()); return fs[i + 1] || null; };
-  function cambiarAOtroDia(p) {
-    const s = siguienteDia(); if (!s) { toast('Por ahora no hay otro día disponible'); return; }
-    ponFecha(s.f); toast(`📅 Ahora tu pedido es para ${s.txt.toLowerCase()}`);
-    if (p) { const c = document.querySelector(`.card[data-id="${CSS.escape(p.id)}"]`); if (c) c.scrollIntoView({ block: 'center', behavior: sinMov ? 'auto' : 'smooth' }); }
-  }
   function pintarStockTags() {
-    const hoy = paraHoy(), sig = siguienteDia();
+    const hoy = paraHoy();
     document.querySelectorAll('.card[data-id]').forEach(c => {
       const p = prod(c.dataset.id), t = c.querySelector('.stk-tag'); if (!t || !p) return;
       const r = hoy && !p.agotado ? quedanHoy(p.id) : Infinity;
@@ -276,7 +266,6 @@
       if (c._upd) c._upd();
       c.classList.toggle('sin-hoy', sinHoy);
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) { ad.disabled = p.agotado || pausa || sinHoy; ad.textContent = p.agotado ? 'Agotado' : sinHoy ? 'Agotado hoy' : 'Añadir'; }
-      const od = c.querySelector('.otro-dia'); if (od) { od.hidden = !(sinHoy && sig); if (!od.hidden) od.textContent = `Pedir para ${sig.txt.split(' · ')[0].toLowerCase()} →`; }
       if (sinHoy) { t.hidden = false; t.textContent = 'Agotado hoy'; t.classList.add('cero'); return; }
       t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}`; t.classList.remove('cero'); t.classList.toggle('uno', r === 1); }
     });
@@ -333,7 +322,7 @@
   const det = $('#detalle'); let detP = null, detQ = 1;
   const detUpd = () => { const t = topeHoy(detP); if (detQ > t) detQ = Math.max(1, t); $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= 1; $('#det-mas').disabled = detQ >= t;
     const a = $('#det-add'); a.disabled = !detP || detP.agotado || pausa || !!det.dataset.sinHoy; a.textContent = detP && detP.agotado ? 'Agotado' : pausa ? 'Pedidos en pausa' : det.dataset.sinHoy ? 'Agotado hoy' : `Agregar · ${money(detQ * (detP ? detP.precio : 0))}`;
-    const od = $('#det-otro'), sig = siguienteDia(); if (od) { od.hidden = !(det.dataset.sinHoy && sig); if (!od.hidden) od.textContent = `Pedir para ${sig.txt.split(' · ')[0].toLowerCase()} →`; } };
+  };
   function abrirDetalle(p) {
     detP = p; detQ = 1;
     const im = $('#det-img'); im.src = foto(p); im.alt = p.nombre;
@@ -353,7 +342,6 @@
   det.addEventListener('cancel', e => { e.preventDefault(); cerrarDetalle(); });
   det.addEventListener('click', e => { if (e.target === det) cerrarDetalle(); });
   $('#det-add').onclick = () => { if (!detP || detP.agotado || pausa || topeHoy(detP) <= 0) return; agregar(detP, Math.min(detQ, topeHoy(detP)), $('#det-img')); cerrarDetalle(); };
-  $('#det-otro').onclick = () => { const p = detP; cerrarDetalle(); cambiarAOtroDia(p); };
 
   // ---------- Fuera de horario: se puede programar ----------
   function pintarProgramar() {

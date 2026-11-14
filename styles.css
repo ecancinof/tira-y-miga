@@ -297,15 +297,21 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 42px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
 
 
-/* "Para hoy | Agendar" en la barra de pestañas */
-.tabs { display: flex; align-items: center; gap: 10px; }
+/* "Para hoy | Agendar" en la barra de pestañas: mismo diseño que las pestañas (activo = fondo oscuro, texto claro) */
+.tabs { display: flex; align-items: center; gap: 8px; }
 .tabs-in { flex: 1; min-width: 0; }
-.cuando { flex-shrink: 0; display: inline-flex; padding: 3px; border-radius: 999px; background: var(--cream); border: 1px solid var(--line); }
-.cu-btn { border: 0; background: none; color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .25s, color .25s; }
-.cu-btn:hover:not(:disabled) { background: #e8dbc8; }
-.cu-btn.on { background: var(--caramel); color: var(--ink); box-shadow: 0 1px 2px rgba(56, 34, 29, .15); }
+.cuando { flex-shrink: 0; display: inline-flex; gap: 8px; padding-right: 10px; margin-right: 2px; border-right: 1px solid var(--line); }
+.cu-btn { border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 16px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+.cu-btn:hover:not(:disabled) { border-color: var(--ink); }
+.cu-btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .cu-btn:disabled { opacity: .45; cursor: not-allowed; }
-@media (max-width: 600px) { .cu-btn { padding: 6px 10px; font-size: 13px; } }
+@media (max-width: 600px) {
+  /* Celular: el selector va en su propia fila, arriba; las categorías abajo */
+  .tabs { flex-direction: column; align-items: stretch; gap: 8px; }
+  .cuando { display: flex; padding: 0; margin: 0; border: 0; }
+  .cu-btn { flex: 1; padding: 8px 10px; }
+  .cu-btn:not(.on) { background: var(--cream); border-color: transparent; }
+}
 
 /* Ventana flotante de agenda: calendario compacto + horas; el botón de confirmar siempre queda a la vista */
 .agenda { width: min(420px, calc(100% - 24px)); max-height: calc(100dvh - 24px); border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5); overflow: hidden; }
@@ -353,11 +359,6 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .cal-d { width: 32px; height: 32px; font-size: 13px; }
   .horas { grid-template-columns: repeat(3, 1fr); max-height: 172px; }
 }
-
-/* Enlace "Pedir para mañana →" cuando ya no hay para hoy */
-.otro-dia { align-self: flex-start; border: 0; background: none; padding: 2px 0; margin-top: -2px; font: 600 var(--fs-xs)/1.4 var(--sans); color: var(--caramel-d); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.otro-dia:hover { color: var(--ink); }
-.det-body .otro-dia { font-size: var(--fs-sm); }
 
 /* Fuera de horario */
 .aviso-cerrado { max-width: 760px; margin: 0 auto 24px; text-align: center; background: var(--cream); border-radius: var(--r); padding: 14px 18px; font-size: var(--fs-base); }
