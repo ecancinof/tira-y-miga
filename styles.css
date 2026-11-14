@@ -41,9 +41,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header .horario-badge { margin: 0 auto; }
 .brand img { --logo: 65px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc(var(--logo) * -.11); max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
 .brand-txt { display: flex; flex-direction: column; line-height: 1.15; border-left: 1px solid var(--line); padding-left: 14px; }
-.brand-txt b { font: 500 26px var(--serif); letter-spacing: .08em; text-transform: uppercase; }                /* marca: Tira & Miga */
-.brand-txt small { font: 500 12px var(--serif); letter-spacing: .3em; text-transform: uppercase; color: var(--caramel-d); margin-top: 1px; } /* Bakehouse */
-.brand-txt i { font: 400 14px var(--serif); }
+.brand-txt b { font: 500 26px/1.05 var(--serif); letter-spacing: .08em; text-transform: uppercase; }        /* marca: Tira & Miga (Fraunces) */
+/* Las dos líneas secundarias van en DM Sans, igual que los rótulos del resto de la página, para no mezclar tres estilos */
+.brand-txt small { font: 600 10.5px/1.4 var(--label); letter-spacing: .26em; text-transform: uppercase; color: var(--caramel-d); margin-top: 3px; } /* Bakehouse */
+.brand-txt i { font: 400 12.5px/1.4 var(--sans); font-style: normal; color: var(--muted); letter-spacing: .01em; margin-top: 1px; }
 .nav { display: flex; gap: 28px; }
 .nav a { text-decoration: none; font-size: var(--fs-sm); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .nav a:hover { text-decoration: underline; text-underline-offset: 6px; }
@@ -213,7 +214,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .brand img { --logo: 44px; }
   .brand-txt { padding-left: 10px; line-height: 1.1; }
   .brand-txt b { font-size: 18px; }
-  .brand-txt small, .brand-txt i { font-size: 11px; }
+  .brand-txt small { font-size: 9px; margin-top: 2px; }
+  .brand-txt i { font-size: 11px; }
   .nav { display: none; }
   .brand { margin-right: auto; }
   .header .horario-badge { display: none; }
