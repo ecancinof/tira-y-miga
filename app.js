@@ -96,7 +96,7 @@
     const abiertos = R.filter(g => !g.cerrado), cerrados = R.filter(g => g.cerrado);
     const lineaCorta = abiertos.map(g => `${may(g.dias)} ${rango(g.i)}`).join(' · ') + (cerrados.length ? ` · ${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado` : '');
     $('#hb-horas').textContent = lineaCorta;
-    const box = $('#horario-dias'); box.replaceChildren();
+    const box = $('#horario-dias'); if (!box) return; box.replaceChildren();
     abiertos.forEach(g => { const p = el('p'); p.append(may(g.dias), el('br'), el('b', null, rango(g.i))); box.append(p); });
     cerrados.forEach(g => box.append(el('p', 'muted', `${may(g.dias)} cerrado`)));
   }
