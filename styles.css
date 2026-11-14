@@ -33,7 +33,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 24px; padding: 12px 5%; background: rgba(252, 248, 241, .94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
 .header .horario-badge { margin: 0 auto; }
-.brand img { --logo: 62px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc(var(--logo) * -.11); max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
+.brand img { --logo: 65px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc(var(--logo) * -.11); max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
 .brand-txt { display: flex; flex-direction: column; line-height: 1.15; border-left: 1px solid var(--line); padding-left: 14px; }
 .brand-txt small { font: 500 12px var(--serif); letter-spacing: .3em; text-transform: uppercase; color: var(--caramel-d); }
 .brand-txt b { font: 500 26px var(--serif); letter-spacing: .08em; text-transform: uppercase; }
@@ -190,7 +190,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 }
 @media (max-width: 600px) {
   .header { gap: 12px; padding: 10px 4%; }
-  .brand img { --logo: 47px; }
+  .brand img { --logo: 50px; }
   .brand-txt { padding-left: 10px; }
   .brand-txt b { font-size: 19px; }
   .brand-txt small, .brand-txt i { font-size: 11px; }
