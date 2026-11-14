@@ -45,6 +45,9 @@
   }
   const textoConflicto = c => c.ids.length > 1 ? `Entre ${c.ids.map(i => prod(i).nombre).join(' y ')} solo alcanzan ${c.disp} para hoy (salen de la misma concha)`
     : c.disp <= 0 ? `${prod(c.ids[0]).nombre} ya se agotó para hoy` : `Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp} de ${prod(c.ids[0]).nombre}`;
+  // Tope de piezas que se pueden agregar ahora (stock de hoy menos lo que ya está en el carrito); si hoy no se limita, MAXQ
+  const topeHoy = p => { if (!p || p.agotado || (fechasDisponibles()[0] || {}).f !== hoyYmd()) return MAXQ; const r = quedanHoy(p.id); return r <= 0 ? MAXQ : Math.min(MAXQ, r); };
+  const enLetraT = n => ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'][n] || String(n);
   const quedanHoy = id => maxHoy(id, [...cart]) - (cart.get(id) || 0); // cuántas más puede agregar para hoy
   // Fotos: la que publica la app (se guarda en este navegador por versión) > la de catalogo.js > la general
   const fotosApp = {};
@@ -213,8 +216,10 @@
     let q = 1;
     const st = el('div', 'stepper'), menos = el('button', null, '−'), out = el('output', null, '1'), mas = el('button', null, '+');
     menos.type = mas.type = 'button'; menos.setAttribute('aria-label', 'Una pieza menos de ' + p.nombre); mas.setAttribute('aria-label', 'Una pieza más de ' + p.nombre);
-    const upd = () => { out.textContent = q; menos.disabled = q <= 1 || p.agotado; mas.disabled = q >= MAXQ || p.agotado; };
-    menos.onclick = () => { q = Math.max(1, q - 1); upd(); }; mas.onclick = () => { q = Math.min(MAXQ, q + 1); upd(); };
+    const upd = () => { const t = topeHoy(p); if (q > t) q = Math.max(1, t); out.textContent = q; menos.disabled = q <= 1 || p.agotado; mas.disabled = q >= t || p.agotado; mas.title = t < MAXQ && q >= t ? `Disponible hoy: ${enLetraT(t)}` : ''; };
+    c._upd = upd; // se vuelve a revisar cuando cambia el carrito o el stock
+    menos.onclick = () => { q = Math.max(1, q - 1); upd(); };
+    mas.onclick = () => { const t = topeHoy(p); if (q >= t) { toast(`${p.nombre} · Disponible hoy: ${enLetraT(t)}`); return; } q = Math.min(t, q + 1); upd(); };
     st.append(menos, out, mas); upd();
     const add = el('button', 'add', p.agotado ? 'Agotado' : 'Añadir');
     add.type = 'button'; add.disabled = p.agotado || pausa;
@@ -224,7 +229,7 @@
       ocupado = true;
       add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
       setTimeout(() => { add.textContent = c.classList.contains('sin-hoy') ? 'Pedir otro día' : 'Añadir'; add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; }, 1300);
-      agregar(p, q, img); q = 1; upd();
+      agregar(p, Math.min(q, topeHoy(p)), img); q = 1; upd();
     };
     acc.append(st, add); b.append(acc);
     c.append(fi, b);
@@ -238,6 +243,7 @@
       const r = hoyAbre && !p.agotado ? quedanHoy(p.id) : Infinity;
       // Sin stock para hoy: se ve en gris como agotada (aún se puede pedir para otro día)
       const sinHoy = hoyAbre && !p.agotado && r <= 0; // sin stock, o el carrito ya tiene las últimas
+      if (c._upd) c._upd();
       c.classList.toggle('sin-hoy', sinHoy);
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) ad.textContent = sinHoy ? 'Pedir otro día' : 'Añadir';
       if (sinHoy) { t.hidden = false; t.textContent = 'Agotado hoy'; t.classList.add('cero'); return; }
@@ -280,7 +286,7 @@
 
   // ---------- Vista de detalle del producto ----------
   const det = $('#detalle'); let detP = null, detQ = 1;
-  const detUpd = () => { $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= 1; $('#det-mas').disabled = detQ >= MAXQ;
+  const detUpd = () => { const t = topeHoy(detP); if (detQ > t) detQ = Math.max(1, t); $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= 1; $('#det-mas').disabled = detQ >= t;
     const a = $('#det-add'); a.disabled = !detP || detP.agotado || pausa; a.textContent = detP && detP.agotado ? 'Agotado hoy' : pausa ? 'Pedidos en pausa' : `${det.dataset.sinHoy ? 'Pedir para otro día' : 'Agregar'} · ${money(detQ * (detP ? detP.precio : 0))}`; };
   function abrirDetalle(p) {
     detP = p; detQ = 1;
@@ -296,11 +302,11 @@
   }
   function cerrarDetalle() { if (!det.open) return; det.classList.add('sale'); setTimeout(() => { det.close(); det.classList.remove('sale'); }, 170); }
   $('#det-menos').onclick = () => { detQ = Math.max(1, detQ - 1); detUpd(); };
-  $('#det-mas').onclick = () => { detQ = Math.min(MAXQ, detQ + 1); detUpd(); };
+  $('#det-mas').onclick = () => { const t = topeHoy(detP); if (detQ >= t) { toast(`${detP.nombre} · Disponible hoy: ${enLetraT(t)}`); return; } detQ = Math.min(t, detQ + 1); detUpd(); };
   $('#det-x').onclick = cerrarDetalle;
   det.addEventListener('cancel', e => { e.preventDefault(); cerrarDetalle(); });
   det.addEventListener('click', e => { if (e.target === det) cerrarDetalle(); });
-  $('#det-add').onclick = () => { if (!detP || detP.agotado || pausa) return; agregar(detP, detQ, $('#det-img')); cerrarDetalle(); };
+  $('#det-add').onclick = () => { if (!detP || detP.agotado || pausa) return; agregar(detP, Math.min(detQ, topeHoy(detP)), $('#det-img')); cerrarDetalle(); };
 
   // ---------- Fuera de horario: se puede programar ----------
   function pintarProgramar() {
@@ -362,7 +368,8 @@
       const st = el('div', 'stepper'), a = el('button', null, '−'), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; a.setAttribute('aria-label', 'Menos ' + p.nombre); b.setAttribute('aria-label', 'Más ' + p.nombre);
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
-      a.disabled = q <= 1; b.disabled = q >= MAXQ;
+      const tope = drawer.open && esParaHoy() ? Math.max(q, maxHoy(id, [...cart])) : MAXQ;
+      a.disabled = q <= 1; b.disabled = q >= Math.min(MAXQ, tope);
       a.onclick = () => { cart.set(id, Math.max(1, q - 1)); guardarCarrito(); pintarCarrito(); };
       b.onclick = () => { cart.set(id, Math.min(MAXQ, q + 1)); guardarCarrito(); pintarCarrito(); };
       inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, v); guardarCarrito(); pintarCarrito(); };
