@@ -487,7 +487,15 @@
     bh.setAttribute('aria-pressed', esHoy); ba.setAttribute('aria-pressed', !esHoy);
     const cur = fs.find(o => o.f === f);
     $('#cu-agendar-t').textContent = esHoy || !cur ? 'Agendar' : `${cur.txt.split(' · ')[0]} · ${hora12(hm(horaPedido()))}`;
+    moverBurbuja();
   }
+  // Burbuja oscura que se desliza de "Para hoy" a "Agendar" (y cambia de ancho con el texto)
+  function moverBurbuja() {
+    const bb = $('#cu-bubble'), on = $('#cuando .cu-btn.on'); if (!bb || !on) return;
+    bb.style.width = on.offsetWidth + 'px'; bb.style.transform = `translateX(${on.offsetLeft}px)`;
+    if (!bb.classList.contains('lista')) requestAnimationFrame(() => requestAnimationFrame(() => bb.classList.add('lista')));
+  }
+  addEventListener('resize', moverBurbuja); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moverBurbuja);
   $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) return; const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
   $('#cu-agendar').onclick = () => abrirAgenda();
 
