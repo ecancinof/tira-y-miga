@@ -59,22 +59,28 @@
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const DIAS_C = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  // Cada día puede tener varios horarios (tramos), p. ej. 9:00–14:00 y 17:00–22:00
+  const HHMM = /^\d{2}:\d{2}$/;
+  const tramosDe = x => {
+    const l = (Array.isArray(x.tramos) && x.tramos.length ? x.tramos : [{ abre: x.abre, cierra: x.cierra }])
+      .filter(t => t && HHMM.test(t.abre) && HHMM.test(t.cierra) && hm(t.cierra) > hm(t.abre)).map(t => ({ a: hm(t.abre), c: hm(t.cierra) })).sort((p, q) => p.a - q.a);
+    return l.length ? l : [{ a: hm('17:00'), c: hm('22:00') }];
+  };
   const horarioDeConfig = () => ({
-    dias: [0, 1, 2, 3, 4, 5, 6].map(i => ({ a: !(C.diasCerrado || []).includes(i), abre: C.abre || '17:00', cierra: C.cierra || '22:00' })),
+    dias: [0, 1, 2, 3, 4, 5, 6].map(i => ({ a: !(C.diasCerrado || []).includes(i), t: tramosDe({ abre: C.abre || '17:00', cierra: C.cierra || '22:00' }) })),
     ultimoMin: Math.max(0, hm(C.cierra || '22:00') - hm(C.ultimoPedidoHoy || '21:00')), prepMin: C.minutosPreparacion || 45
   });
   let H = horarioDeConfig();
-  const dia = d => H.dias[d.getDay()] || { a: false };
-  const abiertoDia = d => !!dia(d).a;
-  const abreDe = d => hm(dia(d).abre), cierraDe = d => hm(dia(d).cierra);
+  const dia = d => H.dias[d.getDay()] || { a: false, t: [] };
+  const abiertoDia = d => !!dia(d).a && dia(d).t.length > 0;
+  const cierreFinal = d => Math.max(...dia(d).t.map(t => t.c));
+  const abiertoEn = (d, m) => abiertoDia(d) && dia(d).t.some(t => m >= t.a && m < t.c);
 
   function horasDe(fecha) {
     const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
     if (!abiertoDia(d)) return [];
-    const out = [], ini = abreDe(d), fin = cierraDe(d) - 30;
-    let desde = ini;
-    if (fecha === ymd(new Date())) desde = Math.max(ini, Math.ceil((minAhora() + (H.prepMin || 45)) / 30) * 30);
-    for (let m = desde; m <= fin; m += 30) out.push(m);
+    const out = [], hoy = fecha === ymd(new Date()), min = Math.ceil((minAhora() + (H.prepMin || 45)) / 30) * 30;
+    for (const t of dia(d).t) for (let m = hoy ? Math.max(t.a, min) : t.a; m <= t.c - 30; m += 30) if (!out.includes(m)) out.push(m);
     return out;
   }
   function fechasDisponibles() {
@@ -83,48 +89,37 @@
       const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i);
       if (!abiertoDia(d)) continue;
       const f = ymd(d);
-      if (i === 0 && (minAhora() > cierraDe(d) - (H.ultimoMin ?? 60) || !horasDe(f).length)) continue;
+      if (i === 0 && (minAhora() > cierreFinal(d) - (H.ultimoMin ?? 60) || !horasDe(f).length)) continue;
       const etiqueta = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1);
       out.push({ f, txt: `${etiqueta} · ${d.getDate()} ${MESES[d.getMonth()]}` });
     }
     return out;
   }
-  // Resumen tipo "Mié a lun · 5 – 10 pm" y "Martes cerrado" (semana de lunes a domingo, agrupando días seguidos iguales)
+  // Resumen corto del horario para el encabezado: "Mar a jue 5–10 pm · Vie 9 am–2 pm y 5–10 pm · Lunes cerrado"
+  const hNum = m => { const h = Math.floor(m / 60) % 24, mi = m % 60; return `${((h + 11) % 12) + 1}${mi ? ':' + String(mi).padStart(2, '0') : ''}`; };
+  const ap = m => (Math.floor(m / 60) % 24) < 12 ? 'am' : 'pm';
+  const tramoTxt = t => ap(t.a) === ap(t.c) ? `${hNum(t.a)}–${hNum(t.c)} ${ap(t.c)}` : `${hNum(t.a)} ${ap(t.a)}–${hNum(t.c)} ${ap(t.c)}`;
+  const rango = i => { const l = H.dias[i].t.map(tramoTxt); return l.length > 1 ? l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1] : l[0]; };
   function resumenHorario() {
-    const orden = [1, 2, 3, 4, 5, 6, 0], clave = i => H.dias[i].a ? H.dias[i].abre + '-' + H.dias[i].cierra : 'x';
-    if (orden.every(i => clave(i) === clave(orden[0]))) return H.dias[1].a ? [{ dias: 'Todos los días', i: 1 }] : [{ dias: 'Cerrado', i: 1, cerrado: true }];
+    const orden = [1, 2, 3, 4, 5, 6, 0], clave = i => abiertoDia({ getDay: () => i }) ? H.dias[i].t.map(t => t.a + '-' + t.c).join(',') : 'x';
+    if (orden.every(i => clave(i) === clave(orden[0]))) return clave(1) !== 'x' ? [{ dias: 'Todos los días', i: 1 }] : [{ dias: 'Cerrado', i: 1, cerrado: true }];
     let ini = orden.findIndex((i, k) => clave(i) !== clave(orden[(k + 6) % 7]));
     const grupos = [];
     for (let k = 0; k < 7; k++) { const i = orden[(ini + k) % 7], g = grupos[grupos.length - 1]; if (g && g.k === clave(i)) g.l.push(i); else grupos.push({ k: clave(i), l: [i] }); }
     return grupos.map(g => ({ dias: g.l.length === 1 ? DIAS[g.l[0]] : g.l.length === 2 ? `${DIAS_C[g.l[0]]} y ${DIAS_C[g.l[1]].toLowerCase()}` : `${DIAS_C[g.l[0]]} a ${DIAS_C[g.l[g.l.length - 1]].toLowerCase()}`, i: g.l[0], cerrado: g.k === 'x' }))
-      .sort((a, b) => a.cerrado - b.cerrado);
+      .sort((a, b) => a.cerrado - b.cerrado || [1, 2, 3, 4, 5, 6, 0].indexOf(a.i) - [1, 2, 3, 4, 5, 6, 0].indexOf(b.i));
   }
-  const rango = i => { const a = hm(H.dias[i].abre), c = hm(H.dias[i].cierra), mismo = (a < 720) === (c % 1440 < 720); return mismo ? `${hCorta(a)} – ${hora12(c)}` : `${hora12(a)} – ${hora12(c)}`; };
   const may = t => t[0].toUpperCase() + t.slice(1);
+  // El encabezado solo muestra el resumen del horario (sin "abierto / cerrado" en tiempo real)
   function pintarHorario() {
     const R = resumenHorario();
     const abiertos = R.filter(g => !g.cerrado), cerrados = R.filter(g => g.cerrado);
-    const lineaCorta = abiertos.map(g => `${may(g.dias)} ${rango(g.i)}`).join(' · ') + (cerrados.length ? ` · ${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado` : '');
-    $('#hb-horas').textContent = lineaCorta;
-    const box = $('#horario-dias'); if (!box) return; box.replaceChildren();
-    abiertos.forEach(g => { const p = el('p'); p.append(may(g.dias), el('br'), el('b', null, rango(g.i))); box.append(p); });
-    cerrados.forEach(g => box.append(el('p', 'muted', `${may(g.dias)} cerrado`)));
+    $('#hb-horas').replaceChildren(...abiertos.map(g => el('span', 'hb-g', `${may(g.dias)} ${rango(g.i)}`)),
+      ...(cerrados.length ? [el('span', 'hb-g hb-cerr', `${may(cerrados.map(g => g.dias.toLowerCase()).join(' y '))} cerrado`)] : []));
   }
-  function pintarEstadoHoy() {
-    const e = $('#hb-estado'), bx = $('#horario-badge'), d = new Date(), m = minAhora();
-    bx.classList.remove('abierto', 'pausa');
-    if (pausa) { bx.classList.add('pausa'); e.textContent = 'Pedidos en línea en pausa'; return; }
-    if (abiertoDia(d) && m >= abreDe(d) && m < cierraDe(d)) { bx.classList.add('abierto'); e.textContent = `Abierto ahora · hasta las ${hora12(cierraDe(d))}`; return; }
-    if (abiertoDia(d) && m < abreDe(d)) { e.textContent = `Hoy abrimos a las ${hora12(abreDe(d))}`; return; }
-    let k = 1; while (k < 8 && !abiertoDia(new Date(d.getFullYear(), d.getMonth(), d.getDate() + k))) k++;
-    if (k >= 8) { e.textContent = 'Cerrado por ahora'; return; }
-    const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k);
-    e.textContent = `Cerrado · abrimos ${k === 1 ? 'mañana' : 'el ' + DIAS[dd.getDay()]} a las ${hora12(abreDe(dd))}`;
-  }
-  const estadoYProgramar = () => { pintarEstadoHoy(); if (typeof pintarProgramar === 'function') pintarProgramar(); };
   function usarHorario(h) {
     if (!h || !Array.isArray(h.dias) || h.dias.length !== 7) return;
-    H = { dias: h.dias.map(x => ({ a: !!x.a, abre: /^\d{2}:\d{2}$/.test(x.abre) ? x.abre : '17:00', cierra: /^\d{2}:\d{2}$/.test(x.cierra) ? x.cierra : '22:00' })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45) };
+    H = { dias: h.dias.map(x => ({ a: !!(x && x.a), t: tramosDe(x || {}) })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45) };
   }
 
   // ---------- Menú ----------
@@ -283,7 +278,7 @@
   // ---------- Fuera de horario: se puede programar ----------
   function pintarProgramar() {
     const av = $('#aviso-cerrado'), np = $('#nota-prog'), hoy = ymd(new Date()), fs = fechasDisponibles();
-    const prox = fs[0], d = new Date(), m = minAhora(), abiertoAhora = abiertoDia(d) && m >= abreDe(d) && m < cierraDe(d);
+    const prox = fs[0], d = new Date(), m = minAhora(), abiertoAhora = abiertoEn(d, m);
     if (pausa || !prox || prox.f === hoy) { av.hidden = true; np.hidden = true; return; }
     const h = horasDe(prox.f)[0], et = prox.txt.split(' · ')[0].toLowerCase();
     const cuando = `${et === 'mañana' ? 'mañana' : 'el ' + et}${h != null ? ' a las ' + hora12(h) : ''}`;
@@ -305,7 +300,7 @@
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
-      pintarMenu(); pintarCarrito(); pintarEstadoHoy(); pintarRepetir(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
+      pintarMenu(); pintarCarrito(); pintarRepetir(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
       cargarFotos();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -489,6 +484,6 @@
 
   // ---------- Inicio ----------
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
-  leerCarrito(); aplicarCliente(); pintarHorario(); estadoYProgramar(); cargarMenu(); evento('visita');
-  setInterval(estadoYProgramar, 60000);
+  leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); evento('visita');
+  setInterval(pintarProgramar, 60000);
 })();
