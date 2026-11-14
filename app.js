@@ -15,7 +15,17 @@
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
   const leerCliente = () => { try { return JSON.parse(localStorage.getItem('tm-cliente') || '{}'); } catch (e) { return {}; } };
-  const guardarCliente = d => { try { localStorage.setItem('tm-cliente', JSON.stringify({ nombre: d.nombre, tel: d.tel, direccion: d.direccion })); } catch (e) {} };
+  const guardarCliente = d => { try { localStorage.setItem('tm-cliente', JSON.stringify({ nombre: d.nombre, tel: d.tel, direccion: d.direccion, entregaTipo: d.entregaTipo, pago: d.pago })); } catch (e) {} };
+  // Último pedido (para el botón "Repetir mi pedido")
+  const leerUltimo = () => { try { const o = JSON.parse(localStorage.getItem('tm-ultimo') || 'null'); return o && Array.isArray(o.items) ? o : null; } catch (e) { return null; } };
+  const guardarUltimo = items => { try { localStorage.setItem('tm-ultimo', JSON.stringify({ ts: Date.now(), items: items.map(i => ({ id: i.id, cant: i.cant })) })); } catch (e) {} };
+
+  // ---------- Métricas: cuántos visitan, agregan, abren el pedido (una vez por visita) ----------
+  function evento(t) {
+    if (!C.api) return;
+    try { if (sessionStorage.getItem('tm-ev-' + t)) return; sessionStorage.setItem('tm-ev-' + t, '1'); } catch (e) {}
+    try { fetch(C.api, { method: 'POST', mode: 'no-cors', keepalive: true, body: JSON.stringify({ accion: 'evento', t }) }).catch(() => {}); } catch (e) {}
+  }
 
   const prod = id => menu.find(p => p.id === id);
   // Fotos: la que publica la app (se guarda en este navegador por versión) > la de catalogo.js > la general
@@ -111,6 +121,7 @@
     const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + k);
     e.textContent = `Cerrado · abrimos ${k === 1 ? 'mañana' : 'el ' + DIAS[dd.getDay()]} a las ${hora12(abreDe(dd))}`;
   }
+  const estadoYProgramar = () => { pintarEstadoHoy(); if (typeof pintarProgramar === 'function') pintarProgramar(); };
   function usarHorario(h) {
     if (!h || !Array.isArray(h.dias) || h.dias.length !== 7) return;
     H = { dias: h.dias.map(x => ({ a: !!x.a, abre: /^\d{2}:\d{2}$/.test(x.abre) ? x.abre : '17:00', cierra: /^\d{2}:\d{2}$/.test(x.cierra) ? x.cierra : '22:00' })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45) };
@@ -120,7 +131,7 @@
   function normalizar(lista) {
     return lista.map((p, i) => ({
       id: String(p.id), nombre: String(p.nombre || ''), precio: Number(p.precio) || 0,
-      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, desc: p.desc || ''
+      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, destacado: !!p.destacado, desc: p.desc || ''
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
   // ---------- Animaciones ----------
@@ -151,18 +162,24 @@
     const grupos = new Map();
     for (const p of [...menu].sort((a, b) => a.orden - b.orden)) { if (!grupos.has(p.seccion)) grupos.set(p.seccion, []); grupos.get(p.seccion).push(p); }
     const claves = [...grupos.keys()].sort((a, b) => (ORDEN_SEC.indexOf(a) + 99) % 99 - (ORDEN_SEC.indexOf(b) + 99) % 99 || a.localeCompare(b));
-    for (const s of claves) {
-      const info = K.secciones[s] || { eyebrow: '', titulo: s, texto: '' };
-      const sec = el('section', 'sec'); sec.setAttribute('aria-label', info.titulo);
+    // ⭐ Las favoritas (las marcas en la app): van primero
+    const favs = menu.filter(p => p.destacado).sort((a, b) => a.orden - b.orden);
+    const lista = claves.map(s => ({ s, info: K.secciones[s] || { eyebrow: '', titulo: s, texto: '' }, prods: grupos.get(s), pre: '' }));
+    if (favs.length) lista.unshift({ s: 'Favoritas', info: { eyebrow: 'Lo más pedido', titulo: 'Las favoritas', texto: 'Las que más se piden. Si no sabes cuál elegir, empieza por aquí.' }, prods: favs, pre: 'fav-', fav: true });
+    const tabs = [];
+    for (const { s, info, prods, pre, fav } of lista) {
+      const sec = el('section', 'sec' + (fav ? ' sec-fav' : '')); sec.setAttribute('aria-label', info.titulo); sec.id = 'sec-' + slug(s);
+      tabs.push({ id: sec.id, txt: fav ? '⭐ Favoritas' : (info.corto || s) });
       const h = el('div', 'sec-head');
       if (info.eyebrow) h.append(el('p', 'eyebrow', info.eyebrow));
       h.append(el('h2', null, info.titulo));
       if (info.texto) h.append(el('p', null, info.texto));
       const g = el('div', 'grid');
-      grupos.get(s).forEach((p, k) => { const t = tarjeta(p); revelar(t, p.id, k); g.append(t); });
+      prods.forEach((p, k) => { const t = tarjeta(p); revelar(t, pre + p.id, k); g.append(t); });
       revelar(h, 'sec-' + s);
       sec.append(h, g); cont.append(sec);
     }
+    pintarTabs(tabs);
     if (!menu.length) cont.append(el('p', 'vacio', 'Estamos actualizando el menú. Escríbenos por WhatsApp para hacer tu pedido.'));
   }
   function tarjeta(p) {
@@ -170,8 +187,11 @@
     const fi = el('div', 'card-img'), img = el('img');
     img.src = foto(p); img.alt = p.nombre; img.loading = 'lazy'; img.width = 560; img.height = 420;
     fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy'));
-    const b = el('div', 'card-body'), top = el('div', 'card-top');
-    top.append(el('h3', null, p.nombre), el('span', 'precio', money(p.precio)));
+    fi.append(el('span', 'ver-mas', 'Ver')); fi.tabIndex = 0; fi.setAttribute('role', 'button'); fi.setAttribute('aria-label', 'Ver detalles de ' + p.nombre);
+    fi.onclick = () => abrirDetalle(p); fi.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirDetalle(p); } };
+    const b = el('div', 'card-body'), top = el('div', 'card-top'), h3 = el('h3'), tb = el('button', 'card-tit', p.nombre);
+    tb.type = 'button'; tb.onclick = () => abrirDetalle(p); h3.append(tb);
+    top.append(h3, el('span', 'precio', money(p.precio)));
     b.append(top);
     if (desc(p)) b.append(el('p', 'card-desc', desc(p)));
     const acc = el('div', 'card-acc');
@@ -187,18 +207,94 @@
     add.onclick = () => {
       if (ocupado || pausa || p.agotado) return; // mientras dice "Añadido" no vuelve a sumar
       ocupado = true;
-      const n = Math.min(MAXQ, (cart.get(p.id) || 0) + q); cart.set(p.id, n); guardarCarrito(); pintarCarrito();
       add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
       setTimeout(() => { add.textContent = 'Añadir'; add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; }, 1300);
-      if (sinMov || !img.animate) { const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } else volarAlCarrito(img);
-      toast(`${q} × ${p.nombre} en tu pedido`); q = 1; upd();
+      agregar(p, q, img); q = 1; upd();
     };
     acc.append(st, add); b.append(acc);
     c.append(fi, b);
     return c;
   }
+  function agregar(p, q, img) {
+    cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + q)); guardarCarrito(); pintarCarrito(); evento('agrega');
+    if (sinMov || !img || !img.animate) { const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } else volarAlCarrito(img);
+    toast(`${q} × ${p.nombre} en tu pedido`);
+  }
+  const slug = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  // ---------- Pestañas de categorías (fijas arriba al bajar) ----------
+  const tabsBox = $('#tabs'), tabsIn = $('#tabs-in');
+  const altoFijo = () => $('.header').offsetHeight + (tabsBox.hidden ? 0 : tabsBox.offsetHeight) + 8;
+  function pintarTabs(tabs) {
+    tabsIn.replaceChildren(); tabsBox.hidden = tabs.length < 2;
+    for (const t of tabs) {
+      const b = el('button', 'tab', t.txt); b.type = 'button'; b.dataset.sec = t.id;
+      b.onclick = () => { const s = document.getElementById(t.id); if (!s) return; window.scrollTo({ top: s.getBoundingClientRect().top + scrollY - altoFijo() + 1, behavior: sinMov ? 'auto' : 'smooth' }); };
+      tabsIn.append(b);
+    }
+    marcarTab();
+  }
+  function marcarTab() {
+    if (tabsBox.hidden) return;
+    const lim = altoFijo() + 40; let act = null;
+    for (const b of tabsIn.children) { const s = document.getElementById(b.dataset.sec); if (s && s.getBoundingClientRect().top <= lim) act = b; }
+    act = act || tabsIn.children[0];
+    for (const b of tabsIn.children) { const on = b === act; if (b.classList.contains('on') !== on) { b.classList.toggle('on', on); if (on) { b.setAttribute('aria-current', 'true'); tabsIn.scrollTo({ left: b.offsetLeft - (tabsIn.clientWidth - b.offsetWidth) / 2, behavior: sinMov ? 'auto' : 'smooth' }); } else b.removeAttribute('aria-current'); } }
+  }
+  let tabRaf = 0; addEventListener('scroll', () => { if (!tabRaf) tabRaf = requestAnimationFrame(() => { tabRaf = 0; marcarTab(); }); }, { passive: true });
+  const ponAltoHeader = () => document.documentElement.style.setProperty('--hdr', $('.header').offsetHeight + 'px');
+  ponAltoHeader(); addEventListener('resize', ponAltoHeader); if ('ResizeObserver' in window) new ResizeObserver(ponAltoHeader).observe($('.header'));
+
+  // ---------- Vista de detalle del producto ----------
+  const det = $('#detalle'); let detP = null, detQ = 1;
+  const detUpd = () => { $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= 1; $('#det-mas').disabled = detQ >= MAXQ;
+    const a = $('#det-add'); a.disabled = !detP || detP.agotado || pausa; a.textContent = detP && detP.agotado ? 'Agotado hoy' : pausa ? 'Pedidos en pausa' : `Agregar · ${money(detQ * (detP ? detP.precio : 0))}`; };
+  function abrirDetalle(p) {
+    detP = p; detQ = 1;
+    const im = $('#det-img'); im.src = foto(p); im.alt = p.nombre; det.classList.toggle('agotado', p.agotado); $('#det-ag').hidden = !p.agotado;
+    $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
+    $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p); detUpd();
+    if (!det.open) det.showModal();
+  }
+  function cerrarDetalle() { if (!det.open) return; det.classList.add('sale'); setTimeout(() => { det.close(); det.classList.remove('sale'); }, 170); }
+  $('#det-menos').onclick = () => { detQ = Math.max(1, detQ - 1); detUpd(); };
+  $('#det-mas').onclick = () => { detQ = Math.min(MAXQ, detQ + 1); detUpd(); };
+  $('#det-x').onclick = cerrarDetalle;
+  det.addEventListener('cancel', e => { e.preventDefault(); cerrarDetalle(); });
+  det.addEventListener('click', e => { if (e.target === det) cerrarDetalle(); });
+  $('#det-add').onclick = () => { if (!detP || detP.agotado || pausa) return; agregar(detP, detQ, $('#det-img')); cerrarDetalle(); };
+
+  // ---------- Repetir mi último pedido ----------
+  function pintarRepetir() {
+    const u = leerUltimo(), box = $('#repetir');
+    const ok = u ? u.items.filter(i => { const p = prod(i.id); return p && !p.agotado && i.cant > 0; }) : [];
+    box.hidden = !ok.length || pausa; if (box.hidden) return;
+    const nombre = (leerCliente().nombre || '').split(' ')[0];
+    $('#rep-tit').textContent = nombre ? `¿Lo de siempre, ${nombre}?` : '¿Lo de siempre?';
+    const tot = ok.reduce((a, i) => a + i.cant * prod(i.id).precio, 0), faltan = u.items.length - ok.length;
+    $('#rep-lista').textContent = ok.map(i => `${i.cant} ${prod(i.id).nombre}`).join(' · ') + ` — ${money(tot)}` + (faltan ? ` (${faltan === 1 ? '1 producto ya no está disponible' : faltan + ' productos ya no están disponibles'})` : '');
+  }
+  $('#rep-btn').onclick = () => {
+    const u = leerUltimo(); if (!u || pausa) return;
+    let n = 0; for (const i of u.items) { const p = prod(i.id); if (p && !p.agotado && i.cant > 0) { cart.set(i.id, Math.min(MAXQ, i.cant | 0)); n++; } }
+    if (!n) return; guardarCarrito(); pintarCarrito(); evento('agrega'); abrir();
+  };
+
+  // ---------- Fuera de horario: se puede programar ----------
+  function pintarProgramar() {
+    const av = $('#aviso-cerrado'), np = $('#nota-prog'), hoy = ymd(new Date()), fs = fechasDisponibles();
+    const prox = fs[0], d = new Date(), m = minAhora(), abiertoAhora = abiertoDia(d) && m >= abreDe(d) && m < cierraDe(d);
+    if (pausa || !prox || prox.f === hoy) { av.hidden = true; np.hidden = true; return; }
+    const h = horasDe(prox.f)[0], et = prox.txt.split(' · ')[0].toLowerCase();
+    const cuando = `${et === 'mañana' ? 'mañana' : 'el ' + et}${h != null ? ' a las ' + hora12(h) : ''}`;
+    av.replaceChildren(el('b', null, abiertoAhora ? '⏰ Por hoy ya no alcanzamos a preparar más pedidos.' : '🌙 Ahora estamos cerrados,'),
+      (abiertoAhora ? ' Puedes' : ' pero puedes') + ' dejar tu pedido programado desde ahorita. Lo más pronto: ', el('b', null, cuando + '.'));
+    av.hidden = false;
+    np.textContent = `📅 Tu pedido quedará programado. Lo más pronto es ${cuando}; elige el día y la hora que prefieras.`; np.hidden = false;
+  }
+
   async function cargarMenu() {
-    menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito();
+    menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito(); pintarRepetir();
     if (!C.api) return;
     try {
       const r = await fetch(C.api + '?accion=menu', { cache: 'no-store' });
@@ -209,7 +305,7 @@
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
-      pintarMenu(); pintarCarrito(); pintarEstadoHoy(); if (drawer.open) llenarFechas();
+      pintarMenu(); pintarCarrito(); pintarEstadoHoy(); pintarRepetir(); aplicarCliente(); pintarProgramar(); if (drawer.open) llenarFechas();
       cargarFotos();
     } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -253,7 +349,7 @@
   // ---------- Panel ----------
   const drawer = $('#drawer');
   function abrir() {
-    llenarFechas(); if (!drawer.open) drawer.showModal();
+    llenarFechas(); if (!drawer.open) drawer.showModal(); if (cart.size) evento('abre');
   }
   function cerrar() {
     if (!drawer.open) return;
@@ -280,13 +376,33 @@
     if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
   }
   $('#sel-fecha').onchange = llenarHoras;
-  form.addEventListener('change', e => {
-    if (e.target.name === 'entregaTipo') { const dom = form.entregaTipo.value === 'domicilio'; $('#campo-dir').hidden = !dom; }
-  });
+  const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
+  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); });
   const listoParaPedir = () => form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10;
   function revisarBoton() { const ok = listoParaPedir(); $('#btn-enviar').disabled = !ok; $('#falta-datos').hidden = ok; }
   form.addEventListener('input', e => { if (e.target.name === 'nombre' || e.target.name === 'tel') revisarBoton(); });
-  (() => { const c = leerCliente(); if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = c.tel; if (c.direccion) form.direccion.value = c.direccion; revisarBoton(); })();
+  // 1) Si ya pidió antes, sus datos aparecen llenos (se guardan solo en su celular)
+  let clienteAplicado = false;
+  function aplicarCliente() {
+    const c = leerCliente();
+    if (!clienteAplicado) {
+      clienteAplicado = true;
+      if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = fmtTel(String(c.tel)); if (c.direccion) form.direccion.value = c.direccion;
+      if (c.pago && [...form.pago.options].some(o => o.value === c.pago)) form.pago.value = c.pago;
+    }
+    if (c.entregaTipo === 'domicilio' && conEnvio && !form.dataset.tocado) form.entregaTipo.value = 'domicilio';
+    if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = 'recoge';
+    ponDir();
+    const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
+    if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}! Ya llenamos tus datos.`;
+    revisarBoton();
+  }
+  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
+  $('#saludo-no').onclick = () => {
+    try { localStorage.removeItem('tm-cliente'); localStorage.removeItem('tm-ultimo'); } catch (e) {}
+    form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.selectedIndex = 0; form.entregaTipo.value = 'recoge'; ponDir();
+    $('#saludo').hidden = true; $('#repetir').hidden = true; revisarBoton(); form.nombre.focus();
+  };
 
   const fmtTel = t => t.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
   function datosForm() {
@@ -335,7 +451,7 @@
     if (pausa) { err.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.'; err.hidden = false; return; }
     const d = datosForm(), m = validar(d);
     if (m) { err.textContent = m; err.hidden = false; return; }
-    guardarCliente(d);
+    guardarCliente(d); guardarUltimo(d.items);
     btn.disabled = true; btn.classList.add('enviando'); $('#btn-enviar-t').textContent = 'Enviando…';
     let folio = '', registrado = false;
     if (C.api && !d.web) {
@@ -347,7 +463,7 @@
       } catch (x) { registrado = false; }
     }
     const link = linkWA(mensajeWA(d, folio));
-    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = '';
+    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; pintarRepetir(); aplicarCliente();
     btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton();
     cerrar();
     toast(folio ? `¡Pedido ${folio} recibido! Abriendo WhatsApp…` : 'Abriendo WhatsApp…');
@@ -373,6 +489,6 @@
 
   // ---------- Inicio ----------
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
-  leerCarrito(); pintarHorario(); pintarEstadoHoy(); cargarMenu();
-  setInterval(pintarEstadoHoy, 60000);
+  leerCarrito(); aplicarCliente(); pintarHorario(); estadoYProgramar(); cargarMenu(); evento('visita');
+  setInterval(estadoYProgramar, 60000);
 })();

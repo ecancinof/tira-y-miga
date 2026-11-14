@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=21">
+<link rel="stylesheet" href="styles.css?v=22">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -60,6 +60,12 @@
       <p class="eyebrow">A cada antojo, su concha</p>
       <h2 id="menu-t">¿Cuál se te antoja hoy?</h2>
     </div>
+    <p class="aviso-cerrado" id="aviso-cerrado" hidden></p>
+    <div class="repetir" id="repetir" hidden>
+      <div class="rep-txt"><b id="rep-tit">¿Lo de siempre?</b><span id="rep-lista"></span></div>
+      <button class="btn btn-dark rep-btn" id="rep-btn" type="button">🔁 Repetir mi pedido</button>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Categorías del menú" hidden><div class="tabs-in" id="tabs-in"></div></nav>
     <div id="menu-secciones"></div>
   </section>
 
@@ -123,12 +129,14 @@
           </div>
         </fieldset>
 
+        <p class="saludo" id="saludo" hidden><span id="saludo-t"></span> <button type="button" class="btn-link" id="saludo-no">No soy yo</button></p>
         <div class="campos">
           <label class="f"><span>Tu nombre</span><input name="nombre" autocomplete="name" maxlength="60" required></label>
           <label class="f"><span>Tu WhatsApp (10 dígitos)</span><input name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="449 123 4567" required></label>
           <label class="f full" id="campo-dir" hidden><span class="lbl-fila">Dirección de entrega <em class="cotiza">🛵 Se cotizará con el repartidor</em></span><textarea name="direccion" rows="2" maxlength="200" placeholder="Calle, número, colonia y alguna referencia"></textarea></label>
           <label class="f"><span>Día</span><select name="fecha" id="sel-fecha" required></select></label>
           <label class="f"><span>Hora</span><select name="hora" id="sel-hora" required></select></label>
+          <p class="nota-prog full" id="nota-prog" hidden></p>
           <label class="f full"><span>Forma de pago</span>
             <select name="pago"><option>Efectivo</option><option>Transferencia</option></select></label>
           <label class="f full"><span>Notas <span class="muted">(opcional)</span></span><textarea name="notas" rows="2" maxlength="300" placeholder="Ej. es para regalo, sin cajita, etc."></textarea></label>
@@ -143,8 +151,22 @@
   </div>
 </dialog>
 
-<script src="config.js?v=21"></script>
-<script src="catalogo.js?v=21"></script>
-<script src="app.js?v=21"></script>
+<dialog class="detalle" id="detalle" aria-labelledby="det-n">
+  <div class="det-img"><img id="det-img" alt="" width="900" height="675"><span class="agotado-tag" id="det-ag" hidden>Agotado hoy</span>
+    <button class="icon-btn det-x" id="det-x" type="button" aria-label="Cerrar">×</button></div>
+  <div class="det-body">
+    <p class="eyebrow" id="det-sec"></p>
+    <div class="card-top"><h2 id="det-n"></h2><span class="precio" id="det-p"></span></div>
+    <p class="det-desc" id="det-d"></p>
+    <div class="det-acc">
+      <div class="stepper"><button type="button" id="det-menos" aria-label="Una pieza menos">−</button><output id="det-q">1</output><button type="button" id="det-mas" aria-label="Una pieza más">+</button></div>
+      <button class="add" id="det-add" type="button">Agregar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="config.js?v=22"></script>
+<script src="catalogo.js?v=22"></script>
+<script src="app.js?v=22"></script>
 </body>
 </html>

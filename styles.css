@@ -253,3 +253,68 @@ legend { font-weight: 600; margin-bottom: 8px; }
 }
 @keyframes subeBarra { from { transform: translateY(120%); } }
 @media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; } }
+
+/* ---------- v22: flujo de pedido ---------- */
+/* Pestañas de categorías: se quedan fijas debajo del encabezado */
+.tabs { position: sticky; top: var(--hdr, 88px); z-index: 15; margin: 0 0 28px; padding: 10px 0; background: rgba(252, 248, 241, .96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.tabs-in { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tabs-in::-webkit-scrollbar { display: none; }
+.tab { flex-shrink: 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+.tab:hover { border-color: var(--ink); }
+.tab.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.sec { scroll-margin-top: 150px; }
+
+/* Favoritas */
+.sec-fav .sec-head h2::before { content: '★ '; color: var(--caramel-d); }
+.sec-fav .card { border-color: var(--caramel); }
+
+/* Repetir mi pedido */
+.repetir { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: #fff; border: 1.5px dashed var(--caramel-d); border-radius: var(--r); padding: 16px 20px; margin: 0 auto 28px; max-width: 760px; }
+.rep-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 260px; }
+.rep-txt b { font-family: var(--serif); font-weight: 500; font-size: 20px; }
+.rep-txt span { color: var(--muted); font-size: 14px; }
+.rep-btn { align-self: center; white-space: nowrap; }
+
+/* Fuera de horario */
+.aviso-cerrado { max-width: 760px; margin: 0 auto 24px; text-align: center; background: var(--cream); border-radius: var(--r); padding: 14px 18px; font-size: 15px; }
+.nota-prog { grid-column: 1 / -1; background: var(--cream); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+
+/* Saludo de cliente frecuente */
+.saludo { background: #eef7f1; color: #1f5a37; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.btn-link { border: 0; background: none; padding: 0; color: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 13px; }
+
+/* Tarjeta: foto y nombre abren el detalle */
+.card-img { cursor: zoom-in; }
+.card-img:focus-visible { outline-offset: -4px; }
+.ver-mas { position: absolute; right: 10px; bottom: 10px; background: rgba(252, 248, 241, .92); color: var(--ink); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; opacity: 0; transition: opacity .2s; }
+.card-img:hover .ver-mas, .card-img:focus-visible .ver-mas { opacity: 1; }
+@media (hover: none) { .ver-mas { opacity: 1; } }
+.card-tit { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.card-tit:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+
+/* Vista de detalle */
+.detalle { width: min(560px, calc(100% - 24px)); max-height: calc(100dvh - 24px); border: 0; padding: 0; border-radius: 20px; background: var(--paper); color: var(--ink); overflow: auto; box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .5); }
+.detalle::backdrop { background: rgba(30, 18, 14, .55); }
+.detalle[open] { animation: detEntra .25s cubic-bezier(.2,.8,.2,1); }
+.detalle.sale { animation: detSale .17s ease-in forwards; }
+@keyframes detEntra { from { opacity: 0; transform: translateY(24px) scale(.97); } }
+@keyframes detSale { to { opacity: 0; transform: translateY(16px) scale(.98); } }
+.det-img { position: relative; aspect-ratio: 4 / 3; background: var(--cream); }
+.det-img img { width: 100%; height: 100%; object-fit: cover; }
+.detalle.agotado .det-img img { filter: grayscale(.85) opacity(.7); }
+.det-x { position: absolute; top: 12px; right: 12px; background: rgba(252, 248, 241, .92); }
+.det-body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 10px; }
+.det-body h2 { font-size: 28px; }
+.det-desc { color: var(--muted); }
+.det-acc { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+.det-acc .add { padding: 13px 12px; font-size: 16px; }
+@media (max-width: 600px) {
+  .detalle { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; }
+  @keyframes detEntra { from { transform: translateY(100%); } }
+  @keyframes detSale { to { transform: translateY(100%); } }
+  .det-body { padding: 16px 18px calc(20px + env(safe-area-inset-bottom)); }
+  .det-body h2 { font-size: 24px; }
+  .tabs { margin: 0 -4% 22px; padding: 8px 4%; }
+  .repetir { padding: 14px 16px; }
+  .rep-btn { width: 100%; }
+}
