@@ -17,6 +17,12 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+/* Grano de papel muy tenue sobre el crema (SVG de ruido incrustado; 180 px en mosaico) */
+:root { --grano: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .22  0 0 0 0 .13  0 0 0 0 .11  .11 0 0 0 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+body { background-image: var(--grano); }
+.ubicacion, .horario-movil { background-image: var(--grano); }
+.tabs { background-image: var(--grano); }
+.header { background-image: var(--grano); }
 img { max-width: 100%; display: block; }
 a { color: inherit; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 500; margin: 0; line-height: 1.15; }
@@ -55,7 +61,11 @@ h1 { font-size: var(--fs-hero); line-height: 1.04; letter-spacing: -.01em; text-
 h1 em { color: var(--caramel); font-style: normal; }
 .hero-desc { color: #e7dbcf; max-width: 420px; font-size: var(--fs-lg); line-height: 1.55; }
 .hero-img { padding: 32px 32px 32px 0; }
-.hero-img img { width: 100%; height: 100%; max-height: 520px; object-fit: cover; border-radius: var(--r); }
+.hero-foto { height: 100%; max-height: 520px; border-radius: var(--r); overflow: hidden; }
+.hero-img img { width: 100%; height: 100%; object-fit: cover; }
+/* Movimiento lento (Ken Burns): la foto respira 1.00 → 1.07 en 18 s, ida y vuelta */
+.hero-foto img { animation: kenburns 18s ease-in-out infinite alternate; transform-origin: 55% 45%; will-change: transform; }
+@keyframes kenburns { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.07) translate(-1.2%, 1%); } }
 .horario-badge { display: flex; align-items: center; gap: 12px; padding: 10px 22px; border: 1.5px solid var(--caramel); border-radius: 22px; background: #fff; line-height: 1.3; max-width: 520px; cursor: default; }
 .hb-ico { color: var(--caramel-d); flex-shrink: 0; width: 24px; height: 24px; }
 .hb-cerr { color: var(--muted); font-weight: 500; }
@@ -194,7 +204,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .nav { gap: 18px; }
   .hero { grid-template-columns: 1fr; }
   .hero-img { padding: 0 5% 32px; order: 2; }
-  .hero-img img { max-height: 340px; }
+  .hero-foto { max-height: 340px; aspect-ratio: 4 / 3; }
   .hero-copy { padding: 48px 5% 32px; }
   .ubicacion { grid-template-columns: 1fr; gap: 32px; }
 }
@@ -261,6 +271,19 @@ legend { font-weight: 600; margin-bottom: 8px; }
   body.con-barra .toast { bottom: 96px; }
 }
 @keyframes subeBarra { from { transform: translateY(120%); } }
+
+/* Botón flotante de WhatsApp: solo en celular y tableta (en computadora ya está en el pie) */
+.wa-flota { display: none; }
+@media (max-width: 900px) {
+  .wa-flota { display: grid; place-items: center; position: fixed; right: 14px; bottom: max(16px, env(safe-area-inset-bottom)); width: 54px; height: 54px; border-radius: 50%; background: var(--wa); color: #fff; box-shadow: 0 10px 24px -8px rgba(18, 90, 45, .6); z-index: 39; transition: bottom .3s cubic-bezier(.2,.8,.2,1), transform .15s; animation: waWiggle 10s ease-in-out 4s infinite; }
+  .wa-flota:active { transform: scale(.94); }
+  body.con-barra .wa-flota { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px); } /* se sube cuando aparece la barra "Ver mi pedido" */
+  /* El aviso flotante se corre a la izquierda para no taparse con el botón de WhatsApp */
+  .toast { left: 16px; right: 82px; max-width: none; transform: translateY(140%); }
+  .toast.ver { transform: none; }
+}
+/* Cada 10 s se sacude un poquito (solo durante el primer medio segundo del ciclo) */
+@keyframes waWiggle { 0%, 6%, 100% { transform: rotate(0); } 1% { transform: rotate(-12deg); } 2% { transform: rotate(10deg); } 3% { transform: rotate(-8deg); } 4% { transform: rotate(6deg); } 5% { transform: rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; } }
 
 /* ---------- v22: flujo de pedido ---------- */
@@ -285,7 +308,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .fav-tag { display: none; position: absolute; top: 12px; right: 12px; background: var(--caramel); color: var(--ink); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 .card.es-fav .fav-tag { display: inline-block; }
 /* En celular la foto es angosta: la estrella va arriba a la izquierda y "Hoy quedan" baja un renglón */
-@media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 36px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
+@media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 42px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
 
 
 /* Chip "¿Para cuándo?" en la barra de pestañas: es un <select> disfrazado para que en el celular abra el selector nativo */
@@ -348,9 +371,30 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .tab { padding: 7px 14px; }
 }
 
+/* ---------- Esqueletos de carga (mientras llega el menú en vivo) ---------- */
+.sk { display: block; border-radius: 8px; background: linear-gradient(100deg, var(--cream) 30%, #f8f0e4 50%, var(--cream) 70%); background-size: 220% 100%; animation: brillo 1.4s ease-in-out infinite; }
+@keyframes brillo { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.sk-sec { pointer-events: none; }
+.sk-sec .sec-head { gap: 12px; }
+.sk-eyebrow { width: 150px; height: 12px; }
+.sk-h2 { width: min(320px, 70%); height: 32px; }
+.sk-p { width: min(480px, 90%); height: 14px; }
+.sk-card { border-color: var(--line); animation: aparece .4s ease both; animation-delay: var(--d, 0ms); }
+@keyframes aparece { from { opacity: 0; transform: translateY(10px); } }
+.sk-card .card-img { border-radius: 0; }
+.sk-card .card-body { gap: 10px; }
+.sk-tit { width: 70%; height: 20px; }
+.sk-precio { width: 44px; height: 16px; }
+.sk-desc { width: 100%; height: 12px; } .sk-desc.corta { width: 60%; }
+.sk-btn { width: 100%; height: 40px; border-radius: 999px; margin-top: auto; }
+@media (max-width: 600px) { .sk-card .card-img { aspect-ratio: auto; min-height: 150px; } .sk-btn { height: 36px; } }
+
 /* ---------- Stock de hoy ---------- */
 .stk-tag { background: var(--caramel-d); color: #fff; }
 .stk-tag.cero { background: var(--ink); }
+/* Cuando queda solo 1, la etiqueta late despacio */
+.stk-tag.uno { animation: latido 2.2s ease-in-out infinite; }
+@keyframes latido { 0%, 100% { box-shadow: 0 0 0 0 rgba(191, 117, 67, .55); } 55% { box-shadow: 0 0 0 7px rgba(191, 117, 67, 0); } }
 .card .agotado-tag + .stk-tag { top: 46px; }
 .ci.excede { border-bottom-color: var(--err); }
 .ci.excede .stepper { border-color: var(--err); }

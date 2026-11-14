@@ -273,7 +273,7 @@
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) { ad.disabled = p.agotado || pausa || sinHoy; ad.textContent = p.agotado ? 'Agotado' : sinHoy ? 'Agotado hoy' : 'Añadir'; }
       const od = c.querySelector('.otro-dia'); if (od) { od.hidden = !(sinHoy && sig); if (!od.hidden) od.textContent = `Pedir para ${sig.txt.split(' · ')[0].toLowerCase()} →`; }
       if (sinHoy) { t.hidden = false; t.textContent = 'Agotado hoy'; t.classList.add('cero'); return; }
-      t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}`; t.classList.remove('cero'); }
+      t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}`; t.classList.remove('cero'); t.classList.toggle('uno', r === 1); }
     });
   }
   function agregar(p, q, img) {
@@ -373,16 +373,37 @@
       if (f !== firmaMenu) { firmaMenu = f; aplicarMenu(d); }
     } catch (e) {}
   }
+  // Mientras llega el menú en vivo se ven "esqueletos" (siluetas que laten) en lugar de un salto de contenido.
+  // Si el buzón tarda más de 2.5 s o falla, se muestra el menú de respaldo de catalogo.js.
+  function pintarSkeleton() {
+    const cont = $('#menu-secciones'); cont.replaceChildren();
+    for (let s = 0; s < 2; s++) {
+      const sec = el('section', 'sec sk-sec'); sec.setAttribute('aria-hidden', 'true');
+      const h = el('div', 'sec-head'); h.append(el('span', 'sk sk-eyebrow'), el('span', 'sk sk-h2')); if (s) h.append(el('span', 'sk sk-p'));
+      const g = el('div', 'grid');
+      for (let k = 0; k < (s ? 2 : 3); k++) {
+        const c = el('article', 'card sk-card'), fi = el('div', 'card-img sk'), b = el('div', 'card-body');
+        b.append(el('span', 'sk sk-tit'), el('span', 'sk sk-precio'), el('span', 'sk sk-desc'), el('span', 'sk sk-desc corta'), el('span', 'sk sk-btn'));
+        c.append(fi, b); c.style.setProperty('--d', (k * 90) + 'ms'); g.append(c);
+      }
+      sec.append(h, g); cont.append(sec);
+    }
+    cont.setAttribute('aria-busy', 'true');
+  }
   async function cargarMenu() {
-    menu = normalizar(K.menuRespaldo || []); pintarMenu(); pintarCarrito();
-    if (!C.api) return;
+    menu = normalizar(K.menuRespaldo || []); // el respaldo ya cuenta como menú (para que el carrito guardado no se pierda)
+    if (!C.api) { pintarMenu(); pintarCarrito(); return; }
+    pintarSkeleton(); pintarCarrito();
+    let mostrado = false;
+    const respaldo = setTimeout(() => { if (!menuEnVivo) { mostrado = true; $('#menu-secciones').removeAttribute('aria-busy'); pintarMenu(); pintarCarrito(); } }, 2500);
     try {
       const r = await fetch(C.api + '?accion=menu', { cache: 'no-store' });
       const d = await r.json();
-      if (!d.ok) return;
+      if (!d.ok) throw 0;
+      clearTimeout(respaldo); $('#menu-secciones').removeAttribute('aria-busy');
       firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.productos]);
       aplicarMenu(d);
-    } catch (e) { /* sin conexión al buzón: se queda el menú de respaldo */ }
+    } catch (e) { clearTimeout(respaldo); if (!mostrado && !menuEnVivo) { $('#menu-secciones').removeAttribute('aria-busy'); pintarMenu(); pintarCarrito(); } /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
   function aplicarMenu(d) {
     try {
@@ -595,7 +616,7 @@
   })();
 
   // ---------- Inicio ----------
-  $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
+  $('#wa-contacto').href = $('#wa-flota').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
   leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); pintarDiaChip(); evento('visita');
   setInterval(() => { pintarProgramar(); pintarDiaChip(); }, 60000);
   setInterval(refrescarMenu, 60000);
