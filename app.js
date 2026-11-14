@@ -354,6 +354,23 @@
     setTimeout(() => { location.href = link; }, 400);
   });
 
+  // ---------- DiDi Food y Uber Eats: abrir la app del celular ----------
+  // Android: intent:// abre la app instalada y, si no está, la página web (browser_fallback_url).
+  // iPhone: los enlaces https de Uber Eats y DiDi abren la app sola si está instalada (enlaces universales).
+  (() => {
+    if (!/Android/i.test(navigator.userAgent)) return;
+    const rutas = {
+      'com.ubercab.eats': { host: 'www.ubereats.com', scheme: 'ubereats', path: 'store/browse?storeUUID=58d3c2d3-957d-40b4-9ea7-16bdb255949c&diningMode=DELIVERY', pkg: 'com.ubercab.eats' },
+      'com.xiaojukeji.didi.global.customer': { host: 'www.didi-food.com', scheme: 'globalOneTravel', path: 'soda/businessPage?shopId=5764616005389913209&rsc_media=googlemap&ddlCode=q9TJD0&cId=food_googleMap1&channelId=food_googleMap&redirectType=2&dp_sub3=es-MX&dp_sub4=10&dp_sub5=52010100&dp_sub6=21.886537&dp_sub7=-102.234484&ddlcode=q9TJD0&openfrom=food_googleMap&ddl=new', pkg: 'com.didiglobal.passenger' }
+    };
+    document.querySelectorAll('.app-btn[data-android-package]').forEach(a => {
+      const r = rutas[a.dataset.androidPackage], web = new URL(a.href);
+      if (!r || web.hostname !== r.host) return;
+      a.href = `intent://${r.path}#Intent;scheme=${r.scheme};package=${r.pkg};S.browser_fallback_url=${encodeURIComponent(web.href)};end`;
+      a.removeAttribute('target');
+    });
+  })();
+
   // ---------- Inicio ----------
   $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
   leerCarrito(); pintarHorario(); pintarEstadoHoy(); cargarMenu();
