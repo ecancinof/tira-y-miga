@@ -237,11 +237,11 @@
       const p = prod(c.dataset.id), t = c.querySelector('.stk-tag'); if (!t || !p) return;
       const r = hoyAbre && !p.agotado ? quedanHoy(p.id) : Infinity;
       // Sin stock para hoy: se ve en gris como agotada (aún se puede pedir para otro día)
-      const sinHoy = hoyAbre && !p.agotado && maxHoy(p.id, []) <= 0;
+      const sinHoy = hoyAbre && !p.agotado && r <= 0; // sin stock, o el carrito ya tiene las últimas
       c.classList.toggle('sin-hoy', sinHoy);
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) ad.textContent = sinHoy ? 'Pedir otro día' : 'Añadir';
       if (sinHoy) { t.hidden = false; t.textContent = 'Agotado hoy'; t.classList.add('cero'); return; }
-      t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = r > 0 ? `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}` : maxHoy(p.id, []) <= 0 ? 'Agotado para hoy' : 'Ya no quedan más hoy'; t.classList.toggle('cero', r <= 0); }
+      t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `Hoy ${r === 1 ? 'queda 1' : 'quedan ' + r}`; t.classList.remove('cero'); }
     });
   }
   function agregar(p, q, img) {
@@ -285,7 +285,7 @@
   function abrirDetalle(p) {
     detP = p; detQ = 1;
     const im = $('#det-img'); im.src = foto(p); im.alt = p.nombre;
-    const sinHoy = !p.agotado && (fechasDisponibles()[0] || {}).f === hoyYmd() && maxHoy(p.id, []) <= 0;
+    const sinHoy = !p.agotado && (fechasDisponibles()[0] || {}).f === hoyYmd() && quedanHoy(p.id) <= 0;
     det.classList.toggle('agotado', p.agotado || sinHoy); $('#det-ag').hidden = !(p.agotado || sinHoy); det.dataset.sinHoy = sinHoy ? '1' : '';
     $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
     $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
