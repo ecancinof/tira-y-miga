@@ -288,6 +288,22 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 36px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
 
 
+/* Chip "¿Para cuándo?" en la barra de pestañas: es un <select> disfrazado para que en el celular abra el selector nativo */
+.tabs { display: flex; align-items: center; gap: 10px; }
+.tabs-in { flex: 1; min-width: 0; }
+.dia-chip { position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px 8px 10px; border-radius: 999px; background: var(--caramel); color: var(--ink); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s; }
+.dia-chip:hover { background: #e3ab6a; }
+.dia-chip .dc-l { color: #6b4a2a; font-weight: 500; }
+.dia-chip b { font-weight: 700; }
+.dia-chip .dc-flecha { font-size: 11px; margin-left: -2px; }
+.dia-chip select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; } /* 16px evita el zoom de iOS */
+.dia-chip:has(select:focus-visible) { outline: 3px solid var(--caramel-d); outline-offset: 3px; }
+@media (max-width: 600px) { .dia-chip .dc-l { display: none; } .dia-chip { padding: 7px 10px 7px 9px; } }
+/* Enlace "Pedir para mañana →" cuando ya no hay para hoy */
+.otro-dia { align-self: flex-start; border: 0; background: none; padding: 2px 0; margin-top: -2px; font: 600 var(--fs-xs)/1.4 var(--sans); color: var(--caramel-d); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.otro-dia:hover { color: var(--ink); }
+.det-body .otro-dia { font-size: var(--fs-sm); }
+
 /* Fuera de horario */
 .aviso-cerrado { max-width: 760px; margin: 0 auto 24px; text-align: center; background: var(--cream); border-radius: var(--r); padding: 14px 18px; font-size: var(--fs-base); }
 .nota-prog { grid-column: 1 / -1; background: var(--cream); border-radius: 10px; padding: 10px 12px; font-size: var(--fs-sm); }
@@ -341,4 +357,4 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
-.card.sin-hoy .add { background: var(--muted); }
+.card.sin-hoy .add, .card.sin-hoy .add:disabled { background: var(--line); color: var(--muted); }

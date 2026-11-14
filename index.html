@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=37">
+<link rel="stylesheet" href="styles.css?v=38">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -68,7 +68,13 @@
       <h2 id="menu-t">¿Cuál se te antoja hoy?</h2>
     </div>
     <p class="aviso-cerrado" id="aviso-cerrado" hidden></p>
-    <nav class="tabs" id="tabs" aria-label="Categorías del menú" hidden><div class="tabs-in" id="tabs-in"></div></nav>
+    <nav class="tabs" id="tabs" aria-label="Categorías del menú" hidden>
+      <label class="dia-chip" id="dia-chip" hidden title="Elige para qué día es tu pedido">
+        <span class="dc-ico" aria-hidden="true">📅</span><span class="dc-l">Para</span><b id="dia-txt">Hoy</b><span class="dc-flecha" aria-hidden="true">▾</span>
+        <select id="dia-menu" aria-label="¿Para qué día es tu pedido?"></select>
+      </label>
+      <div class="tabs-in" id="tabs-in"></div>
+    </nav>
     <div id="menu-secciones"></div>
   </section>
 
@@ -168,11 +174,12 @@
       <div class="stepper"><button type="button" id="det-menos" aria-label="Una pieza menos">−</button><output id="det-q">1</output><button type="button" id="det-mas" aria-label="Una pieza más">+</button></div>
       <button class="add" id="det-add" type="button">Agregar</button>
     </div>
+    <button class="otro-dia" id="det-otro" type="button" hidden></button>
   </div>
 </dialog>
 
-<script src="config.js?v=37"></script>
-<script src="catalogo.js?v=37"></script>
-<script src="app.js?v=37"></script>
+<script src="config.js?v=38"></script>
+<script src="catalogo.js?v=38"></script>
+<script src="app.js?v=38"></script>
 </body>
 </html>
