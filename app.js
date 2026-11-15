@@ -436,9 +436,9 @@
       del.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>';
       del.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); };
       ctrl.append(st, del);
-      r.append(el('strong', null, money(q * p.precio)));
-      if (conflicto) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; r.append(cb); }
-      r.append(ctrl);
+      // Agotado para hoy: la píldora − / + se sustituye por "Cambiar" (quita el producto y vuelve al catálogo)
+      if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb); }
+      r.append(el('strong', null, money(q * p.precio)), ctrl);
       li.append(img, mid, r); ul.append(li);
     }
     const { pz, t } = totales();

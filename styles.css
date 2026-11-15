@@ -447,9 +447,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci.excede .stepper { border-color: var(--err); }
 .ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); margin-top: 2px; }
 .ci.excede img, .ci.agot img { filter: grayscale(.85) opacity(.7); } /* foto en gris como en el catálogo */
-.ci-cambiar { width: 111px; height: 37px; margin-right: 42px; padding: 0; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* mismo tamaño que la píldora − / + (34+40+34 + bordes) y alineada sobre ella (36px del bote + 6px de separación) */
-.ci.excede { align-items: start; } /* el precio se queda arriba, a la altura de las demás filas */
-.ci.excede img { margin-top: 2px; }
+.ci-cambiar { width: 111px; height: 37px; padding: 0; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* ocupa el lugar de la píldora − / + (mismo tamaño) cuando el producto está agotado para hoy */
 .ci-cambiar:hover { background: #fbe9e5; }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
