@@ -444,7 +444,10 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .card .agotado-tag + .stk-tag { top: 46px; }
 .ci.excede { border-bottom-color: var(--err); }
 .ci.excede .stepper { border-color: var(--err); }
-.ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); }
+.ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); margin-top: 2px; }
+.ci.excede img, .ci.agot img { filter: grayscale(.85) opacity(.7); } /* foto en gris como en el catálogo */
+.ci-cambiar { border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); padding: 6px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.ci-cambiar:hover { background: #fbe9e5; }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
 .card.sin-hoy .add, .card.sin-hoy .add:disabled { background: var(--line); color: var(--muted); }

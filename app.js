@@ -420,7 +420,8 @@
       const p = prod(id), li = el('li', 'ci' + (p.agotado ? ' agot' : ''));
       const img = el('img'); img.src = foto(p); img.alt = '';
       const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`));
-      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) li.classList.add('excede'); } // sin texto bajo el producto: el aviso general va abajo del carrito
+      let conflicto = null; // producto que no alcanza para hoy: aviso corto, foto en gris y botón para cambiar el día
+      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { conflicto = c; li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.disp <= 0 ? '⚠️ Agotado para hoy' : `⚠️ Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
       const st = el('div', 'stepper'), a = el('button', null, '−'), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; a.setAttribute('aria-label', 'Menos ' + p.nombre); b.setAttribute('aria-label', 'Más ' + p.nombre);
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
@@ -435,7 +436,9 @@
       del.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>';
       del.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); };
       ctrl.append(st, del);
-      r.append(el('strong', null, money(q * p.precio)), ctrl);
+      r.append(el('strong', null, money(q * p.precio)));
+      if (conflicto) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; r.append(cb); }
+      r.append(ctrl);
       li.append(img, mid, r); ul.append(li);
     }
     const { pz, t } = totales();
