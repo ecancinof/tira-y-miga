@@ -39,7 +39,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 24px; padding: 12px 5%; background: rgba(252, 248, 241, .94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
 .header .horario-badge { margin: 0 auto; }
-.brand img { --logo: 80px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc(var(--logo) * -.11); max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
+.brand img { --logo: 83px; width: calc(var(--logo) / .82); height: calc(var(--logo) / .82); margin: calc((65px - var(--logo) / .82) / 2) calc(var(--logo) * -.11); /* ocupa 65px de alto en el layout: el logo crece sin que crezca el encabezado */ max-width: none; clip-path: circle(46%); flex-shrink: 0; } /* el archivo trae margen alrededor del círculo */
 .brand-txt { display: flex; flex-direction: column; line-height: 1.15; border-left: 1px solid var(--line); padding-left: 14px; }
 .brand-txt b { font: 500 26px/1.05 var(--serif); letter-spacing: .08em; text-transform: uppercase; }        /* marca: Tira & Miga (Fraunces) */
 /* Las dos líneas secundarias van en DM Sans, igual que los rótulos del resto de la página, para no mezclar tres estilos */
@@ -188,6 +188,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .f.full { grid-column: 1 / -1; }
 .f input, .f select, .f textarea { font-weight: 400; font-size: var(--fs-base); padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
 .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--ink); outline: none; }
+.f select:disabled { background: var(--paper, #f7f2ea); color: var(--ink); opacity: 1; cursor: not-allowed; appearance: none; -webkit-appearance: none; } /* Día bloqueado cuando el pedido es para hoy */
 .f .bad { border-color: var(--err); }
 .trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .error { background: #fbe9e5; color: var(--err); padding: 12px 14px; border-radius: 10px; font-size: var(--fs-sm); font-weight: 600; }
