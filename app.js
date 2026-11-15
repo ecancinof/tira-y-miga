@@ -500,6 +500,7 @@
   addEventListener('resize', moverBurbuja); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moverBurbuja);
   $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) return; const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
   $('#cu-agendar').onclick = () => abrirAgenda();
+  const drAg = $('#dr-agendar'); if (drAg) drAg.onclick = () => abrirAgenda(); // mismo minicalendario desde el resumen del pedido
 
   // Ventana flotante: minicalendario + hora (respeta el horario que se publica desde la app)
   const agenda = $('#agenda'); let agF = '', agH = '', agMes = null; // selección provisional y mes visible
