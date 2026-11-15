@@ -185,7 +185,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .seg input:focus-visible + span { outline: 3px solid var(--caramel-d); outline-offset: 2px; }
 .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .f { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
-.f.full { grid-column: 1 / -1; }
+.f.full, .campos .full { grid-column: 1 / -1; }
+.campos legend { font-size: var(--fs-sm); margin-bottom: 4px; } /* "Forma de pago" con el mismo tamaño que las demás etiquetas del formulario */
 .f input, .f select, .f textarea { font-weight: 400; font-size: var(--fs-base); padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
 .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--ink); outline: none; }
 .f select:disabled { background: var(--paper, #f7f2ea); color: var(--ink); opacity: 1; cursor: not-allowed; appearance: none; -webkit-appearance: none; } /* Día bloqueado cuando el pedido es para hoy */
