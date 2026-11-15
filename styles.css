@@ -187,9 +187,9 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .f { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
 .f.full, .campos .full { grid-column: 1 / -1; }
 .campos fieldset { min-width: 0; width: 100%; }
-.fila-dia { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; } /* Día | Hora | Agendar en una sola fila */
-.btn-agendar { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 11px 14px; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--ink); color: var(--paper); font-weight: 600; font-size: var(--fs-base); cursor: pointer; transition: background .2s; }
-.btn-agendar:hover { background: var(--ink-2); } /* el fieldset ocupa todo el ancho: los botones de pago miden igual que los de entrega */
+.fila-dia { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; } /* Día | Hora | Agendar en una sola fila */
+.btn-agendar { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-weight: 600; font-size: var(--fs-base); cursor: pointer; transition: border-color .2s, background .2s; } /* claro: es una acción, no una opción seleccionada */
+.btn-agendar:hover { border-color: var(--ink); background: var(--cream); } /* el fieldset ocupa todo el ancho: los botones de pago miden igual que los de entrega */
 .campos legend { font-size: var(--fs-sm); margin-bottom: 4px; } /* "Forma de pago" con el mismo tamaño que las demás etiquetas del formulario */
 .f input, .f select, .f textarea { font-weight: 400; font-size: var(--fs-base); padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
 .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--ink); outline: none; }
@@ -243,6 +243,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .campos { grid-template-columns: 1fr; }
   .fila-dia { gap: 8px; }
   .btn-agendar { padding: 11px 10px; }
+  .fila-dia .f select { padding-left: 10px; padding-right: 26px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
