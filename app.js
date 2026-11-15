@@ -580,7 +580,7 @@
     const falta = faltantes(), ok = falta.length === 0, ex = excedidos().length > 0;
     $('#btn-enviar').disabled = !ok || ex; $('#falta-datos').hidden = ok;
     if (!ok) $('#falta-datos').textContent = `Elige ${falta.length > 1 ? falta.slice(0, -1).join(', ') + ' y ' + falta.at(-1) : falta[0]} para continuar.`;
-    const a = $('#stk-aviso'); if (a) { a.hidden = !ex; if (ex) a.textContent = '⚠️ Para hoy no alcanza el stock de lo marcado en rojo. Baja la cantidad o elige otro día.'; }
+    const a = $('#stk-aviso'); if (a) a.hidden = true; // sin aviso general: cada producto ya muestra su propio aviso y el botón Cambiar
   }
   form.addEventListener('input', e => { if (e.target.name === 'nombre' || e.target.name === 'tel') revisarBoton(); });
   // 1) Si ya pidió antes, sus datos aparecen llenos (se guardan solo en su celular)
