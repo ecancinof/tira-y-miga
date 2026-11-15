@@ -212,12 +212,12 @@ legend { font-weight: 600; margin-bottom: 8px; }
   /* Encabezado fijo compacto: una sola fila (≈60 px). El horario sale del encabezado y se desplaza con la página */
   .header { gap: 12px; padding: 8px 4%; }
   .brand img { --logo: 44px; }
-  .brand-txt { padding-left: 10px; line-height: 1.1; }
+  .brand-txt { padding-left: 0; border-left: 0; line-height: 1.1; flex: 1; text-align: center; align-items: center; } /* móvil: el texto va centrado entre el logo y el carrito, cada línea centrada bajo la anterior */
   .brand-txt b { font-size: 18px; }
   .brand-txt small { font-size: 10.5px; margin-top: 2px; }
   .brand-txt i { font-size: 10px; }
   .nav { display: none; }
-  .brand { margin-right: auto; }
+  .brand { margin-right: auto; flex: 1; min-width: 0; }
   .header .horario-badge { display: none; }
   .horario-movil { display: block; padding: 10px 4% 0; background: var(--paper); }
   .horario-movil .horario-badge { width: 100%; max-width: none; margin: 0 0 10px; padding: 8px 14px; border-radius: 12px; }
