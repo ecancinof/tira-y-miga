@@ -189,7 +189,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .campos fieldset { min-width: 0; width: 100%; }
 .fila-dia { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; } /* Día | Hora | Agendar en una sola fila */
 .btn-agendar { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-weight: 600; font-size: var(--fs-base); cursor: pointer; transition: border-color .2s, background .2s; } /* claro: es una acción, no una opción seleccionada */
-.btn-agendar:hover { border-color: var(--ink); background: var(--cream); } /* el fieldset ocupa todo el ancho: los botones de pago miden igual que los de entrega */
+.btn-agendar:hover { border-color: var(--ink); background: var(--cream); }
+.btn-agendar.activo { border-color: var(--ink); background: var(--ink); color: var(--paper); } /* oscuro cuando el pedido ya está agendado para otro día */ /* el fieldset ocupa todo el ancho: los botones de pago miden igual que los de entrega */
 .campos legend { font-size: var(--fs-sm); margin-bottom: 4px; } /* "Forma de pago" con el mismo tamaño que las demás etiquetas del formulario */
 .f input, .f select, .f textarea { font-weight: 400; font-size: var(--fs-base); padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; width: 100%; }
 .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--ink); outline: none; }

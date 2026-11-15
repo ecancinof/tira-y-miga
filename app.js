@@ -476,7 +476,7 @@
     bloquearDia(); llenarHoras();
   }
   // Si el pedido es "Para hoy", el Día no se cambia desde el resumen (solo la hora); para otro día se usa "Agendar"
-  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = hoy; sel.title = hoy ? 'Pedido para hoy. Para otro día usa "Agendar".' : ''; }
+  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = hoy; sel.title = hoy ? 'Pedido para hoy. Para otro día usa "Agendar".' : ''; const b = $('#dr-agendar'); if (b) b.classList.toggle('activo', !hoy); }
   // ---------- "Para hoy | Agendar" (barra de pestañas) ----------
   const hayHoyDisponible = () => fechasDisponibles().some(o => o.f === hoyYmd());
   function pintarCuando() {
@@ -566,13 +566,16 @@
   $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; try { localStorage.setItem('tm-hora', horaSel); } catch (e) {} pintarCuando(); };
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
   const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
-  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); });
+  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton(); });
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
-  const listoParaPedir = () => form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10;
+  // Nada viene preseleccionado: el cliente elige entrega y forma de pago
+  const faltantes = () => { const f = []; if (!form.entregaTipo.value) f.push('cómo lo quieres'); if (!(form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10)) f.push('tu nombre y tu WhatsApp'); if (!form.pago.value) f.push('la forma de pago'); return f; };
+  const listoParaPedir = () => faltantes().length === 0;
   function revisarBoton() {
-    const ok = listoParaPedir(), ex = excedidos().length > 0;
+    const falta = faltantes(), ok = falta.length === 0, ex = excedidos().length > 0;
     $('#btn-enviar').disabled = !ok || ex; $('#falta-datos').hidden = ok;
+    if (!ok) $('#falta-datos').textContent = `Elige ${falta.length > 1 ? falta.slice(0, -1).join(', ') + ' y ' + falta.at(-1) : falta[0]} para continuar.`;
     const a = $('#stk-aviso'); if (a) { a.hidden = !ex; if (ex) a.textContent = '⚠️ Para hoy no alcanza el stock de lo marcado en rojo. Baja la cantidad o elige otro día.'; }
   }
   form.addEventListener('input', e => { if (e.target.name === 'nombre' || e.target.name === 'tel') revisarBoton(); });
@@ -583,10 +586,8 @@
     if (!clienteAplicado) {
       clienteAplicado = true;
       if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = fmtTel(String(c.tel)); if (c.direccion) form.direccion.value = c.direccion;
-      if (c.pago && ['Efectivo', 'Transferencia'].includes(c.pago)) form.pago.value = c.pago;
     }
-    if (c.entregaTipo === 'domicilio' && conEnvio && !form.dataset.tocado) form.entregaTipo.value = 'domicilio';
-    if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = 'recoge';
+    if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = '';
     ponDir();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
     if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}! Ya llenamos tus datos.`;
@@ -595,7 +596,7 @@
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
   $('#saludo-no').onclick = () => {
     try { localStorage.removeItem('tm-cliente'); localStorage.removeItem('tm-ultimo'); } catch (e) {}
-    form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.value = 'Efectivo'; form.entregaTipo.value = 'recoge'; ponDir();
+    form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.value = ''; form.entregaTipo.value = ''; ponDir();
     $('#saludo').hidden = true; revisarBoton(); form.nombre.focus();
   };
 
@@ -614,12 +615,14 @@
     const mal = (campo, msg) => { if (campo) { campo.classList.add('bad'); campo.focus(); } return msg; };
     if (!d.items.length) return 'Tu pedido está vacío.';
     const ag = d.items.find(i => prod(i.id).agotado); if (ag) return `${ag.nombre} se agotó por hoy. Quítalo de tu pedido, por favor.`;
+    if (!d.entregaTipo) return 'Elige si pasas a recoger o lo quieres a domicilio.';
     if (!d.nombre) return mal(form.nombre, 'Escribe tu nombre.');
     if (d.tel.length !== 10) return mal(form.tel, 'Escribe tu número de WhatsApp a 10 dígitos.');
     if (d.entregaTipo === 'domicilio' && d.direccion.length < 8) return mal(form.direccion, 'Escribe la dirección de entrega.');
     if (!d.fecha) return mal(form.fecha, 'Elige el día.');
     if (limitaHoy() && d.fecha === hoyYmd()) { const c = conflictosHoy([...cart])[0]; if (c) return textoConflicto(c) + '. Cambia la cantidad o elige otro día.'; }
     if (!d.hora) return mal(form.hora, 'Elige la hora.');
+    if (!d.pago) return 'Elige la forma de pago.';
     return '';
   }
   function fechaTexto(f) { const [y, m, d] = f.split('-').map(Number), dt = new Date(y, m - 1, d); return `${DIAS[dt.getDay()]} ${d} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1]}`; }
