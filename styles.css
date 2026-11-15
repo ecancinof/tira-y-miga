@@ -246,7 +246,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .btn-pedido.enviando { cursor: wait; }
 .centro { text-align: center; }
 .lbl-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.cotiza { font-style: normal; font-weight: 700; font-size: var(--fs-xs); color: var(--caramel-d); }
+.cotiza { font: inherit; font-style: normal; font-weight: 700; color: #9a4f1c; } /* misma fuente y tamaño que "Dirección de entrega", en negrita y naranja oscuro */
 
 /* Carrito: cantidad + botón de eliminar en la misma fila */
 .ci-ctrl { display: flex; align-items: center; gap: 6px; }

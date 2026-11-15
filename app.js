@@ -26,7 +26,7 @@
     if (!fechasDisponibles().some(o => o.f === f)) return;
     const cambia = f !== fechaSel; fechaSel = f; if (hora) horaSel = hora;
     try { localStorage.setItem('tm-fecha', f); if (hora) localStorage.setItem('tm-hora', hora); } catch (e) {}
-    if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; llenarHoras(); }
+    if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; bloquearDia(); llenarHoras(); }
     pintarCuando(); if (!cambia) return;
     pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
   }
@@ -473,8 +473,10 @@
     const sel = $('#sel-fecha'), prev = sel.value; sel.replaceChildren();
     for (const o of fechasDisponibles()) { const op = el('option', null, o.txt); op.value = o.f; sel.append(op); }
     sel.value = fechaPedido(); // misma fecha que el chip "¿Para cuándo?"
-    llenarHoras();
+    bloquearDia(); llenarHoras();
   }
+  // Si el pedido es "Para hoy", el Día no se cambia desde el resumen (solo la hora); para otro día se usa "Agendar"
+  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = hoy; sel.title = hoy ? 'Pedido para hoy. Para otro día usa "Agendar".' : ''; }
   // ---------- "Para hoy | Agendar" (barra de pestañas) ----------
   const hayHoyDisponible = () => fechasDisponibles().some(o => o.f === hoyYmd());
   function pintarCuando() {
