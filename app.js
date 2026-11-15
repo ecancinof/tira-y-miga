@@ -476,7 +476,8 @@
     bloquearDia(); llenarHoras();
   }
   // Si el pedido es "Para hoy", el Día no se cambia desde el resumen (solo la hora); para otro día se usa "Agendar"
-  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = hoy; sel.title = hoy ? 'Pedido para hoy. Para otro día usa "Agendar".' : ''; const b = $('#dr-agendar'); if (b) b.classList.toggle('activo', !hoy); }
+  // La casilla Día solo muestra el día elegido; se cambia únicamente con el botón "Agendar"
+  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = true; sel.title = 'Para cambiar el día usa "Agendar".'; const b = $('#dr-agendar'); if (b) b.classList.toggle('activo', !hoy); }
   // ---------- "Para hoy | Agendar" (barra de pestañas) ----------
   const hayHoyDisponible = () => fechasDisponibles().some(o => o.f === hoyYmd());
   function pintarCuando() {
