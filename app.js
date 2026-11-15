@@ -420,7 +420,7 @@
       const p = prod(id), li = el('li', 'ci' + (p.agotado ? ' agot' : ''));
       const img = el('img'); img.src = foto(p); img.alt = '';
       const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`));
-      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.ids.length > 1 ? `Comparte concha: para hoy alcanzan ${c.disp} en total` : c.disp <= 0 ? 'Agotado para hoy' : `Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
+      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) li.classList.add('excede'); } // sin texto bajo el producto: el aviso general va abajo del carrito
       const st = el('div', 'stepper'), a = el('button', null, '−'), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; a.setAttribute('aria-label', 'Menos ' + p.nombre); b.setAttribute('aria-label', 'Más ' + p.nombre);
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
