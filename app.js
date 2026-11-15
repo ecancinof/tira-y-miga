@@ -582,7 +582,7 @@
     if (!clienteAplicado) {
       clienteAplicado = true;
       if (c.nombre) form.nombre.value = c.nombre; if (c.tel) form.tel.value = fmtTel(String(c.tel)); if (c.direccion) form.direccion.value = c.direccion;
-      if (c.pago && [...form.pago.options].some(o => o.value === c.pago)) form.pago.value = c.pago;
+      if (c.pago && ['Efectivo', 'Transferencia'].includes(c.pago)) form.pago.value = c.pago;
     }
     if (c.entregaTipo === 'domicilio' && conEnvio && !form.dataset.tocado) form.entregaTipo.value = 'domicilio';
     if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = 'recoge';
@@ -594,7 +594,7 @@
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
   $('#saludo-no').onclick = () => {
     try { localStorage.removeItem('tm-cliente'); localStorage.removeItem('tm-ultimo'); } catch (e) {}
-    form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.selectedIndex = 0; form.entregaTipo.value = 'recoge'; ponDir();
+    form.nombre.value = form.tel.value = form.direccion.value = ''; form.pago.value = 'Efectivo'; form.entregaTipo.value = 'recoge'; ponDir();
     $('#saludo').hidden = true; revisarBoton(); form.nombre.focus();
   };
 

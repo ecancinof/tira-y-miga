@@ -213,7 +213,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
   /* Encabezado fijo compacto: una sola fila (≈60 px). El horario sale del encabezado y se desplaza con la página */
   .header { gap: 12px; padding: 8px 4% 2px; } /* la línea inferior queda justo bajo el logo */
   .brand img { --logo: 54px; margin-left: calc(var(--logo) * -.11 + 8px); } /* el círculo del logo va a la altura del bloque de texto (de TIRA & MIGA a Panadería y repostería) */
-  .brand-txt { padding-left: 0; border-left: 0; line-height: 1.1; text-align: center; align-items: center; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; } /* móvil: el texto va centrado entre el logo y el carrito, cada línea centrada bajo la anterior */
+  .brand-txt { padding-left: 0; border-left: 0; line-height: 1.1; text-align: center; align-items: center; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; } /* móvil: el texto va centrado respecto a la pantalla, cada línea centrada bajo la anterior */
   .brand-txt b { font-size: 18px; }
   .brand-txt small { font-size: 10.5px; margin-top: 2px; }
   .brand-txt i { font-size: 10px; }
