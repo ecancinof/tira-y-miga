@@ -18,5 +18,5 @@ window.TM_CONFIG = {
   // Cuántos días adelante se puede apartar
   diasAdelante: 14,
   // Productos "sobre pedido" (los marcas en la app, p. ej. miniconchas): días de anticipación y piezas mínimas
-  sobrePedido: { diasAnticipacion: 1, minimo: 6 }
+  sobrePedido: { diasAnticipacion: 1, minimo: 1 }
 };
