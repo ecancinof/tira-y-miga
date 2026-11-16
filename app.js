@@ -574,7 +574,7 @@
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago
-  const faltantes = () => { const f = []; if (!form.entregaTipo.value) f.push('cómo lo quieres'); if (!(form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10)) f.push('tu nombre y tu WhatsApp'); if (!form.pago.value) f.push('la forma de pago'); return f; };
+  const faltantes = () => { const f = []; if (!form.entregaTipo.value) f.push('si recoges o te lo enviamos'); if (!(form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10)) f.push('tu nombre y tu WhatsApp'); if (!form.pago.value) f.push('la forma de pago'); return f; };
   const listoParaPedir = () => faltantes().length === 0;
   function revisarBoton() {
     const falta = faltantes(), ok = falta.length === 0, ex = excedidos().length > 0;
