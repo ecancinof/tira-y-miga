@@ -334,7 +334,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .sec-fav .sec-head h2::before { content: '★ '; color: var(--caramel-d); }
 .sec-fav .card { border-color: var(--caramel); }
 /* En su sección normal, la favorita solo lleva una estrella (la tarjeta completa ya está arriba) */
-.fav-tag { display: none; position: absolute; top: 12px; right: 12px; background: #f5b320; color: var(--ink); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px rgba(56, 34, 29, .25); } /* amarillo vivo como la estrella ⭐, con sombra para que resalte sobre la foto */
+.fav-tag { display: none; position: absolute; top: 12px; right: 12px; background: #ffc71f; color: #1a1a1a; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px rgba(56, 34, 29, .25); } /* amarillo brillante con texto negro: máximo contraste sobre la foto */
 .card.es-fav .fav-tag { display: inline-block; }
 /* En celular la foto es angosta: la estrella va arriba a la izquierda y "Hoy quedan" baja un renglón */
 @media (max-width: 600px) { .fav-tag { top: 8px; left: 8px; right: auto; font-size: 11px; padding: 3px 8px; } .card.es-fav .stk-tag { top: 42px; left: 8px; } .card .agotado-tag { top: 8px; left: 8px; } }
