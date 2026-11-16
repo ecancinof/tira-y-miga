@@ -444,7 +444,7 @@
     const { pz, t } = totales();
     $('#cart-count').textContent = pz;
     $('#cart-open').setAttribute('aria-label', `Ver tu pedido, ${pz} ${pz === 1 ? 'pieza' : 'piezas'}`);
-    $('#drawer-count').textContent = `${pz} ${pz === 1 ? 'pieza' : 'piezas'}`;
+    { const n = $('#drawer-n'); if (n && n.textContent !== String(pz)) { n.textContent = pz; const ch = $('#drawer-count'); ch.classList.remove('pop'); void ch.offsetWidth; ch.classList.add('pop'); } $('#drawer-pz').textContent = pz === 1 ? 'pieza' : 'piezas'; }
     $('#cart-total').textContent = money(t);
     $('#cart-empty').hidden = cart.size > 0;
     $('#form-pedido').hidden = cart.size === 0;

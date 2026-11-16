@@ -160,9 +160,15 @@ address { font-style: normal; font-size: var(--fs-lg); }
 .drawer::backdrop { background: rgba(30, 18, 14, .5); }
 .drawer-in { padding: 24px; display: flex; flex-direction: column; gap: 20px; min-height: 100%; }
 .drawer-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.drawer-tit { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .drawer-top h2 { font-family: var(--sans); font-weight: 700; font-size: var(--fs-xl); } /* misma tipografía que el resto del resumen */
-.drawer-n { font-size: var(--fs-lg); font-weight: 600; color: var(--ink-2); } /* piezas junto al título, más chico que el Total */
+.drawer-der { display: flex; align-items: center; gap: 10px; }
+/* Chip de piezas: píldora crema con el número destacado; "late" cuando cambia la cantidad */
+.chip-pz { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--cream); color: var(--ink-2); font-size: var(--fs-sm); font-weight: 600; line-height: 1; white-space: nowrap; }
+.chip-pz b { font-size: var(--fs-lg); font-weight: 700; color: var(--ink); }
+.chip-ico { font-size: 15px; }
+.chip-pz.pop { animation: chip-pop .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes chip-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); background: #ead9c0; } 100% { transform: scale(1); } }
+@media (max-width: 380px) { .chip-pz span:last-child { display: none; } .chip-pz { padding: 6px 10px; } } /* en pantallas muy angostas solo icono + número */
 .vacio { text-align: center; padding: 48px 0; color: var(--muted); }
 .vacio a { color: var(--ink); font-weight: 600; }
 .cart-items { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 12px; }
