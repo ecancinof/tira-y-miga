@@ -373,10 +373,13 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @keyframes ok-palomita { to { stroke-dashoffset: 0; } }
 .ok-cuerpo h2 { font-family: var(--sans); font-weight: 700; font-size: var(--fs-xl); margin: 4px 0 0; }
 .ok-folio { margin: 0; display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--cream); border: 1px solid var(--line); font-weight: 700; font-size: var(--fs-sm); }
-.ok-txt { margin: 4px 0 0; color: var(--muted); font-size: var(--fs-sm); }
-.ok-resumen { list-style: none; margin: 10px 0 0; padding: 12px 14px; width: 100%; display: grid; gap: 8px; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 14px; font-size: var(--fs-sm); font-weight: 600; }
+.confirmado { width: min(600px, calc(100% - 24px)); }
+.ok-info { display: grid; gap: 10px; width: 100%; margin-top: 10px; }
+@media (min-width: 560px) { .ok-info { grid-template-columns: 1fr 1fr; } } /* PC: resumen a la izquierda, aviso de WhatsApp a la derecha */
+.ok-txt { margin: 0; display: flex; align-items: center; gap: 10px; text-align: left; padding: 12px 14px; border-radius: 14px; background: #e7f6ec; border: 1px solid #bfe3cb; color: #14532d; font-size: var(--fs-sm); font-weight: 700; line-height: 1.4; }
+.ok-txt svg { flex-shrink: 0; color: #25d366; }
+.ok-resumen { list-style: none; margin: 0; padding: 12px 14px; width: 100%; display: grid; gap: 8px; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 14px; font-size: var(--fs-sm); font-weight: 600; }
 .ok-resumen li { display: flex; gap: 10px; align-items: center; }
-.confirmado .ag-acc .btn-texto { text-align: center; font-size: var(--fs-sm); }
 /* Aviso cuando no se pudo enviar el pedido */
 .envio-falla { background: #fbe9e5; color: var(--err); padding: 12px 14px; border-radius: 10px; font-size: var(--fs-sm); }
 .envio-falla p { margin: 0 0 10px; }
