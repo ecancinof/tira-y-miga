@@ -422,20 +422,21 @@
       const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`));
       let conflicto = null; // producto que no alcanza para hoy: aviso corto, foto en gris y botón para cambiar el día
       if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { conflicto = c; li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.disp <= 0 ? '⚠️ Agotado para hoy' : `⚠️ Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
-      const st = el('div', 'stepper'), a = el('button', null, '−'), inp = el('input'), b = el('button', null, '+');
-      a.type = b.type = 'button'; a.setAttribute('aria-label', 'Menos ' + p.nombre); b.setAttribute('aria-label', 'Más ' + p.nombre);
+      // Una sola píldora: [🗑 o −] [N ×] [+]. Con 1 pieza el botón izquierdo es el bote (quita el producto); con más, es −
+      const st = el('div', 'stepper'), a = el('button', null), inp = el('input'), b = el('button', null, '+');
+      a.type = b.type = 'button'; b.setAttribute('aria-label', 'Más ' + p.nombre);
+      if (q <= 1) { a.classList.add('es-del'); a.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; a.setAttribute('aria-label', 'Quitar ' + p.nombre); a.title = 'Quitar'; }
+      else { a.textContent = '−'; a.setAttribute('aria-label', 'Menos ' + p.nombre); }
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
       const tope = drawer.open && esParaHoy() ? Math.max(q, maxHoy(id, [...cart])) : MAXQ;
-      a.disabled = q <= 1; b.disabled = q >= Math.min(MAXQ, tope);
-      a.onclick = () => { cart.set(id, Math.max(1, q - 1)); guardarCarrito(); pintarCarrito(); };
+      b.disabled = q >= Math.min(MAXQ, tope);
+      const quitar = () => { li.classList.add('se-va'); setTimeout(() => { cart.delete(id); guardarCarrito(); pintarCarrito(); }, 220); }; // se encoge y desaparece
+      a.onclick = () => { if (q <= 1) return quitar(); cart.set(id, q - 1); guardarCarrito(); pintarCarrito(); };
       b.onclick = () => { cart.set(id, Math.min(MAXQ, q + 1)); guardarCarrito(); pintarCarrito(); };
       inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, v); guardarCarrito(); pintarCarrito(); };
       st.append(a, inp, b);
-      const r = el('div', 'ci-r'), del = el('button', 'ci-del'), ctrl = el('div', 'ci-ctrl'); del.type = 'button';
-      del.setAttribute('aria-label', 'Quitar ' + p.nombre); del.title = 'Quitar';
-      del.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>';
-      del.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); };
-      ctrl.append(st, del);
+      const r = el('div', 'ci-r'), ctrl = el('div', 'ci-ctrl');
+      ctrl.append(st);
       // Agotado para hoy: la píldora − / + se sustituye por "Cambiar" (quita el producto y vuelve al catálogo)
       if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb); }
       r.append(el('strong', null, money(q * p.precio)), ctrl);
