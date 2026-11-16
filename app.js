@@ -699,9 +699,12 @@
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
     const diaTxt = ($('#sel-fecha option:checked') || {}).textContent || '', horaTxt = ($('#sel-hora option:checked') || {}).textContent || '';
     $('#ok-folio').textContent = folio ? `Folio ${folio}` : ''; $('#ok-folio').hidden = !folio;
-    $('#ok-txt').textContent = `Te escribiremos por WhatsApp al ${d.tel.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1\u00a0$2\u00a0$3')} para confirmarlo${dom ? ' y pasarte el costo de envío' : ''}.`;
+    const telTxt = d.tel.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1\u00a0$2\u00a0$3');
+    // A domicilio el pedido no es definitivo hasta que el cliente acepta el costo de envío
+    $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
+    $('#ok-txt').textContent = dom ? `Te enviaremos por WhatsApp al ${telTxt} el costo de envío. Tu pedido queda confirmado cuando lo aceptes.` : `Te escribiremos por WhatsApp al ${telTxt} para confirmarlo.`;
     const ul = $('#ok-resumen'); ul.replaceChildren();
-    [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
+    [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
       .forEach(([ic, tx]) => { const li = el('li'); li.append(el('span', null, ic), el('span', null, tx)); ul.append(li); });
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton();
     cerrar(); setTimeout(() => { const ok = $('#confirmado'); if (!ok.open) ok.showModal(); }, 200);
