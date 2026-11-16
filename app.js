@@ -505,7 +505,14 @@
   }
   addEventListener('resize', moverBurbuja); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moverBurbuja);
   $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) return; const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
-  $('#cu-agendar').onclick = () => abrirAgenda();
+  // Al tocar "Agendar pedido": primero la burbuja se desliza al botón (animación), después se abre el minicalendario.
+  // Si el cliente cierra sin elegir, la burbuja regresa sola a "Para hoy" (pintarCuando al cerrar)
+  $('#cu-agendar').onclick = () => {
+    const ba = $('#cu-agendar'), bh = $('#cu-hoy');
+    if (ba.classList.contains('on')) return abrirAgenda();
+    bh.classList.remove('on'); ba.classList.add('on'); moverBurbuja();
+    setTimeout(abrirAgenda, 420);
+  };
   const drAg = $('#dr-agendar'); if (drAg) drAg.onclick = () => abrirAgenda(); // mismo minicalendario desde el resumen del pedido
 
   // Ventana flotante: minicalendario + hora (respeta el horario que se publica desde la app)
@@ -521,7 +528,7 @@
     pintarCal(); pintarHorasAg();
     if (!agenda.open) agenda.showModal();
   }
-  function cerrarAgenda() { if (!agenda.open) return; agenda.classList.add('sale'); setTimeout(() => { agenda.close(); agenda.classList.remove('sale'); }, 170); }
+  function cerrarAgenda() { if (!agenda.open) return; agenda.classList.add('sale'); setTimeout(() => { agenda.close(); agenda.classList.remove('sale'); pintarCuando(); }, 170); } // al cerrar, la burbuja refleja la fecha real (hoy o la agendada)
   function pintarCal() {
     const fs = fechasDisponibles(), disp = new Set(fs.map(o => o.f)), hoy = new Date(), y = agMes.getFullYear(), m = agMes.getMonth();
     const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
