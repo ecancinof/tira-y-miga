@@ -172,9 +172,9 @@ address { font-style: normal; font-size: var(--fs-lg); }
 @media (max-width: 380px) { .chip-pz span:last-child { display: none; } .chip-pz { padding: 6px 10px; } } /* en pantallas muy angostas solo icono + número */
 .vacio { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 28px 0 40px; color: var(--muted); }
 .vacio p { margin: 0; }
-.vacio-ilu { width: min(220px, 70%); height: auto; animation: vacio-flota 3s ease-in-out infinite; } /* boceto de bolsa vacía, flota suavemente */
+.vacio-ilu { width: min(220px, 70%); height: auto; animation: vacio-flota 3s ease-in-out infinite; } /* boceto de concha en el plato, flota suavemente */
 @keyframes vacio-flota { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.vacio .btn { margin-top: 4px; }
+.vacio-btn { align-self: center; margin-top: 4px; text-decoration: none; padding: 10px 20px; font-size: var(--fs-base); } /* mismo estilo que Favoritas / Rellenas, centrado */
 .cart-items { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 12px; }
 .ci { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .ci img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
