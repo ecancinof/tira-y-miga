@@ -438,7 +438,8 @@
       const r = el('div', 'ci-r'), ctrl = el('div', 'ci-ctrl');
       ctrl.append(st);
       // Agotado para hoy: la píldora − / + se sustituye por "Cambiar" (quita el producto y vuelve al catálogo)
-      if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb); }
+      if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb);
+        const del = el('button', 'ci-del'); del.type = 'button'; del.setAttribute('aria-label', 'Quitar ' + p.nombre); del.title = 'Quitar del pedido'; del.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; del.onclick = quitar; ctrl.append(del); } // también se puede solo quitar, sin ir al catálogo
       r.append(el('strong', null, money(q * p.precio)), ctrl);
       li.append(img, mid, r); ul.append(li);
     }

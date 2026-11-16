@@ -261,6 +261,8 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .campos { grid-template-columns: 1fr; }
   .fila-dia { gap: 8px; }
   .btn-agendar { padding: 11px 10px; }
+  /* Móvil: los botones del resumen (entrega, Agendar, pago) con fondo crema como las categorías, para que se note que son botones */
+  .seg input:not(:checked) + span, .btn-agendar:not(.activo) { background: var(--cream); }
   .fila-dia { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
   .fila-dia .f select { padding-left: 10px; padding-right: 24px; font-size: 15px; } /* que quepa "9:30 pm" completo */
 }
@@ -477,7 +479,10 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci.excede .stepper { border-color: var(--err); }
 .ci-stk { font-size: var(--fs-xs); font-weight: 700; color: var(--err); margin-top: 2px; }
 .ci.excede img, .ci.agot img { filter: grayscale(.85) opacity(.7); } /* foto en gris como en el catálogo */
-.ci-cambiar { width: 111px; height: 37px; padding: 0; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* ocupa el lugar de la píldora − / + (mismo tamaño) cuando el producto está agotado para hoy */
+.ci-del { display: grid; place-items: center; width: 37px; height: 37px; border: 1.5px solid var(--err); border-radius: 50%; background: #fff; color: var(--err); cursor: pointer; padding: 0; transition: background .2s, transform .12s; } /* bote junto a "Cambiar" en productos agotados */
+@media (hover: hover) { .ci-del:hover { background: #fbe9e5; } }
+.ci-del:active { transform: scale(.9); }
+.ci-cambiar { height: 37px; padding: 0 12px; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* ocupa el lugar de la píldora − / + (mismo tamaño) cuando el producto está agotado para hoy */
 @media (hover: hover) { .ci-cambiar:hover { background: #fbe9e5; } }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
