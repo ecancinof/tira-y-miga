@@ -290,7 +290,13 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .bp-t { display: flex; flex-direction: column; flex: 1; line-height: 1.25; }
   .bp-t b { font-size: var(--fs-base); }
   .bp-t small { font-size: var(--fs-xs); color: #e7dbcf; }
-  .bp-flecha { font-size: 20px; }
+  .bp-flecha { font-size: 20px; animation: bp-flecha 1.6s ease-in-out infinite; } /* la flecha "invita" moviéndose a la derecha */
+  /* Latido suave de la barra: un halo caramelo que se expande cada ~3 s, para que se note que es un botón */
+  .barra-pedido:not([hidden]) { animation: bp-latido 3s ease-in-out infinite; transition: transform .12s; }
+  .barra-pedido:active { transform: scale(.97); }
+  @keyframes bp-latido { 0%, 100% { box-shadow: 0 8px 24px rgba(56, 34, 29, .35), 0 0 0 0 rgba(234, 187, 130, .6); } 50% { box-shadow: 0 8px 24px rgba(56, 34, 29, .35), 0 0 0 10px rgba(234, 187, 130, 0); } }
+  @keyframes bp-flecha { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+  @media (prefers-reduced-motion: reduce) { .barra-pedido:not([hidden]), .bp-flecha { animation: none; } }
   body.con-barra { padding-bottom: 88px; }
   body.con-barra .toast { bottom: 96px; }
 }
