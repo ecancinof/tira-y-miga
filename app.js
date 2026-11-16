@@ -492,7 +492,7 @@
     bh.classList.toggle('on', esHoy); ba.classList.toggle('on', !esHoy);
     bh.setAttribute('aria-pressed', esHoy); ba.setAttribute('aria-pressed', !esHoy);
     const cur = fs.find(o => o.f === f);
-    $('#cu-agendar-t').textContent = esHoy || !cur ? 'Agendar' : `${cur.txt.split(' · ')[0]} · ${hora12(hm(horaPedido()))}`;
+    $('#cu-agendar-t').textContent = esHoy || !cur ? 'Agendar pedido' : `${cur.txt.split(' · ')[0]} · ${hora12(hm(horaPedido()))}`;
     moverBurbuja();
   }
   // Burbuja oscura que se desliza de "Para hoy" a "Agendar" (y cambia de ancho con el texto)
