@@ -674,7 +674,7 @@
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const err = $('#form-error'), btn = $('#btn-enviar'); err.hidden = true;
+    const err = $('#form-error'), btn = $('#btn-enviar'), falla = $('#envio-falla'); err.hidden = true; falla.hidden = true;
     if (pausa) { err.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.'; err.hidden = false; return; }
     const d = datosForm(), m = validar(d);
     if (m) { err.textContent = m; err.hidden = false; return; }
@@ -690,12 +690,27 @@
       } catch (x) { registrado = false; }
     }
     const link = linkWA(mensajeWA(d, folio));
-    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente();
-    btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton();
-    cerrar();
-    toast(folio ? `¡Pedido ${folio} recibido! Abriendo WhatsApp…` : 'Abriendo WhatsApp…');
-    setTimeout(() => { location.href = link; }, 400);
+    btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido';
+    // Sin buzón configurado: el único canal es WhatsApp (como antes)
+    if (!C.api) { cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton(); cerrar(); toast('Abriendo WhatsApp…'); setTimeout(() => { location.href = link; }, 400); return; }
+    // Falló el registro: NO se vacía el carrito; puede reintentar o mandarlo por WhatsApp
+    if (!registrado && !d.web) { $('#falla-wa').href = link; falla.hidden = false; revisarBoton(); falla.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    // Registrado: pantalla de confirmación dentro de la página (no hace falta tener WhatsApp)
+    const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
+    const diaTxt = ($('#sel-fecha option:checked') || {}).textContent || '', horaTxt = ($('#sel-hora option:checked') || {}).textContent || '';
+    $('#ok-folio').textContent = folio ? `Folio ${folio}` : ''; $('#ok-folio').hidden = !folio;
+    $('#ok-txt').textContent = `Te escribiremos por WhatsApp al ${d.tel.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')} para confirmarlo${dom ? ' y pasarte el costo de envío' : ''}.`;
+    const ul = $('#ok-resumen'); ul.replaceChildren();
+    [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
+      .forEach(([ic, tx]) => { const li = el('li'); li.append(el('span', null, ic), el('span', null, tx)); ul.append(li); });
+    $('#ok-wa').href = link;
+    cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton();
+    cerrar(); setTimeout(() => { const ok = $('#confirmado'); if (!ok.open) ok.showModal(); }, 200);
   });
+
+  // Confirmación: cerrar con "Listo", con Esc o tocando fuera
+  { const ok = $('#confirmado'), fin = () => { if (!ok.open) return; ok.classList.add('sale'); setTimeout(() => { ok.close(); ok.classList.remove('sale'); }, 170); };
+    $('#ok-listo').onclick = fin; ok.addEventListener('cancel', e => { e.preventDefault(); fin(); }); ok.addEventListener('click', e => { if (e.target === ok) fin(); }); }
 
   // ---------- DiDi Food y Uber Eats: abrir la app del celular ----------
   // Android: intent:// abre la app instalada y, si no está, la página web (browser_fallback_url).
