@@ -331,7 +331,7 @@
     $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
     $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
     const r = !p.agotado && paraHoy() ? quedanHoy(p.id) : Infinity, ds = $('#det-stk');
-    ds.hidden = !(r <= 5); if (!ds.hidden) ds.textContent = r <= 0 ? 'Agotado para hoy · cambia el día para pedirla' : `Para hoy ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`;
+    ds.hidden = !(r > 0 && r <= 5); if (!ds.hidden) ds.textContent = `Para hoy ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`; // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
     detUpd();
     if (!det.open) det.showModal();
   }
@@ -596,7 +596,7 @@
     if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = '';
     ponDir();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
-    if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}! Ya llenamos tus datos.`;
+    if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
     revisarBoton();
   }
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
