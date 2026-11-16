@@ -181,7 +181,7 @@ address { font-style: normal; font-size: var(--fs-lg); }
 .ci-n { font-weight: 600; line-height: 1.3; }
 .ci-p { font-size: var(--fs-xs); color: var(--muted); }
 .ci-r { display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; } /* precio a la derecha y la píldora − / + a su izquierda, en una sola fila */
-.ci-r strong { min-width: 44px; text-align: right; }
+.ci-r strong { display: inline-flex; align-items: center; justify-content: flex-end; height: 37px; min-width: 44px; line-height: 1; } /* misma altura que la píldora, centrado con ella */
 .ci .stepper { border: 1px solid var(--ink); } /* mismo grosor que el círculo del bote de basura */
 .ci .stepper button { width: 34px; height: 34px; font-size: 22px; font-weight: 500; line-height: 1; }
 .ci.agot .ci-n::after { content: ' · agotado'; color: var(--err); font-weight: 600; }
