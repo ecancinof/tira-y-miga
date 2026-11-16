@@ -6,7 +6,7 @@ window.TM_CONFIG = {
   api: 'https://script.google.com/macros/s/AKfycbxJoiLIrP0w5jGY5XmA9HV8pPzUvM-hOyqrVAi8kzXPOtFOXshEVTj-YCAMd-tBGOYk/exec',
   whatsapp: '523341016194',
   // Datos para transferencia (los que pongas en la app los reemplazan)
-  datosPago: 'CLABE: 170180019435675074\nBanco: REVOLUT\nA nombre de: Esteban Cancino',
+  datosPago: 'CLABE: 170180019435675074\nBanco: REVOLUT\nA nombre: Esteban Cancino',
   // Días: 0 = domingo, 1 = lunes, 2 = martes … 6 = sábado
   diasCerrado: [2],
   abre: '17:00',
@@ -16,5 +16,7 @@ window.TM_CONFIG = {
   // Minutos que necesitas para tener listo un pedido de hoy
   minutosPreparacion: 45,
   // Cuántos días adelante se puede apartar
-  diasAdelante: 14
+  diasAdelante: 14,
+  // Productos "sobre pedido" (los marcas en la app, p. ej. miniconchas): días de anticipación y piezas mínimas
+  sobrePedido: { diasAnticipacion: 1, minimo: 6 }
 };

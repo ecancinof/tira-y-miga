@@ -488,5 +488,9 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci-cambiar { height: 37px; padding: 0 12px; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* ocupa el lugar de la píldora − / + (mismo tamaño) cuando el producto está agotado para hoy */
 @media (hover: hover) { .ci-cambiar:hover { background: #fbe9e5; } }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
+/* Sobre pedido: etiqueta en la foto y notas en tarjeta, detalle y carrito */
+.sp-tag { position: absolute; top: 12px; left: 12px; background: #fff; color: var(--ink); border: 1px solid var(--line); font-size: var(--fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 6px rgba(56, 34, 29, .2); }
+.card-sp { margin: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--caramel-d); }
+.ci-sp { font-size: var(--fs-xs); font-weight: 700; color: var(--caramel-d); margin-top: 2px; }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
 .card.sin-hoy .add, .card.sin-hoy .add:disabled { background: var(--line); color: var(--muted); }

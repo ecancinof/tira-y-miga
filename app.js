@@ -41,12 +41,18 @@
   }
 
   const prod = id => menu.find(p => p.id === id);
+  // ---------- Sobre pedido (p. ej. miniconchas): no se venden a diario, se piden con anticipación y con un mínimo de piezas ----------
+  const SP = Object.assign({ diasAnticipacion: 1, minimo: 6 }, C.sobrePedido || {});
+  const minQ = p => p && p.sobre ? Math.max(1, Math.floor(Number(SP.minimo) || 1)) : 1;
+  const haySobre = () => [...cart.keys()].some(id => { const p = prod(id); return !!(p && p.sobre); });
+  const spDias = () => Math.max(0, Math.floor(Number(SP.diasAnticipacion) || 0));
+  const spTxt = () => { const d = spDias(), m = minQ({ sobre: true }); return `Sobre pedido · con ${d === 1 ? '1 día' : d + ' días'} de anticipación${m > 1 ? ', mínimo ' + m + ' piezas' : ''}`; };
   // ---------- Stock de hoy (solo limita pedidos PARA HOY) ----------
   const hoyYmd = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const limitaHoy = () => !!stockFecha && stockFecha === hoyYmd() && Object.keys(STK).length > 0;
   // Cuántas piezas de "id" caben hoy, tomando en cuenta lo demás del carrito (sabores que comparten la misma concha base)
   function maxHoy(id, entradas) {
-    const p = prod(id); if (!limitaHoy() || !p || !p.usa.length) return Infinity;
+    const p = prod(id); if (!limitaHoy() || !p || !p.usa.length || p.sobre) return Infinity;
     const uso = {}; for (const [k, q] of entradas) { if (k === id) continue; const o = prod(k); if (o) o.usa.forEach(u => { uso[u.id] = (uso[u.id] || 0) + q * u.por; }); }
     let m = Infinity; p.usa.forEach(u => { if (u.id in STK) m = Math.min(m, Math.floor((STK[u.id] - (uso[u.id] || 0)) / u.por + 1e-9)); });
     return Math.max(0, m);
@@ -55,7 +61,7 @@
   function conflictosHoy(entradas) {
     if (!limitaHoy()) return [];
     const uso = {}, quien = {};
-    for (const [k, q] of entradas) { const o = prod(k); if (!o) continue; o.usa.forEach(u => { if (!(u.id in STK)) return; uso[u.id] = (uso[u.id] || 0) + q * u.por; (quien[u.id] = quien[u.id] || []).push({ id: k, por: u.por }); }); }
+    for (const [k, q] of entradas) { const o = prod(k); if (!o || o.sobre) continue; o.usa.forEach(u => { if (!(u.id in STK)) return; uso[u.id] = (uso[u.id] || 0) + q * u.por; (quien[u.id] = quien[u.id] || []).push({ id: k, por: u.por }); }); }
     return Object.keys(uso).filter(b => uso[b] > STK[b] + 1e-9).map(b => ({ disp: Math.max(0, Math.floor(STK[b] / Math.min(...quien[b].map(x => x.por)) + 1e-9)), ids: quien[b].map(x => x.id) }));
   }
   const textoConflicto = c => c.ids.length > 1 ? `Entre ${c.ids.map(i => prod(i).nombre).join(' y ')} solo alcanzan ${c.disp} para hoy (salen de la misma concha)`
@@ -115,13 +121,15 @@
   function horasDe(fecha) {
     const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
     if (!abiertoDia(d)) return [];
-    const out = [], hoy = fecha === ymd(new Date()), min = Math.ceil((minAhora() + (H.prepMin || 45)) / 30) * 30;
-    for (const t of dia(d).t) for (let m = hoy ? Math.max(t.a, min) : t.a; m <= t.c - 30; m += 30) if (!out.includes(m)) out.push(m);
+    // Otros días: cada 30 min hasta media hora antes de cerrar.
+    // Hoy: cada 15 min desde (ahora + preparación) y hasta 15 min antes de cerrar, para que "último pedido" (p. ej. 15 min antes) sí se respete
+    const out = [], hoy = fecha === ymd(new Date()), paso = hoy ? 15 : 30, min = Math.ceil((minAhora() + (H.prepMin ?? 45)) / paso) * paso;
+    for (const t of dia(d).t) for (let m = hoy ? Math.max(t.a, min) : t.a; m <= t.c - paso; m += paso) if (!out.includes(m)) out.push(m);
     return out;
   }
-  function fechasDisponibles() {
-    const out = [], hoy = new Date();
-    for (let i = 0; i <= (C.diasAdelante || 14); i++) {
+  function fechasDisponibles(todas) { // todas = sin la regla de "sobre pedido" (para el aviso general de horario)
+    const out = [], hoy = new Date(), desde = todas ? 0 : (haySobre() ? spDias() : 0);
+    for (let i = desde; i <= (C.diasAdelante || 14) + desde; i++) {
       const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i);
       if (!abiertoDia(d)) continue;
       const f = ymd(d);
@@ -162,7 +170,7 @@
   function normalizar(lista) {
     return lista.map((p, i) => ({
       id: String(p.id), nombre: String(p.nombre || ''), precio: Number(p.precio) || 0,
-      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, destacado: !!p.destacado, desc: p.desc || '',
+      seccion: p.seccion || 'Rellenas', categoria: p.categoria || 'Conchas', fotoV: p.fotoV || '', orden: Number(p.orden ?? i) || 0, agotado: !!p.agotado, destacado: !!p.destacado, sobre: !!p.sobrePedido, desc: p.desc || '',
       usa: Array.isArray(p.usa) ? p.usa.filter(u => u && u.id && Number(u.por) > 0).map(u => ({ id: String(u.id), por: Number(u.por) })) : []
     })).filter(p => p.id && p.nombre && p.precio > 0);
   }
@@ -221,7 +229,7 @@
     const c = el('article', 'card' + (p.agotado ? ' agotado' : '')); c.dataset.id = p.id;
     const fi = el('div', 'card-img'), img = el('img');
     img.src = foto(p); img.alt = p.nombre; img.loading = 'lazy'; img.width = 560; img.height = 420;
-    fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy'));
+    fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy')); else if (p.sobre) fi.append(el('span', 'sp-tag', '📦 Sobre pedido'));
     const stg = el('span', 'agotado-tag stk-tag'); stg.hidden = true; fi.append(stg);
     const fv = el('span', 'fav-tag', '★ Favorita'); fv.title = 'Una de las más pedidas'; fi.append(fv);
     fi.append(el('span', 'ver-mas', 'Ver')); fi.tabIndex = 0; fi.setAttribute('role', 'button'); fi.setAttribute('aria-label', 'Ver detalles de ' + p.nombre);
@@ -231,13 +239,14 @@
     top.append(h3, el('span', 'precio', money(p.precio)));
     b.append(top);
     if (desc(p)) b.append(el('p', 'card-desc', desc(p)));
+    if (p.sobre) b.append(el('p', 'card-sp', spTxt()));
     const acc = el('div', 'card-acc');
-    let q = 1;
-    const st = el('div', 'stepper'), menos = el('button', null, '−'), out = el('output', null, '1'), mas = el('button', null, '+');
+    const mi = minQ(p); let q = mi;
+    const st = el('div', 'stepper'), menos = el('button', null, '−'), out = el('output', null, String(mi)), mas = el('button', null, '+');
     menos.type = mas.type = 'button'; menos.setAttribute('aria-label', 'Una pieza menos de ' + p.nombre); mas.setAttribute('aria-label', 'Una pieza más de ' + p.nombre);
-    const upd = () => { const t = topeHoy(p); if (q > t) q = Math.max(1, t); out.textContent = q; menos.disabled = q <= 1 || t <= 0; mas.disabled = q >= t; mas.title = t < MAXQ && t > 0 && q >= t ? `Disponible hoy: ${enLetraT(t)}` : ''; };
+    const upd = () => { const t = topeHoy(p); if (q > t) q = Math.max(mi, t); out.textContent = q; menos.disabled = q <= mi || t <= 0; mas.disabled = q >= t; mas.title = t < MAXQ && t > 0 && q >= t ? `Disponible hoy: ${enLetraT(t)}` : ''; };
     c._upd = upd; // se vuelve a revisar cuando cambia el carrito o el stock
-    menos.onclick = () => { q = Math.max(1, q - 1); upd(); };
+    menos.onclick = () => { q = Math.max(mi, q - 1); upd(); };
     mas.onclick = () => { const t = topeHoy(p); if (q >= t) { toast(t <= 0 ? `${p.nombre} · Agotada para hoy` : `${p.nombre} · Disponible hoy: ${enLetraT(t)}`); return; } q = Math.min(t, q + 1); upd(); };
     st.append(menos, out, mas); upd();
     const add = el('button', 'add', p.agotado ? 'Agotado' : 'Añadir');
@@ -249,7 +258,7 @@
       ocupado = true;
       add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
       setTimeout(() => { add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; pintarStockTags(); }, 1300);
-      agregar(p, Math.min(q, t), img); q = 1; upd();
+      agregar(p, Math.min(q, t), img); q = mi; upd();
     };
     acc.append(st, add); b.append(acc);
     c.append(fi, b);
@@ -273,10 +282,14 @@
   function agregar(p, q, img) {
     const r = paraHoy() ? quedanHoy(p.id) : Infinity;
     q = Math.min(q, topeHoy(p)); if (q <= 0) return;
+    if (p.sobre && !cart.has(p.id)) q = Math.max(q, minQ(p));
+    const fAntes = fechaPedido();
     cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + q)); guardarCarrito(); pintarCarrito(); evento('agrega');
     if (sinMov || !img || !img.animate) { const b = $('#cart-count'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } else volarAlCarrito(img);
     // "Disponible hoy: dos" (en palabras del 1 al 10)
     const enLetra = n => ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'][n] || String(n);
+    const fDesp = fechaPedido();
+    if (p.sobre && fDesp !== fAntes) { const o = fechasDisponibles().find(x => x.f === fDesp); toast(`📦 ${p.nombre} es sobre pedido · tu pedido quedó para ${o ? o.txt.split(' · ')[0].toLowerCase() : 'otro día'}`); return; }
     if (q > r) { const tot = Math.max(0, r + (cart.get(p.id) || 0) - q); toast(tot <= 0 ? `${p.nombre} · Agotada hoy. Agregada para pedir otro día.` : `${p.nombre} · Disponible hoy: ${enLetra(tot)}`); }
     else toast(`${q} × ${p.nombre} en tu pedido`);
   }
@@ -320,23 +333,24 @@
 
   // ---------- Vista de detalle del producto ----------
   const det = $('#detalle'); let detP = null, detQ = 1;
-  const detUpd = () => { const t = topeHoy(detP); if (detQ > t) detQ = Math.max(1, t); $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= 1; $('#det-mas').disabled = detQ >= t;
+  const detUpd = () => { const t = topeHoy(detP), mi = minQ(detP); if (detQ > t) detQ = Math.max(mi, t); $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= mi; $('#det-mas').disabled = detQ >= t;
     const a = $('#det-add'); a.disabled = !detP || detP.agotado || pausa || !!det.dataset.sinHoy; a.textContent = detP && detP.agotado ? 'Agotado' : pausa ? 'Pedidos en pausa' : det.dataset.sinHoy ? 'Agotado hoy' : `Agregar · ${money(detQ * (detP ? detP.precio : 0))}`;
   };
   function abrirDetalle(p) {
-    detP = p; detQ = 1;
+    detP = p; detQ = minQ(p);
     const im = $('#det-img'); im.src = foto(p); im.alt = p.nombre;
     const sinHoy = !p.agotado && paraHoy() && quedanHoy(p.id) <= 0;
     det.classList.toggle('agotado', p.agotado || sinHoy); $('#det-ag').hidden = !(p.agotado || sinHoy); det.dataset.sinHoy = sinHoy ? '1' : '';
     $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
     $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
     const r = !p.agotado && paraHoy() ? quedanHoy(p.id) : Infinity, ds = $('#det-stk');
-    ds.hidden = !(r > 0 && r <= 5); if (!ds.hidden) ds.textContent = `Para hoy ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`; // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
+    ds.hidden = !(r > 0 && r <= 5); if (!ds.hidden) ds.textContent = `Para hoy ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`;
+    ds.classList.toggle('sp', !!p.sobre); if (p.sobre && !p.agotado) { ds.hidden = false; ds.textContent = '📦 ' + spTxt(); } // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
     detUpd();
     if (!det.open) det.showModal();
   }
   function cerrarDetalle() { if (!det.open) return; det.classList.add('sale'); setTimeout(() => { det.close(); det.classList.remove('sale'); }, 170); }
-  $('#det-menos').onclick = () => { detQ = Math.max(1, detQ - 1); detUpd(); };
+  $('#det-menos').onclick = () => { detQ = Math.max(minQ(detP), detQ - 1); detUpd(); };
   $('#det-mas').onclick = () => { const t = topeHoy(detP); if (detQ >= t) { toast(`${detP.nombre} · Disponible hoy: ${enLetraT(t)}`); return; } detQ = Math.min(t, detQ + 1); detUpd(); };
   $('#det-x').onclick = cerrarDetalle;
   det.addEventListener('cancel', e => { e.preventDefault(); cerrarDetalle(); });
@@ -345,7 +359,7 @@
 
   // ---------- Fuera de horario: se puede programar ----------
   function pintarProgramar() {
-    const av = $('#aviso-cerrado'), np = $('#nota-prog'), hoy = ymd(new Date()), fs = fechasDisponibles();
+    const av = $('#aviso-cerrado'), np = $('#nota-prog'), hoy = ymd(new Date()), fs = fechasDisponibles(true);
     const prox = fs[0], d = new Date(), m = minAhora(), abiertoAhora = abiertoEn(d, m);
     if (pausa || !prox || prox.f === hoy) { av.hidden = true; np.hidden = true; return; }
     const h = horasDe(prox.f)[0], et = prox.txt.split(' · ')[0].toLowerCase();
@@ -419,21 +433,21 @@
     for (const [id, q] of cart) {
       const p = prod(id), li = el('li', 'ci' + (p.agotado ? ' agot' : ''));
       const img = el('img'); img.src = foto(p); img.alt = '';
-      const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`));
+      const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`)); if (p.sobre) mid.append(el('div', 'ci-sp', `📦 Sobre pedido${minQ(p) > 1 ? ' · mín. ' + minQ(p) : ''}`));
       let conflicto = null; // producto que no alcanza para hoy: aviso corto, foto en gris y botón para cambiar el día
       if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { conflicto = c; li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.disp <= 0 ? '⚠️ Agotado para hoy' : `⚠️ Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
       // Una sola píldora: [🗑 o −] [N ×] [+]. Con 1 pieza el botón izquierdo es el bote (quita el producto); con más, es −
       const st = el('div', 'stepper'), a = el('button', null), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; b.setAttribute('aria-label', 'Más ' + p.nombre);
-      if (q <= 1) { a.classList.add('es-del'); a.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; a.setAttribute('aria-label', 'Quitar ' + p.nombre); a.title = 'Quitar'; }
+      if (q <= minQ(p)) { a.classList.add('es-del'); a.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; a.setAttribute('aria-label', 'Quitar ' + p.nombre); a.title = 'Quitar'; }
       else { a.textContent = '−'; a.setAttribute('aria-label', 'Menos ' + p.nombre); }
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
       const tope = drawer.open && esParaHoy() ? Math.max(q, maxHoy(id, [...cart])) : MAXQ;
       b.disabled = q >= Math.min(MAXQ, tope);
       const quitar = () => { li.classList.add('se-va'); setTimeout(() => { cart.delete(id); guardarCarrito(); pintarCarrito(); }, 220); }; // se encoge y desaparece
-      a.onclick = () => { if (q <= 1) return quitar(); cart.set(id, q - 1); guardarCarrito(); pintarCarrito(); };
+      a.onclick = () => { if (q <= minQ(p)) return quitar(); cart.set(id, q - 1); guardarCarrito(); pintarCarrito(); };
       b.onclick = () => { cart.set(id, Math.min(MAXQ, q + 1)); guardarCarrito(); pintarCarrito(); };
-      inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, v); guardarCarrito(); pintarCarrito(); };
+      inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, Math.max(minQ(p), v)); guardarCarrito(); pintarCarrito(); };
       st.append(a, inp, b);
       const r = el('div', 'ci-r'), ctrl = el('div', 'ci-ctrl');
       ctrl.append(st);
@@ -451,6 +465,7 @@
     $('#cart-empty').hidden = cart.size > 0;
     $('#form-pedido').hidden = cart.size === 0;
     const bp = $('#barra-pedido');
+    { const fp = fechaPedido(); pintarCuando(); const sf = $('#sel-fecha'); if (drawer.open && sf && sf.value !== fp) llenarFechas(); } // con "sobre pedido" el día se recorre solo
     pintarStockTags(); if (typeof revisarBoton === 'function' && $('#sel-fecha')) try { revisarBoton(); } catch (e) {}
     if (bp) { bp.hidden = !pz; $('#bp-num').textContent = pz; $('#bp-txt').textContent = `${pz} ${pz === 1 ? 'pieza' : 'piezas'} · ${money(t)}`; document.body.classList.toggle('con-barra', !!pz); }
   }
@@ -490,7 +505,7 @@
     const fs = fechasDisponibles(), f = fechaPedido(), hoy = hoyYmd(), esHoy = f === hoy;
     box.hidden = !fs.length || pausa;
     const bh = $('#cu-hoy'), ba = $('#cu-agendar');
-    bh.disabled = !hayHoyDisponible(); bh.title = bh.disabled ? 'Por hoy ya no recibimos pedidos' : '';
+    bh.disabled = !hayHoyDisponible(); bh.title = bh.disabled ? (haySobre() ? 'Tu pedido lleva productos sobre pedido' : 'Por hoy ya no recibimos pedidos') : '';
     bh.classList.toggle('on', esHoy); ba.classList.toggle('on', !esHoy);
     bh.setAttribute('aria-pressed', esHoy); ba.setAttribute('aria-pressed', !esHoy);
     const cur = fs.find(o => o.f === f);
@@ -504,7 +519,7 @@
     if (!bb.classList.contains('lista')) requestAnimationFrame(() => requestAnimationFrame(() => bb.classList.add('lista')));
   }
   addEventListener('resize', moverBurbuja); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moverBurbuja);
-  $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) return; const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
+  $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) { if (haySobre()) toast(`📦 Tu pedido lleva productos sobre pedido (${spDias() === 1 ? '1 día' : spDias() + ' días'} de anticipación)`); return; } const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
   // Al tocar "Agendar pedido": primero la burbuja se desliza al botón (animación), después se abre el minicalendario.
   // Si el cliente cierra sin elegir, la burbuja regresa sola a "Para hoy" (pintarCuando al cerrar)
   $('#cu-agendar').onclick = () => {
