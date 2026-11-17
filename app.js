@@ -17,15 +17,15 @@
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
   // ¿Para cuándo es el pedido? Se elige una sola vez (chip en las pestañas o "Día" en el carrito) y manda en toda la página
   // Al entrar siempre empieza en "Para hoy" (o el primer día disponible): no se recuerda el día de la visita anterior
-  let fechaSel = '', horaSel = ''; try { localStorage.removeItem('tm-fecha'); localStorage.removeItem('tm-hora'); } catch (e) {}
-  const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; };
+  let fechaSel = '', horaSel = '', fechaElegida = false; // fechaElegida = el cliente escogió el día (con "Para hoy", Agendar o la casilla Día) try { localStorage.removeItem('tm-fecha'); localStorage.removeItem('tm-hora'); } catch (e) {}
+  const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fechaElegida || !fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; }; // mientras no elija, siempre el primer día disponible (se recalcula al llegar el horario de la app)
   const paraHoy = () => limitaHoy() && fechaPedido() === hoyYmd(); // true = el pedido es para hoy y aplica el stock del día
   const minTxt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; // 630 → "10:30"
   // Hora elegida (valor "HH:MM"); si ya no cabe en el horario del día, la primera disponible
   const horaPedido = () => { const hs = horasDe(fechaPedido() || hoyYmd()).map(minTxt); if (!hs.length) return ''; if (!hs.includes(horaSel)) horaSel = hs[0]; return horaSel; };
   function ponFecha(f, origen, hora) {
     if (!fechasDisponibles().some(o => o.f === f)) return;
-    const cambia = f !== fechaSel; fechaSel = f; if (hora) horaSel = hora;
+    const cambia = f !== fechaSel; fechaSel = f; fechaElegida = true; if (hora) horaSel = hora;
     if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; bloquearDia(); llenarHoras(); }
     pintarCuando(); if (!cambia) return;
     pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
