@@ -16,7 +16,8 @@
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
   // ¿Para cuándo es el pedido? Se elige una sola vez (chip en las pestañas o "Día" en el carrito) y manda en toda la página
-  let fechaSel = '', horaSel = ''; try { fechaSel = localStorage.getItem('tm-fecha') || ''; horaSel = localStorage.getItem('tm-hora') || ''; } catch (e) {}
+  // Al entrar siempre empieza en "Para hoy" (o el primer día disponible): no se recuerda el día de la visita anterior
+  let fechaSel = '', horaSel = ''; try { localStorage.removeItem('tm-fecha'); localStorage.removeItem('tm-hora'); } catch (e) {}
   const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; };
   const paraHoy = () => limitaHoy() && fechaPedido() === hoyYmd(); // true = el pedido es para hoy y aplica el stock del día
   const minTxt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; // 630 → "10:30"
@@ -25,7 +26,6 @@
   function ponFecha(f, origen, hora) {
     if (!fechasDisponibles().some(o => o.f === f)) return;
     const cambia = f !== fechaSel; fechaSel = f; if (hora) horaSel = hora;
-    try { localStorage.setItem('tm-fecha', f); if (hora) localStorage.setItem('tm-hora', hora); } catch (e) {}
     if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; bloquearDia(); llenarHoras(); }
     pintarCuando(); if (!cambia) return;
     pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
@@ -591,7 +591,7 @@
     for (const m of horasDe($('#sel-fecha').value)) { const op = el('option', null, hora12(m)); op.value = minTxt(m); sel.append(op); }
     const h = $('#sel-fecha').value === fechaPedido() ? horaPedido() : ''; if ([...sel.options].some(o => o.value === h)) sel.value = h;
   }
-  $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; try { localStorage.setItem('tm-hora', horaSel); } catch (e) {} pintarCuando(); };
+  $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; pintarCuando(); };
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
   const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton(); });
