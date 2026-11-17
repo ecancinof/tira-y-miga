@@ -13,6 +13,7 @@
   let pausa = false, avisoPausa = '', conEnvio = true, menuEnVivo = false, datosPago = C.datosPago || '';
   let STK = {}, stockFecha = ''; // stock de HOY que publica la app (piezas por concha base)
   let capDia = 0, capLibre = {}; // capacidad por día para pedidos agendados (0 = sin límite) y piezas que aún caben por día
+  let stockModo = 'stock'; // 'capacidad' = hoy aún no hay producción registrada: lo de hoy se vende contra la capacidad, no contra el stock
   const cart = new Map();      // id -> cantidad
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
@@ -50,11 +51,12 @@
   const spTxt = () => { const d = spDias(), m = minQ({ sobre: true }); return `Sobre pedido · con ${d === 1 ? '1 día' : d + ' días'} de anticipación${m > 1 ? ', mínimo ' + m + ' piezas' : ''}`; };
   // ---------- Stock de hoy (solo limita pedidos PARA HOY) ----------
   const hoyYmd = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  const limitaHoy = () => !!stockFecha && stockFecha === hoyYmd() && Object.keys(STK).length > 0;
+  const hoyPorCapacidad = () => stockModo === 'capacidad' && !!stockFecha && stockFecha === hoyYmd();
+  const limitaHoy = () => !!stockFecha && stockFecha === hoyYmd() && !hoyPorCapacidad() && Object.keys(STK).length > 0;
   // Pedido para hoy sin stock publicado hoy (la app está cerrada): se acepta, pero se le avisa al cliente que queda por confirmar
   const hoySinStock = () => menuEnVivo && stockFecha !== hoyYmd();
   // Piezas que aún caben en un día AGENDADO (mañana en adelante). Infinity = sin límite
-  const libreDia = f => capDia > 0 && f > hoyYmd() ? (Object.prototype.hasOwnProperty.call(capLibre, f) ? Math.max(0, Number(capLibre[f]) || 0) : capDia) : Infinity;
+  const libreDia = f => capDia > 0 && (f > hoyYmd() || (f === hoyYmd() && hoyPorCapacidad())) ? (Object.prototype.hasOwnProperty.call(capLibre, f) ? Math.max(0, Number(capLibre[f]) || 0) : capDia) : Infinity;
   // Cuántas piezas de "id" caben hoy, tomando en cuenta lo demás del carrito (sabores que comparten la misma concha base)
   function maxHoy(id, entradas) {
     const p = prod(id); if (!limitaHoy() || !p || !p.usa.length || p.sobre) return Infinity;
@@ -382,7 +384,7 @@
     if (!C.api || document.hidden) return;
     try {
       const d = await (await fetch(C.api + '?accion=menu', { cache: 'no-store' })).json(); if (!d.ok) return;
-      const f = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.capDia, d.capLibre, d.productos]);
+      const f = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.stockModo, d.capDia, d.capLibre, d.productos]);
       if (f !== firmaMenu) { firmaMenu = f; aplicarMenu(d); }
     } catch (e) {}
   }
@@ -414,7 +416,7 @@
       const d = await r.json();
       if (!d.ok) throw 0;
       clearTimeout(respaldo); $('#menu-secciones').removeAttribute('aria-busy');
-      firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.capDia, d.capLibre, d.productos]);
+      firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.stockModo, d.capDia, d.capLibre, d.productos]);
       aplicarMenu(d);
     } catch (e) { clearTimeout(respaldo); if (!mostrado && !menuEnVivo) { $('#menu-secciones').removeAttribute('aria-busy'); pintarMenu(); pintarCarrito(); } /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -426,6 +428,7 @@
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
       STK = d.stock && typeof d.stock === 'object' ? d.stock : {}; stockFecha = d.stockFecha || '';
+      stockModo = d.stockModo === 'capacidad' ? 'capacidad' : 'stock';
       capDia = Math.max(0, Math.floor(Number(d.capDia) || 0)); capLibre = d.capLibre && typeof d.capLibre === 'object' ? d.capLibre : {};
       pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); pintarCuando(); if (drawer.open) llenarFechas();
       cargarFotos();
