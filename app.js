@@ -569,8 +569,10 @@
       if (f === agF) { b.classList.add('sel'); b.setAttribute('aria-selected', 'true'); }
       if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : libreDia(f) <= 0 ? 'Ese día ya está lleno' : 'Fuera del plazo para agendar'; if (abiertoDia(dd) && libreDia(f) <= 0) b.classList.add('lleno'); }
       b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = hs[0] || ''; pintarCal(); pintarHorasAg(); };
+      if (b.classList.contains('lleno')) b.setAttribute('aria-label', `${d}: día lleno`);
       g.append(b);
     }
+    const ley = $('#cal-ley'); if (ley) ley.hidden = !g.querySelector('.cal-d.lleno'); // leyenda solo si en este mes hay días llenos
   }
   function pintarHorasAg() {
     const box = $('#ag-horas'); box.replaceChildren();
