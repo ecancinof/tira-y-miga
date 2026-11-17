@@ -12,6 +12,7 @@
   let menu = [];               // [{ id, nombre, precio, seccion, orden, agotado, desc, foto }]
   let pausa = false, avisoPausa = '', conEnvio = true, menuEnVivo = false, datosPago = C.datosPago || '';
   let STK = {}, stockFecha = ''; // stock de HOY que publica la app (piezas por concha base)
+  let capDia = 0, capLibre = {}; // capacidad por día para pedidos agendados (0 = sin límite) y piezas que aún caben por día
   const cart = new Map();      // id -> cantidad
   const leerCarrito = () => { try { const o = JSON.parse(localStorage.getItem('tm-carrito') || '{}'); for (const [k, v] of Object.entries(o)) if (v > 0) cart.set(k, Math.min(MAXQ, v | 0)); } catch (e) {} };
   const guardarCarrito = () => { try { localStorage.setItem('tm-carrito', JSON.stringify(Object.fromEntries(cart))); } catch (e) {} };
@@ -50,6 +51,10 @@
   // ---------- Stock de hoy (solo limita pedidos PARA HOY) ----------
   const hoyYmd = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const limitaHoy = () => !!stockFecha && stockFecha === hoyYmd() && Object.keys(STK).length > 0;
+  // Pedido para hoy sin stock publicado hoy (la app está cerrada): se acepta, pero se le avisa al cliente que queda por confirmar
+  const hoySinStock = () => menuEnVivo && stockFecha !== hoyYmd();
+  // Piezas que aún caben en un día AGENDADO (mañana en adelante). Infinity = sin límite
+  const libreDia = f => capDia > 0 && f > hoyYmd() ? (Object.prototype.hasOwnProperty.call(capLibre, f) ? Math.max(0, Number(capLibre[f]) || 0) : capDia) : Infinity;
   // Cuántas piezas de "id" caben hoy, tomando en cuenta lo demás del carrito (sabores que comparten la misma concha base)
   function maxHoy(id, entradas) {
     const p = prod(id); if (!limitaHoy() || !p || !p.usa.length || p.sobre) return Infinity;
@@ -134,6 +139,7 @@
       if (!abiertoDia(d)) continue;
       const f = ymd(d);
       if (i === 0 && (minAhora() > cierreFinal(d) - (H.ultimoMin ?? 60) || !horasDe(f).length)) continue;
+      if (!todas && libreDia(f) <= 0) continue; // ese día ya está lleno
       const etiqueta = i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1);
       out.push({ f, txt: `${etiqueta} · ${d.getDate()} ${MESES[d.getMonth()]}` });
     }
@@ -376,7 +382,7 @@
     if (!C.api || document.hidden) return;
     try {
       const d = await (await fetch(C.api + '?accion=menu', { cache: 'no-store' })).json(); if (!d.ok) return;
-      const f = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.productos]);
+      const f = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.capDia, d.capLibre, d.productos]);
       if (f !== firmaMenu) { firmaMenu = f; aplicarMenu(d); }
     } catch (e) {}
   }
@@ -408,7 +414,7 @@
       const d = await r.json();
       if (!d.ok) throw 0;
       clearTimeout(respaldo); $('#menu-secciones').removeAttribute('aria-busy');
-      firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.productos]);
+      firmaMenu = JSON.stringify([d.pausa, d.avisoPausa, d.envio, d.horario, d.stock, d.stockFecha, d.capDia, d.capLibre, d.productos]);
       aplicarMenu(d);
     } catch (e) { clearTimeout(respaldo); if (!mostrado && !menuEnVivo) { $('#menu-secciones').removeAttribute('aria-busy'); pintarMenu(); pintarCarrito(); } /* sin conexión al buzón: se queda el menú de respaldo */ }
   }
@@ -420,6 +426,7 @@
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
       STK = d.stock && typeof d.stock === 'object' ? d.stock : {}; stockFecha = d.stockFecha || '';
+      capDia = Math.max(0, Math.floor(Number(d.capDia) || 0)); capLibre = d.capLibre && typeof d.capLibre === 'object' ? d.capLibre : {};
       pintarMenu(); pintarCarrito(); aplicarCliente(); pintarProgramar(); pintarCuando(); if (drawer.open) llenarFechas();
       cargarFotos();
     } catch (e) { console.error(e); }
@@ -560,7 +567,7 @@
       const ok = disp.has(f); b.disabled = !ok;
       if (f === ymd(hoy)) b.classList.add('hoy');
       if (f === agF) { b.classList.add('sel'); b.setAttribute('aria-selected', 'true'); }
-      if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : 'Fuera del plazo para agendar'; }
+      if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : libreDia(f) <= 0 ? 'Ese día ya está lleno' : 'Fuera del plazo para agendar'; if (abiertoDia(dd) && libreDia(f) <= 0) b.classList.add('lleno'); }
       b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = hs[0] || ''; pintarCal(); pintarHorasAg(); };
       g.append(b);
     }
@@ -569,7 +576,8 @@
     const box = $('#ag-horas'); box.replaceChildren();
     const d = fechaDeYmd(agF), hs = horasDe(agF);
     const tramos = abiertoDia(d) ? dia(d).t.map(t => `${hora12(t.a)} – ${hora12(t.c)}`).join(' y ') : 'cerrado';
-    $('#ag-horario').textContent = `${DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1)} ${d.getDate()} ${MESES[d.getMonth()]} · ${tramos}`;
+    const lib = libreDia(agF), quedan = isFinite(lib) && lib < capDia ? ` · quedan ${lib} ${lib === 1 ? 'pieza' : 'piezas'}` : '';
+    $('#ag-horario').textContent = `${DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1)} ${d.getDate()} ${MESES[d.getMonth()]} · ${tramos}${quedan}`;
     if (!hs.length) box.append(el('p', 'muted small', 'No hay horas disponibles ese día.'));
     for (const mnt of hs) {
       const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), hora12(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
@@ -649,12 +657,13 @@
     if (d.entregaTipo === 'domicilio' && d.direccion.length < 8) return mal(form.direccion, 'Escribe la dirección de entrega.');
     if (!d.fecha) return mal(form.fecha, 'Elige el día.');
     if (limitaHoy() && d.fecha === hoyYmd()) { const c = conflictosHoy([...cart])[0]; if (c) return textoConflicto(c) + '. Cambia la cantidad o elige otro día.'; }
+    { const lib = libreDia(d.fecha), pz = d.items.reduce((a, i) => a + i.cant, 0); if (pz > lib) return lib <= 0 ? 'Ese día ya está lleno. Elige otro día, por favor.' : `Para ese día solo nos ${lib === 1 ? 'queda lugar para 1 pieza' : 'quedan ' + lib + ' piezas'}. Cambia la cantidad o elige otro día.`; }
     if (!d.hora) return mal(form.hora, 'Elige la hora.');
     if (!d.pago) return 'Elige la forma de pago.';
     return '';
   }
   function fechaTexto(f) { const [y, m, d] = f.split('-').map(Number), dt = new Date(y, m - 1, d); return `${DIAS[dt.getDay()]} ${d} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][m - 1]}`; }
-  function mensajeWA(d, folio) {
+  function mensajeWA(d, folio, porConfirmar) {
     // Mensaje que el cliente nos manda: claro, con etiquetas en negritas y pocos emojis
     const m2 = v => '$' + (Number(v) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const grupos = new Map();
@@ -667,6 +676,7 @@
     else L.push('• *Entrega:* paso a recoger');
     L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
     if (d.notas) L.push(`• *Nota:* ${d.notas}`);
+    if (porConfirmar) L.push('• *Disponibilidad:* por confirmar ⏳');
     L.push('', dom ? 'Quedo pendiente de la cotización del envío y del total. ¡Gracias!' : '¿Me confirman, por favor? ¡Gracias!');
     return L.join('\n');
   }
@@ -680,16 +690,16 @@
     if (m) { err.textContent = m; err.hidden = false; return; }
     guardarCliente(d);
     btn.disabled = true; btn.classList.add('enviando'); $('#btn-enviar-t').textContent = 'Enviando…';
-    let folio = '', registrado = false;
+    let folio = '', registrado = false, porConfirmar = false;
     if (C.api && !d.web) {
       try {
         const r = await fetch(C.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'pedido', pedido: d }) });
         const res = await r.json();
-        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton(); if (res.stock || /disponible|agot|quedan/i.test(res.error || '')) cargarMenu(); return; }
-        folio = res.folio; registrado = true;
+        if (!res.ok) { err.textContent = res.error || 'No se pudo enviar tu pedido. Inténtalo de nuevo.'; err.hidden = false; btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido'; revisarBoton(); if (res.stock || res.cap || /disponible|agot|quedan|lleno/i.test(res.error || '')) cargarMenu(); return; }
+        folio = res.folio; registrado = true; porConfirmar = !!res.porConfirmar && d.fecha === hoyYmd();
       } catch (x) { registrado = false; }
     }
-    const link = linkWA(mensajeWA(d, folio));
+    const link = linkWA(mensajeWA(d, folio, porConfirmar));
     btn.classList.remove('enviando'); $('#btn-enviar-t').textContent = 'Realiza tu pedido';
     // Sin buzón configurado: el único canal es WhatsApp (como antes)
     if (!C.api) { cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton(); cerrar(); toast('Abriendo WhatsApp…'); setTimeout(() => { location.href = link; }, 400); return; }
@@ -703,6 +713,7 @@
     // A domicilio el pedido no es definitivo hasta que el cliente acepta el costo de envío
     $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
     $('#ok-txt').textContent = dom ? `Te enviaremos por WhatsApp al ${telTxt} el costo de envío. Tu pedido queda confirmado cuando lo aceptes.` : `Te escribiremos por WhatsApp al ${telTxt} para confirmarlo.`;
+    if (porConfirmar) $('#ok-txt').textContent += ' Como es para hoy, primero revisamos que haya piezas disponibles y te confirmamos en un momento.';
     const ul = $('#ok-resumen'); ul.replaceChildren();
     [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
       .forEach(([ic, tx]) => { const li = el('li'); li.append(el('span', null, ic), el('span', null, tx)); ul.append(li); });
