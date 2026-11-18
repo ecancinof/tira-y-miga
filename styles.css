@@ -534,50 +534,51 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .card.sin-hoy .add, .card.sin-hoy .add:disabled { background: var(--line); color: var(--muted); }
 
 
-/* ===== Colores de botones (paleta Soft Steam / Cinnamon / Golden Pastry) =====
-   Sin seleccionar: Soft Steam #A0938A · Seleccionado o al tocar: Cinnamon #72422C
-   "Añadir": Soft Steam y al agregar Golden Pastry #C07F4E · Barra flotante del celular: Golden Pastry */
-:root { --b-steam: #A0938A; --b-steam-h: #93857D; --b-cin: #72422C; --b-gold: #C07F4E; --b-glaze: #F4EBE8; --b-txt: #2B1B14; }
+/* ===== Colores de botones · gama "canela suave" =====
+   Sin seleccionar: fondo Creamy Glaze, borde caramelo claro, texto Cinnamon
+   Seleccionado / al tocar: dorado tostado #A15F35 con texto crema
+   "Añadir": dorado suave; al agregar, dorado tostado · Barra flotante del celular: dorado tostado */
+:root { --b-fondo: #F4EBE8; --b-fondo-h: #EFDDD2; --b-borde: #DEC3B1; --b-texto: #72422C; --b-sel: #A15F35; --b-sel-txt: #FFF8F2; --b-add: #F1DCC9; --b-add-h: #EBCDB4; --b-add-borde: #E2C2A6; --b-oro: #C07F4E; }
 
 /* Resumen del pedido: Paso a recoger / A domicilio, Efectivo / Transferencia y Agendar */
-.seg span, .seg input:not(:checked) + span { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
-@media (hover: hover) { .seg label:hover input:not(:checked) + span { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
-.seg label:active span, .seg input:checked + span { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
-.btn-agendar, .btn-agendar:not(.activo) { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
-@media (hover: hover) { .btn-agendar:not(.activo):hover { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
-.btn-agendar:active, .btn-agendar.activo { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
+.seg span, .seg input:not(:checked) + span { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
+@media (hover: hover) { .seg label:hover input:not(:checked) + span { background: var(--b-fondo-h); border-color: var(--b-oro); } }
+.seg label:active span, .seg input:checked + span { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
+.btn-agendar, .btn-agendar:not(.activo) { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
+@media (hover: hover) { .btn-agendar:not(.activo):hover { background: var(--b-fondo-h); border-color: var(--b-oro); } }
+.btn-agendar:active, .btn-agendar.activo { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
 
 /* Menú principal: Arma tu pedido, Para hoy / Agendar pedido y Favoritas / Rellenas / Especiales */
-.btn-light { background: var(--b-steam); color: var(--b-txt); }
-@media (hover: hover) { .btn-light:hover { background: var(--b-steam-h); } }
-.btn-light:active { background: var(--b-cin); color: var(--b-glaze); }
-.tab { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
-@media (hover: hover) { .tab:hover:not(.on) { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
-.tab:active:not(.on) { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
-.tab.on { color: var(--b-glaze); }
-.tab-pill { background: var(--b-cin); }
-.tabs-in.sin-pill .tab.on { background: var(--b-cin); border-color: var(--b-cin); }
-.cuando { background: var(--b-steam); border-color: var(--b-steam); }
-.cu-btn { color: var(--b-txt); }
-.cu-btn.on { color: var(--b-glaze); }
-.cu-bubble { background: var(--b-cin); }
-@media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: rgba(255, 255, 255, .2); } }
+.btn-light { background: var(--b-fondo); color: var(--b-texto); }
+@media (hover: hover) { .btn-light:hover { background: #fff; } }
+.btn-light:active { background: var(--b-sel); color: var(--b-sel-txt); }
+.tab { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
+@media (hover: hover) { .tab:hover:not(.on) { background: var(--b-fondo-h); border-color: var(--b-oro); } }
+.tab:active:not(.on) { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
+.tab.on { color: var(--b-sel-txt); }
+.tab-pill { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(161, 95, 53, .55); }
+.tabs-in.sin-pill .tab.on { background: var(--b-sel); border-color: var(--b-sel); }
+.cuando { background: var(--b-fondo); border-color: var(--b-borde); box-shadow: none; }
+.cu-btn { color: var(--b-texto); }
+.cu-btn.on { color: var(--b-sel-txt); }
+.cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(161, 95, 53, .55); }
+@media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: var(--b-fondo-h); } }
 
-/* Botón "Añadir": Soft Steam y, al agregar, Golden Pastry (con la misma animación) */
-.add { background: var(--b-steam); color: var(--b-txt); }
-@media (hover: hover) { .add:hover:not(:disabled):not(.ok) { background: var(--b-steam-h); } }
-.add.ok, .add.ok:hover, .add.ok:active, .add.ok:focus { background: var(--b-gold); color: var(--b-txt); }
+/* Botón "Añadir": dorado suave; al agregar, dorado tostado (con la misma animación) */
+.add { background: var(--b-add); color: var(--b-texto); box-shadow: inset 0 0 0 1.5px var(--b-add-borde); }
+@media (hover: hover) { .add:hover:not(:disabled):not(.ok) { background: var(--b-add-h); } }
+.add.ok, .add.ok:hover, .add.ok:active, .add.ok:focus { background: var(--b-sel); color: var(--b-sel-txt); box-shadow: none; }
 
-/* Barra flotante del celular: Golden Pastry, contador Creamy Glaze, halo más visible y flecha más grande */
+/* Barra flotante del celular: dorado tostado, contador crema más grande, halo visible y flecha grande */
 @media (max-width: 900px) {
-  .barra-pedido:not([hidden]) { background: var(--b-gold); color: var(--b-txt); animation: bp-halo 2.2s ease-out infinite; }
-  .barra-pedido .bp-t small { color: #3B2419; }
-  .bp-ico { background: rgba(43, 27, 20, .14); }
-  .bp-ico b { background: var(--b-glaze); color: var(--b-cin); font-weight: 800; box-shadow: 0 0 0 2px var(--b-gold); }
+  .barra-pedido:not([hidden]) { background: var(--b-sel); color: var(--b-sel-txt); animation: bp-halo 2.2s ease-out infinite; }
+  .barra-pedido .bp-t small { color: #F6E2D3; }
+  .bp-ico { background: rgba(255, 248, 242, .18); }
+  .bp-ico b { top: -7px; right: -7px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; font-size: 14px; font-weight: 800; background: var(--b-sel-txt); color: var(--b-sel); box-shadow: 0 0 0 2px var(--b-sel); }
   .bp-flecha { display: grid; place-items: center; }
   @keyframes bp-halo {
-    0% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 0 rgba(114, 66, 44, .75); }
-    70% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 16px rgba(114, 66, 44, 0); }
-    100% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 0 rgba(114, 66, 44, 0); }
+    0% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 0 rgba(192, 127, 78, .85); }
+    70% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 16px rgba(192, 127, 78, 0); }
+    100% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 0 rgba(192, 127, 78, 0); }
   }
 }

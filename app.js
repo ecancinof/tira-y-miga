@@ -203,7 +203,8 @@
   // Mini foto que vuela de la tarjeta al carrito
   function volarAlCarrito(img) {
     if (sinMov || !img || !img.animate) return;
-    const barra = $('#barra-pedido'), dest = (barra && !barra.hidden && barra.offsetParent ? $('#bp-ico') : $('#cart-open')).getBoundingClientRect(), o = img.getBoundingClientRect();
+    const barra = $('#barra-pedido'), dest = (barra && !barra.hidden && barra.getClientRects().length ? $('#bp-ico') : $('#cart-open')).getBoundingClientRect(), o = img.getBoundingClientRect();
+    // En el celular va al botón flotante de abajo (offsetParent no sirve: la barra es position: fixed)
     const f = img.cloneNode(); f.removeAttribute('loading'); f.className = 'vuela';
     const t = Math.min(o.width, o.height, 140);
     Object.assign(f.style, { left: o.left + o.width / 2 - t / 2 + 'px', top: o.top + o.height / 2 - t / 2 + 'px', width: t + 'px', height: t + 'px' });
