@@ -532,3 +532,52 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci-sp { font-size: var(--fs-xs); font-weight: 700; color: var(--caramel-d); margin-top: 2px; }
 .card.sin-hoy .card-img img { filter: grayscale(.85) opacity(.7); }
 .card.sin-hoy .add, .card.sin-hoy .add:disabled { background: var(--line); color: var(--muted); }
+
+
+/* ===== Colores de botones (paleta Soft Steam / Cinnamon / Golden Pastry) =====
+   Sin seleccionar: Soft Steam #A0938A · Seleccionado o al tocar: Cinnamon #72422C
+   "Añadir": Soft Steam y al agregar Golden Pastry #C07F4E · Barra flotante del celular: Golden Pastry */
+:root { --b-steam: #A0938A; --b-steam-h: #93857D; --b-cin: #72422C; --b-gold: #C07F4E; --b-glaze: #F4EBE8; --b-txt: #2B1B14; }
+
+/* Resumen del pedido: Paso a recoger / A domicilio, Efectivo / Transferencia y Agendar */
+.seg span, .seg input:not(:checked) + span { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
+@media (hover: hover) { .seg label:hover input:not(:checked) + span { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
+.seg label:active span, .seg input:checked + span { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
+.btn-agendar, .btn-agendar:not(.activo) { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
+@media (hover: hover) { .btn-agendar:not(.activo):hover { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
+.btn-agendar:active, .btn-agendar.activo { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
+
+/* Menú principal: Arma tu pedido, Para hoy / Agendar pedido y Favoritas / Rellenas / Especiales */
+.btn-light { background: var(--b-steam); color: var(--b-txt); }
+@media (hover: hover) { .btn-light:hover { background: var(--b-steam-h); } }
+.btn-light:active { background: var(--b-cin); color: var(--b-glaze); }
+.tab { background: var(--b-steam); border-color: var(--b-steam); color: var(--b-txt); }
+@media (hover: hover) { .tab:hover:not(.on) { background: var(--b-steam-h); border-color: var(--b-steam-h); } }
+.tab:active:not(.on) { background: var(--b-cin); border-color: var(--b-cin); color: var(--b-glaze); }
+.tab.on { color: var(--b-glaze); }
+.tab-pill { background: var(--b-cin); }
+.tabs-in.sin-pill .tab.on { background: var(--b-cin); border-color: var(--b-cin); }
+.cuando { background: var(--b-steam); border-color: var(--b-steam); }
+.cu-btn { color: var(--b-txt); }
+.cu-btn.on { color: var(--b-glaze); }
+.cu-bubble { background: var(--b-cin); }
+@media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: rgba(255, 255, 255, .2); } }
+
+/* Botón "Añadir": Soft Steam y, al agregar, Golden Pastry (con la misma animación) */
+.add { background: var(--b-steam); color: var(--b-txt); }
+@media (hover: hover) { .add:hover:not(:disabled):not(.ok) { background: var(--b-steam-h); } }
+.add.ok, .add.ok:hover, .add.ok:active, .add.ok:focus { background: var(--b-gold); color: var(--b-txt); }
+
+/* Barra flotante del celular: Golden Pastry, contador Creamy Glaze, halo más visible y flecha más grande */
+@media (max-width: 900px) {
+  .barra-pedido:not([hidden]) { background: var(--b-gold); color: var(--b-txt); animation: bp-halo 2.2s ease-out infinite; }
+  .barra-pedido .bp-t small { color: #3B2419; }
+  .bp-ico { background: rgba(43, 27, 20, .14); }
+  .bp-ico b { background: var(--b-glaze); color: var(--b-cin); font-weight: 800; box-shadow: 0 0 0 2px var(--b-gold); }
+  .bp-flecha { display: grid; place-items: center; }
+  @keyframes bp-halo {
+    0% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 0 rgba(114, 66, 44, .75); }
+    70% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 16px rgba(114, 66, 44, 0); }
+    100% { box-shadow: 0 8px 24px rgba(43, 27, 20, .4), 0 0 0 0 rgba(114, 66, 44, 0); }
+  }
+}
