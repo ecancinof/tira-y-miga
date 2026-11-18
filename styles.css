@@ -515,6 +515,14 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .ci-del { display: grid; place-items: center; width: 37px; height: 37px; border: 1.5px solid var(--err); border-radius: 50%; background: #fff; color: var(--err); cursor: pointer; padding: 0; transition: background .2s, transform .12s; } /* bote junto a "Cambiar" en productos agotados */
 @media (hover: hover) { .ci-del:hover { background: #fbe9e5; } }
 .ci-del:active { transform: scale(.9); }
+/* Bote rápido al final de cada producto del carrito: discreto, se pone rojo al pasar el mouse */
+.ci-del.ci-del-q { width: 32px; height: 32px; border: 0; background: transparent; color: var(--muted); flex: 0 0 auto; }
+@media (hover: hover) { .ci-del.ci-del-q:hover { background: #fbe9e5; color: var(--err); } }
+/* Al tocarlo (celular) o hacer clic: se pone rojo mientras el producto se desliza y desaparece */
+.ci-del.ci-del-q:active, .ci-del.ci-del-q.on { background: #fbe9e5; color: var(--err); }
+.ci-del.ci-del-q.on { transform: scale(.9); }
+.ci-del.ci-del-q:focus-visible { outline: 2px solid var(--err); outline-offset: 1px; }
+@media (max-width: 420px) { .ci-r { gap: 6px; } .ci-del.ci-del-q { width: 28px; height: 28px; } }
 .ci-cambiar { height: 37px; padding: 0 12px; border: 1.5px solid var(--err); background: #fff; color: var(--err); font-weight: 700; font-size: var(--fs-xs); border-radius: 999px; cursor: pointer; white-space: nowrap; } /* ocupa el lugar de la píldora − / + (mismo tamaño) cuando el producto está agotado para hoy */
 @media (hover: hover) { .ci-cambiar:hover { background: #fbe9e5; } }
 .det-stk { font-size: var(--fs-sm); font-weight: 700; color: var(--caramel-d); }
