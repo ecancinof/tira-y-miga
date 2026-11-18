@@ -535,10 +535,10 @@ legend { font-weight: 600; margin-bottom: 8px; }
 
 
 /* ===== Colores de botones · gama "canela suave" =====
-   Sin seleccionar: fondo Creamy Glaze, borde caramelo claro, texto Cinnamon
-   Seleccionado / al tocar: dorado tostado #A15F35 con texto crema
+   Sin seleccionar: fondo Creamy Glaze, borde caramelo claro, texto negro
+   Seleccionado / al tocar: café de la portada #38221D con texto blanco
    "Añadir": dorado suave; al agregar, dorado tostado · Barra flotante del celular: dorado tostado */
-:root { --b-fondo: #F4EBE8; --b-fondo-h: #EFDDD2; --b-borde: #DEC3B1; --b-texto: #72422C; --b-sel: #A15F35; --b-sel-txt: #FFF8F2; --b-add: #F1DCC9; --b-add-h: #EBCDB4; --b-add-borde: #E2C2A6; --b-oro: #C07F4E; }
+:root { --b-fondo: #F4EBE8; --b-fondo-h: #EFDDD2; --b-borde: #DEC3B1; --b-texto: #1A1210; --b-sel: #38221D; --b-sel-txt: #FFFFFF; --b-add: #F1DCC9; --b-add-h: #EBCDB4; --b-add-borde: #E2C2A6; --b-oro: #C07F4E; }
 
 /* Resumen del pedido: Paso a recoger / A domicilio, Efectivo / Transferencia y Agendar */
 .seg span, .seg input:not(:checked) + span { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
@@ -556,12 +556,12 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @media (hover: hover) { .tab:hover:not(.on) { background: var(--b-fondo-h); border-color: var(--b-oro); } }
 .tab:active:not(.on) { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
 .tab.on { color: var(--b-sel-txt); }
-.tab-pill { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(161, 95, 53, .55); }
+.tab-pill { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(56, 34, 29, .5); }
 .tabs-in.sin-pill .tab.on { background: var(--b-sel); border-color: var(--b-sel); }
 .cuando { background: var(--b-fondo); border-color: var(--b-borde); box-shadow: none; }
 .cu-btn { color: var(--b-texto); }
 .cu-btn.on { color: var(--b-sel-txt); }
-.cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(161, 95, 53, .55); }
+.cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(56, 34, 29, .5); }
 @media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: var(--b-fondo-h); } }
 
 /* Botón "Añadir": dorado suave; al agregar, dorado tostado (con la misma animación) */
@@ -572,13 +572,20 @@ legend { font-weight: 600; margin-bottom: 8px; }
 /* Barra flotante del celular: dorado tostado, contador crema más grande, halo visible y flecha grande */
 @media (max-width: 900px) {
   .barra-pedido:not([hidden]) { background: var(--b-sel); color: var(--b-sel-txt); animation: bp-halo 2.2s ease-out infinite; }
-  .barra-pedido .bp-t small { color: #F6E2D3; }
+  .barra-pedido .bp-t small { color: #FFFFFF; opacity: .92; }
   .bp-ico { background: rgba(255, 248, 242, .18); }
-  .bp-ico b { top: -7px; right: -7px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; font-size: 14px; font-weight: 800; background: var(--b-sel-txt); color: var(--b-sel); box-shadow: 0 0 0 2px var(--b-sel); }
+  .bp-ico b { top: -7px; right: -7px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; font-size: 14px; font-weight: 800; background: #FFFFFF; color: #1A1210; box-shadow: 0 0 0 2px var(--b-sel); } /* mismo tamaño que el contador del carrito de arriba */
   .bp-flecha { display: grid; place-items: center; }
   @keyframes bp-halo {
-    0% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 0 rgba(192, 127, 78, .85); }
-    70% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 16px rgba(192, 127, 78, 0); }
-    100% { box-shadow: 0 8px 24px rgba(114, 66, 44, .35), 0 0 0 0 rgba(192, 127, 78, 0); }
+    0% { box-shadow: 0 8px 24px rgba(56, 34, 29, .35), 0 0 0 0 rgba(217, 93, 57, .9); }
+    70% { box-shadow: 0 8px 24px rgba(56, 34, 29, .35), 0 0 0 16px rgba(217, 93, 57, 0); }
+    100% { box-shadow: 0 8px 24px rgba(56, 34, 29, .35), 0 0 0 0 rgba(217, 93, 57, 0); }
   }
 }
+
+/* Carrito de la esquina: mismo color que la barra flotante, icono más grande y contador del mismo tamaño */
+.cart-btn { display: grid; place-items: center; width: 50px; height: 50px; padding: 0; background: var(--b-sel); color: #FFFFFF; }
+.cart-btn svg { width: 28px; height: 28px; }
+@media (hover: hover) { .cart-btn:hover { background: var(--ink-2); } }
+.cart-btn:active { transform: scale(.94); }
+.cart-count { top: -7px; right: -7px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; font-size: 14px; font-weight: 800; background: #FFFFFF; color: #1A1210; box-shadow: 0 0 0 2px var(--b-sel); }
