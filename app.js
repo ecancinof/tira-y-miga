@@ -625,25 +625,36 @@
     pintarDiaHora();
   }
   $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; pintarCuando(); pintarDiaHora(); };
-  // Resumen claro de Día y Hora + horarios de 15 en 15 min como botones (se abren al elegir "Paso a recoger" o "A domicilio")
+  // Resumen claro de Día y Hora; los horarios de 15 en 15 min se eligen en una ventanita flotante
+  const horasDlg = $('#horas-dlg');
   function pintarDiaHora() {
     const sf = $('#sel-fecha'), sh = $('#sel-hora'), f = sf.value; if (!f) return;
     const cur = fechasDisponibles().find(o => o.f === f), et = cur ? cur.txt.split(' · ')[0] : '', ft = fechaTexto(f);
-    $('#cr-dia').textContent = (et === 'Hoy' || et === 'Mañana') ? `${et}, ${ft}` : ft.charAt(0).toUpperCase() + ft.slice(1);
-    const tipo = form.entregaTipo.value, box = $('#dr-horas');
-    $('#cr-hora-lbl').textContent = tipo === 'recoge' ? 'Hora para recoger' : tipo === 'domicilio' ? 'Hora de entrega' : 'Hora';
-    $('#cr-horas-t').textContent = tipo === 'domicilio' ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
+    const diaTxt = (et === 'Hoy' || et === 'Mañana') ? `${et}, ${ft}` : ft.charAt(0).toUpperCase() + ft.slice(1);
+    $('#cr-dia').textContent = diaTxt;
+    const tipo = form.entregaTipo.value, dom = tipo === 'domicilio';
+    $('#cr-hora-lbl').textContent = tipo === 'recoge' ? 'Hora para recoger' : dom ? 'Hora de entrega' : 'Hora';
     const ch = $('#cr-hora'); ch.classList.toggle('pend', !tipo);
     ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sh.value ? hora12(hm(sh.value)) : 'Elige una hora';
-    $('#cr-horas').hidden = !tipo;
-    box.replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
-      b.onclick = () => { sh.value = o.value; horaSel = o.value; pintarCuando(); pintarDiaHora(); }; return b; }));
+    $('#dr-hora').hidden = !tipo;
+    $('#hd-t').textContent = dom ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
+    $('#hd-sub').textContent = `${diaTxt} · de 15 en 15 minutos`;
+    $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
+      b.onclick = () => { sh.value = o.value; horaSel = o.value; $('#cuando-res').classList.remove('bad'); pintarCuando(); pintarDiaHora(); cerrarHoras(true); }; return b; }));
   }
+  function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on') || $('#dr-horas .hora'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } }
+  // Al elegir la hora se cierra sola y el cliente sigue con sus datos (primer campo vacío)
+  function cerrarHoras(elegida) { if (!horasDlg.open) return; horasDlg.classList.add('sale');
+    setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { const sig = [form.nombre, form.tel, form.direccion].find(c => c && !c.closest('[hidden]') && !c.value.trim()); if (sig) sig.focus(); else $('#cuando-res').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, 170); }
+  $('#dr-hora').onclick = abrirHoras;
+  $('#hd-x').onclick = () => cerrarHoras(false);
+  horasDlg.addEventListener('cancel', e => { e.preventDefault(); cerrarHoras(false); });
+  horasDlg.addEventListener('click', e => { if (e.target === horasDlg) cerrarHoras(false); });
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
   const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; pintarDiaHora(); };
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
-    // Al elegir "Paso a recoger" se abren los horarios y se llevan a la vista para escoger la hora
-    if (e.target.name === 'entregaTipo' && e.target.value === 'recoge') setTimeout(() => { const hb = $('#cr-horas'); if (hb && !hb.hidden) { hb.scrollIntoView({ block: 'nearest', behavior: sinMov ? 'auto' : 'smooth' }); const on = $('#dr-horas .hora.on'); if (on) on.focus({ preventScroll: true }); } }, 60); });
+    // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
+    if (e.target.name === 'entregaTipo' && $('#sel-hora').options.length) setTimeout(abrirHoras, 120); });
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago

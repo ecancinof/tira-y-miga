@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=104">
+<link rel="stylesheet" href="styles.css?v=106">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -74,7 +74,6 @@
     <p class="aviso-cerrado" id="aviso-cerrado" hidden></p>
     <nav class="tabs" id="tabs" aria-label="Categorías del menú" hidden>
       <div class="cuando" id="cuando" role="group" aria-label="¿Para cuándo es tu pedido?" hidden>
-        <span class="cu-aviso" id="cu-aviso" aria-hidden="true">👆 Primero elige: ¿para hoy o para otro día?</span>
         <span class="cu-bubble" id="cu-bubble" aria-hidden="true"></span>
         <button class="cu-btn" id="cu-hoy" type="button">Para hoy</button>
         <button class="cu-btn" id="cu-agendar" type="button" aria-haspopup="dialog" aria-controls="agenda"><span aria-hidden="true">📅</span> <span id="cu-agendar-t">Agendar pedido</span></button>
@@ -174,10 +173,7 @@
             <div class="cr-fila">
               <span class="cr-ico" aria-hidden="true">🕐</span>
               <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
-            </div>
-            <div class="cr-horas" id="cr-horas" hidden>
-              <p class="cr-horas-t" id="cr-horas-t">¿A qué hora pasas por tu pedido?</p>
-              <div class="horas dr-horas" id="dr-horas" role="radiogroup" aria-label="Hora"></div>
+              <button type="button" class="btn-agendar" id="dr-hora" hidden aria-haspopup="dialog" aria-controls="horas-dlg">Cambiar hora</button>
             </div>
             <div class="sr-sel"><select name="fecha" id="sel-fecha" required aria-label="Día" tabindex="-1"></select><select name="hora" id="sel-hora" required aria-label="Hora" tabindex="-1"></select></div>
           </div>
@@ -225,6 +221,14 @@
   </div>
 </dialog>
 
+<dialog class="agenda horas-dlg" id="horas-dlg" aria-labelledby="hd-t">
+  <div class="ag-top">
+    <div><h2 id="hd-t">¿A qué hora pasas por tu pedido?</h2><p class="small muted" id="hd-sub"></p></div>
+    <button class="icon-btn" id="hd-x" type="button" aria-label="Cerrar">×</button>
+  </div>
+  <div class="hd-cuerpo"><div class="horas" id="dr-horas" role="radiogroup" aria-label="Hora"></div></div>
+</dialog>
+
 <dialog class="agenda" id="agenda" aria-labelledby="ag-t">
   <div class="ag-top">
     <div><h2 id="ag-t">Agendar pedido</h2><p class="small muted" id="ag-sub">Elige el día y la hora en que lo quieres</p></div>
@@ -269,6 +273,6 @@
 
 <script src="config.js?v=94"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=103"></script>
+<script src="app.js?v=104"></script>
 </body>
 </html>
