@@ -611,3 +611,28 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .bp-ico svg { width: 26px; height: 26px; }
   .bp-flecha svg { width: 46px; height: 32px; }
 }
+
+/* Para hoy / Agendar pedido y Favoritas / Rellenas / Especiales:
+   sin seleccionar con el fondo de "Añadir"; seleccionado (o por default) en #D95D39 */
+:root { --b-acento: #D95D39; --b-acento-h: #C44E2C; }
+.tab { background: var(--b-add); border-color: var(--b-add-borde); color: var(--b-texto); }
+@media (hover: hover) { .tab:hover:not(.on) { background: var(--b-add-h); border-color: var(--b-acento); } }
+.tab:active:not(.on) { background: var(--b-acento); border-color: var(--b-acento); color: #FFFFFF; }
+.tab.on { color: #FFFFFF; font-weight: 700; }
+.tab-pill { background: var(--b-acento); box-shadow: 0 2px 8px -2px rgba(217, 93, 57, .6); }
+.tabs-in.sin-pill .tab.on { background: var(--b-acento); border-color: var(--b-acento); }
+.cuando { background: var(--b-add); border-color: var(--b-add-borde); }
+.cu-btn.on { color: #FFFFFF; font-weight: 700; }
+.cu-bubble { background: var(--b-acento); box-shadow: 0 2px 8px -2px rgba(217, 93, 57, .6); }
+@media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: var(--b-add-h); } }
+
+/* "Conchas gourmet" destacado en la portada: es lo que nos distingue de una panificadora tradicional */
+.hero-tag { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.hero-tag-main { background: var(--b-acento); color: #FFFFFF; padding: 7px 16px; border-radius: 999px; font-size: var(--fs-base); font-weight: 800; letter-spacing: .12em; box-shadow: 0 4px 14px -4px rgba(217, 93, 57, .7); }
+.hero-tag-lugar { color: var(--caramel); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .14em; }
+
+/* Celular y tableta: primero la foto de portada y debajo el texto */
+@media (max-width: 900px) {
+  .hero-img { order: 0; padding: 20px 5% 0; }
+  .hero-copy { order: 1; padding: 28px 5% 40px; gap: 20px; }
+}
