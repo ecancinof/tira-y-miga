@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=103">
+<link rel="stylesheet" href="styles.css?v=104">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -74,6 +74,7 @@
     <p class="aviso-cerrado" id="aviso-cerrado" hidden></p>
     <nav class="tabs" id="tabs" aria-label="Categorías del menú" hidden>
       <div class="cuando" id="cuando" role="group" aria-label="¿Para cuándo es tu pedido?" hidden>
+        <span class="cu-aviso" id="cu-aviso" aria-hidden="true">👆 Primero elige: ¿para hoy o para otro día?</span>
         <span class="cu-bubble" id="cu-bubble" aria-hidden="true"></span>
         <button class="cu-btn" id="cu-hoy" type="button">Para hoy</button>
         <button class="cu-btn" id="cu-agendar" type="button" aria-haspopup="dialog" aria-controls="agenda"><span aria-hidden="true">📅</span> <span id="cu-agendar-t">Agendar pedido</span></button>
@@ -164,10 +165,21 @@
           <label class="f"><span>Tu nombre</span><input name="nombre" autocomplete="name" maxlength="60" required></label>
           <label class="f"><span>Tu WhatsApp (10 dígitos)</span><input name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" required></label>
           <label class="f full" id="campo-dir" hidden><span class="lbl-fila">Dirección de entrega <em class="cotiza">🛵 Se cotizará con el repartidor</em></span><textarea name="direccion" rows="2" maxlength="200" placeholder="Calle, número, colonia y alguna referencia"></textarea></label>
-          <div class="full fila-dia">
-            <label class="f"><span>Día</span><select name="fecha" id="sel-fecha" required></select></label>
-            <label class="f"><span>Hora</span><select name="hora" id="sel-hora" required></select></label>
-            <div class="f"><span aria-hidden="true">&nbsp;</span><button type="button" class="btn-agendar" id="dr-agendar" aria-haspopup="dialog" aria-controls="agenda"><span aria-hidden="true">📅</span> Agendar</button></div>
+          <div class="full cuando-res" id="cuando-res">
+            <div class="cr-fila">
+              <span class="cr-ico" aria-hidden="true">📅</span>
+              <div class="cr-txt"><small>Día de tu pedido</small><b id="cr-dia">—</b></div>
+              <button type="button" class="btn-agendar" id="dr-agendar" aria-haspopup="dialog" aria-controls="agenda">Cambiar día</button>
+            </div>
+            <div class="cr-fila">
+              <span class="cr-ico" aria-hidden="true">🕐</span>
+              <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
+            </div>
+            <div class="cr-horas" id="cr-horas" hidden>
+              <p class="cr-horas-t" id="cr-horas-t">¿A qué hora pasas por tu pedido?</p>
+              <div class="horas dr-horas" id="dr-horas" role="radiogroup" aria-label="Hora"></div>
+            </div>
+            <div class="sr-sel"><select name="fecha" id="sel-fecha" required aria-label="Día" tabindex="-1"></select><select name="hora" id="sel-hora" required aria-label="Hora" tabindex="-1"></select></div>
           </div>
           <p class="nota-prog full" id="nota-prog" hidden></p>
           <p class="nota-prog full" id="stk-dia" hidden></p>
@@ -257,6 +269,6 @@
 
 <script src="config.js?v=94"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=102"></script>
+<script src="app.js?v=103"></script>
 </body>
 </html>

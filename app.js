@@ -138,7 +138,7 @@
     if (!abiertoDia(d)) return [];
     // Otros días: cada 30 min hasta media hora antes de cerrar.
     // Hoy: cada 15 min desde (ahora + preparación) y hasta 15 min antes de cerrar, para que "último pedido" (p. ej. 15 min antes) sí se respete
-    const out = [], hoy = fecha === ymd(new Date()), paso = hoy ? 15 : 30, min = Math.ceil((minAhora() + (H.prepMin ?? 45)) / paso) * paso;
+    const out = [], hoy = fecha === ymd(new Date()), paso = 15, min = Math.ceil((minAhora() + (H.prepMin ?? 45)) / paso) * paso;
     for (const t of dia(d).t) for (let m = hoy ? Math.max(t.a, min) : t.a; m <= t.c - paso; m += paso) if (!out.includes(m)) out.push(m);
     return out;
   }
@@ -540,6 +540,14 @@
     if (!bb.classList.contains('lista')) requestAnimationFrame(() => requestAnimationFrame(() => bb.classList.add('lista')));
   }
   addEventListener('resize', moverBurbuja); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moverBurbuja);
+  // Llamada de atención en "Para hoy / Agendar pedido": al aparecer en pantalla (al entrar o al regresar con scroll)
+  // destella y muestra un aviso, hasta que el cliente elige para cuándo es su pedido
+  { const cu = $('#cuando'); let ult = 0, tAv = 0;
+    const llamar = () => { if (fechaElegida || cu.hidden || Date.now() - ult < 6000) return; ult = Date.now();
+      cu.classList.remove('llama'); void cu.offsetWidth; cu.classList.add('llama'); clearTimeout(tAv); tAv = setTimeout(() => cu.classList.remove('llama'), 4200); };
+    cu.addEventListener('click', () => { clearTimeout(tAv); cu.classList.remove('llama'); });
+    if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setTimeout(llamar, 350); }), { threshold: .9 }).observe(cu);
+  }
   $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) { if (haySobre()) toast(`📦 Tu pedido lleva productos sobre pedido (${spDias() === 1 ? '1 día' : spDias() + ' días'} de anticipación)`); return; } const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
   // Al tocar "Agendar pedido": primero la burbuja se desliza al botón (animación), después se abre el minicalendario.
   // Si el cliente cierra sin elegir, la burbuja regresa sola a "Para hoy" (pintarCuando al cerrar)
@@ -614,11 +622,28 @@
     const sel = $('#sel-hora'); sel.replaceChildren();
     for (const m of horasDe($('#sel-fecha').value)) { const op = el('option', null, hora12(m)); op.value = minTxt(m); sel.append(op); }
     const h = $('#sel-fecha').value === fechaPedido() ? horaPedido() : ''; if ([...sel.options].some(o => o.value === h)) sel.value = h;
+    pintarDiaHora();
   }
-  $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; pintarCuando(); };
+  $('#sel-hora').onchange = () => { horaSel = $('#sel-hora').value; pintarCuando(); pintarDiaHora(); };
+  // Resumen claro de Día y Hora + horarios de 15 en 15 min como botones (se abren al elegir "Paso a recoger" o "A domicilio")
+  function pintarDiaHora() {
+    const sf = $('#sel-fecha'), sh = $('#sel-hora'), f = sf.value; if (!f) return;
+    const cur = fechasDisponibles().find(o => o.f === f), et = cur ? cur.txt.split(' · ')[0] : '', ft = fechaTexto(f);
+    $('#cr-dia').textContent = (et === 'Hoy' || et === 'Mañana') ? `${et}, ${ft}` : ft.charAt(0).toUpperCase() + ft.slice(1);
+    const tipo = form.entregaTipo.value, box = $('#dr-horas');
+    $('#cr-hora-lbl').textContent = tipo === 'recoge' ? 'Hora para recoger' : tipo === 'domicilio' ? 'Hora de entrega' : 'Hora';
+    $('#cr-horas-t').textContent = tipo === 'domicilio' ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
+    const ch = $('#cr-hora'); ch.classList.toggle('pend', !tipo);
+    ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sh.value ? hora12(hm(sh.value)) : 'Elige una hora';
+    $('#cr-horas').hidden = !tipo;
+    box.replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
+      b.onclick = () => { sh.value = o.value; horaSel = o.value; pintarCuando(); pintarDiaHora(); }; return b; }));
+  }
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
-  const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; };
-  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton(); });
+  const ponDir = () => { $('#campo-dir').hidden = form.entregaTipo.value !== 'domicilio'; pintarDiaHora(); };
+  form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
+    // Al elegir "Paso a recoger" se abren los horarios y se llevan a la vista para escoger la hora
+    if (e.target.name === 'entregaTipo' && e.target.value === 'recoge') setTimeout(() => { const hb = $('#cr-horas'); if (hb && !hb.hidden) { hb.scrollIntoView({ block: 'nearest', behavior: sinMov ? 'auto' : 'smooth' }); const on = $('#dr-horas .hora.on'); if (on) on.focus({ preventScroll: true }); } }, 60); });
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago
@@ -665,7 +690,7 @@
   }
   function validar(d) {
     form.querySelectorAll('.bad').forEach(x => x.classList.remove('bad'));
-    const mal = (campo, msg) => { if (campo) { campo.classList.add('bad'); campo.focus(); } return msg; };
+    const mal = (campo, msg) => { if (campo === form.hora || campo === form.fecha) { const c = $('#cuando-res'); c.classList.add('bad'); c.scrollIntoView({ block: 'center' }); return msg; } if (campo) { campo.classList.add('bad'); campo.focus(); } return msg; };
     if (!d.items.length) return 'Tu pedido está vacío.';
     const ag = d.items.find(i => prod(i.id).agotado); if (ag) return `${ag.nombre} se agotó por hoy. Quítalo de tu pedido, por favor.`;
     if (!d.entregaTipo) return 'Elige si pasas a recoger o lo quieres a domicilio.';
