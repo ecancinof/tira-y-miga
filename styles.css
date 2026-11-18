@@ -636,3 +636,18 @@ legend { font-weight: 600; margin-bottom: 8px; }
   .hero-img { order: 0; padding: 20px 5% 0; }
   .hero-copy { order: 1; padding: 28px 5% 40px; gap: 20px; }
 }
+
+/* Seleccionado otra vez en el café #3B2820 (sin seleccionar sigue con el fondo de "Añadir") */
+.tab:active:not(.on) { background: var(--b-sel); border-color: var(--b-sel); }
+.tab-pill, .cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(59, 40, 32, .5); }
+.tabs-in.sin-pill .tab.on { background: var(--b-sel); border-color: var(--b-sel); }
+@media (hover: hover) { .tab:hover:not(.on) { border-color: var(--b-sel); } }
+
+/* "Conchas gourmet" debajo del título: texto destacado (no es botón), en coral claro que contrasta con el café */
+.hero-gourmet { margin-top: -6px; font: 800 clamp(18px, 15px + 1vw, 24px)/1.2 var(--label); letter-spacing: .2em; text-transform: uppercase; color: #F4865F; }
+
+/* En el celular, al tocar un botón el navegador lo deja como "con el mouse encima":
+   el carrito y las X conservan su color para no quedar en blanco */
+.cart-btn:hover, .cart-btn:focus { background: var(--b-sel); color: #FFFFFF; }
+.icon-btn:hover, .icon-btn:focus { background: var(--b-sel); color: #FFFFFF; }
+@media (hover: hover) { .cart-btn:hover, .icon-btn:hover { background: #54392D; } }
