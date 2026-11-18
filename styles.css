@@ -536,16 +536,16 @@ legend { font-weight: 600; margin-bottom: 8px; }
 
 /* ===== Colores de botones · gama "canela suave" =====
    Sin seleccionar: fondo Creamy Glaze, borde caramelo claro, texto negro
-   Seleccionado / al tocar: café de la portada #38221D con texto blanco
+   Seleccionado / al tocar: café #3B2820 con texto blanco
    "Añadir": dorado suave; al agregar, dorado tostado · Barra flotante del celular: dorado tostado */
-:root { --b-fondo: #F4EBE8; --b-fondo-h: #EFDDD2; --b-borde: #DEC3B1; --b-texto: #1A1210; --b-sel: #38221D; --b-sel-txt: #FFFFFF; --b-add: #F1DCC9; --b-add-h: #EBCDB4; --b-add-borde: #E2C2A6; --b-oro: #C07F4E; }
+:root { --b-fondo: #F4EBE8; --b-fondo-h: #EFDDD2; --b-borde: #DEC3B1; --b-texto: #1A1210; --b-sel: #3B2820; --b-sel-txt: #FFFFFF; --b-add: #F1DCC9; --b-add-h: #EBCDB4; --b-add-borde: #E2C2A6; --b-oro: #C07F4E; }
 
 /* Resumen del pedido: Paso a recoger / A domicilio, Efectivo / Transferencia y Agendar */
-.seg span, .seg input:not(:checked) + span { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
-@media (hover: hover) { .seg label:hover input:not(:checked) + span { background: var(--b-fondo-h); border-color: var(--b-oro); } }
+.seg span, .seg input:not(:checked) + span { background: var(--b-add); border-color: var(--b-add-borde); color: var(--b-texto); } /* mismo fondo que "Añadir" */
+@media (hover: hover) { .seg label:hover input:not(:checked) + span { background: var(--b-add-h); border-color: var(--b-oro); } }
 .seg label:active span, .seg input:checked + span { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
-.btn-agendar, .btn-agendar:not(.activo) { background: var(--b-fondo); border-color: var(--b-borde); color: var(--b-texto); }
-@media (hover: hover) { .btn-agendar:not(.activo):hover { background: var(--b-fondo-h); border-color: var(--b-oro); } }
+.btn-agendar, .btn-agendar:not(.activo) { background: var(--b-add); border-color: var(--b-add-borde); color: var(--b-texto); }
+@media (hover: hover) { .btn-agendar:not(.activo):hover { background: var(--b-add-h); border-color: var(--b-oro); } }
 .btn-agendar:active, .btn-agendar.activo { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
 
 /* Menú principal: Arma tu pedido, Para hoy / Agendar pedido y Favoritas / Rellenas / Especiales */
@@ -556,12 +556,12 @@ legend { font-weight: 600; margin-bottom: 8px; }
 @media (hover: hover) { .tab:hover:not(.on) { background: var(--b-fondo-h); border-color: var(--b-oro); } }
 .tab:active:not(.on) { background: var(--b-sel); border-color: var(--b-sel); color: var(--b-sel-txt); }
 .tab.on { color: var(--b-sel-txt); }
-.tab-pill { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(56, 34, 29, .5); }
+.tab-pill { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(59, 40, 32, .5); }
 .tabs-in.sin-pill .tab.on { background: var(--b-sel); border-color: var(--b-sel); }
 .cuando { background: var(--b-fondo); border-color: var(--b-borde); box-shadow: none; }
 .cu-btn { color: var(--b-texto); }
 .cu-btn.on { color: var(--b-sel-txt); }
-.cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(56, 34, 29, .5); }
+.cu-bubble { background: var(--b-sel); box-shadow: 0 2px 6px -2px rgba(59, 40, 32, .5); }
 @media (hover: hover) { .cu-btn:hover:not(.on):not(:disabled) { background: var(--b-fondo-h); } }
 
 /* Botón "Añadir": dorado suave; al agregar, dorado tostado (con la misma animación) */
@@ -584,8 +584,30 @@ legend { font-weight: 600; margin-bottom: 8px; }
 }
 
 /* Carrito de la esquina: mismo color que la barra flotante, icono más grande y contador del mismo tamaño */
-.cart-btn { display: grid; place-items: center; width: 50px; height: 50px; padding: 0; background: var(--b-sel); color: #FFFFFF; }
-.cart-btn svg { width: 28px; height: 28px; }
+.cart-btn { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; background: var(--b-sel); color: #FFFFFF; }
+.cart-btn svg { width: 26px; height: 26px; } /* mismo tamaño que el carrito de la barra flotante */
 @media (hover: hover) { .cart-btn:hover { background: var(--ink-2); } }
 .cart-btn:active { transform: scale(.94); }
 .cart-count { top: -7px; right: -7px; min-width: 26px; height: 26px; padding: 0 7px; border-radius: 13px; font-size: 14px; font-weight: 800; background: #FFFFFF; color: #1A1210; box-shadow: 0 0 0 2px var(--b-sel); }
+
+/* Mismo café #3B2820 en todo lo que se pone oscuro: minicalendario, horas y botones "Agendar" / "Listo" */
+.cal-d.sel { background: var(--b-sel); color: #FFFFFF; }
+.hora.on { background: var(--b-sel); border-color: var(--b-sel); color: #FFFFFF; }
+@media (hover: hover) { .hora:hover { border-color: var(--b-sel); } }
+.btn-dark { background: var(--b-sel); color: #FFFFFF; }
+@media (hover: hover) { .btn-dark:hover { background: #54392D; } }
+
+/* Píldora − / + de las tarjetas: delineado y signos como en el resumen del pedido */
+.stepper { border: 1px solid var(--ink); }
+.card-acc .stepper button { font-size: 22px; font-weight: 500; line-height: 1; }
+
+/* Botón X para cerrar (resumen, minicalendario y ficha de producto): más visible */
+.icon-btn { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; background: var(--b-sel); color: #FFFFFF; font-size: 28px; font-weight: 300; line-height: 1; }
+@media (hover: hover) { .icon-btn:hover { background: #54392D; } }
+.icon-btn:active { transform: scale(.92); }
+
+@media (max-width: 900px) {
+  .bp-ico { width: 48px; height: 48px; } /* mismo tamaño que el carrito de la esquina */
+  .bp-ico svg { width: 26px; height: 26px; }
+  .bp-flecha svg { width: 46px; height: 32px; }
+}
