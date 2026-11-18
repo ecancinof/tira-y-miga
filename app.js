@@ -457,13 +457,13 @@
       // Una sola píldora: [🗑 o −] [N ×] [+]. Con 1 pieza el botón izquierdo es el bote (quita el producto); con más, es −
       const st = el('div', 'stepper'), a = el('button', null), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; b.setAttribute('aria-label', 'Más ' + p.nombre);
-      if (q <= minQ(p)) { a.classList.add('es-del'); a.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; a.setAttribute('aria-label', 'Quitar ' + p.nombre); a.title = 'Quitar'; }
-      else { a.textContent = '−'; a.setAttribute('aria-label', 'Menos ' + p.nombre); }
+      // Siempre "−" (para quitar el producto está el bote de la derecha); con la cantidad mínima se desactiva
+      a.textContent = '−'; a.setAttribute('aria-label', 'Menos ' + p.nombre); a.disabled = q <= minQ(p); if (a.disabled) a.title = 'Para quitarlo usa el bote de basura';
       Object.assign(inp, { type: 'number', min: 1, max: MAXQ, value: q, inputMode: 'numeric' }); inp.setAttribute('aria-label', 'Cantidad de ' + p.nombre);
       const cq = capQueda(), tope = Math.min(drawer.open && esParaHoy() ? Math.max(q, maxHoy(id, [...cart])) : MAXQ, isFinite(cq) ? Math.max(q, q + cq) : MAXQ);
       b.disabled = q >= Math.min(MAXQ, tope);
       const quitar = () => { li.classList.add('se-va'); setTimeout(() => { cart.delete(id); guardarCarrito(); pintarCarrito(); }, 220); }; // se encoge y desaparece
-      a.onclick = () => { if (q <= minQ(p)) return quitar(); cart.set(id, q - 1); guardarCarrito(); pintarCarrito(); };
+      a.onclick = () => { if (q <= minQ(p)) return; cart.set(id, q - 1); guardarCarrito(); pintarCarrito(); };
       b.onclick = () => { cart.set(id, Math.min(MAXQ, q + 1)); guardarCarrito(); pintarCarrito(); };
       inp.onchange = () => { const v = Math.floor(Number(inp.value)); if (v >= 1 && v <= MAXQ) cart.set(id, Math.max(minQ(p), v)); guardarCarrito(); pintarCarrito(); };
       st.append(a, inp, b);
