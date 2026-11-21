@@ -20,6 +20,8 @@
   // ¿Para cuándo es el pedido? Se elige una sola vez (chip en las pestañas o "Día" en el carrito) y manda en toda la página
   // Al entrar siempre empieza en "Para hoy" (o el primer día disponible): no se recuerda el día de la visita anterior
   let fechaSel = '', horaSel = '', fechaElegida = false; // fechaElegida = el cliente escogió el día (con "Para hoy", Agendar o la casilla Día) try { localStorage.removeItem('tm-fecha'); localStorage.removeItem('tm-hora'); } catch (e) {}
+  let tipoEnt = '', horaElegida = false; // tipo de entrega elegido (recoge/domicilio) y si el cliente ya escogió la hora a propósito
+  const DOM_ANT = Math.max(0, Number(C.domicilioAnticipacionMin ?? 60)); // a domicilio, mínimo de anticipación para pedidos de hoy (minutos)
   const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fechaElegida || !fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; }; // mientras no elija, siempre el primer día disponible (se recalcula al llegar el horario de la app)
   const paraHoy = () => limitaHoy() && fechaPedido() === hoyYmd(); // true = el pedido es para hoy y aplica el stock del día
   const minTxt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; // 630 → "10:30"
@@ -27,7 +29,7 @@
   const horaPedido = () => { const hs = horasDe(fechaPedido() || hoyYmd()).map(minTxt); if (!hs.length) return ''; if (!hs.includes(horaSel)) horaSel = hs[0]; return horaSel; };
   function ponFecha(f, origen, hora) {
     if (!fechasDisponibles().some(o => o.f === f)) return;
-    const cambia = f !== fechaSel; fechaSel = f; fechaElegida = true; if (hora) horaSel = hora;
+    const cambia = f !== fechaSel; fechaSel = f; fechaElegida = true; if (hora) { horaSel = hora; horaElegida = true; } else if (cambia) horaElegida = false;
     if (origen !== 'drawer' && $('#sel-fecha')) { $('#sel-fecha').value = f; bloquearDia(); llenarHoras(); }
     pintarCuando(); if (!cambia) return;
     pintarStockTags(); pintarCarrito(); if (typeof revisarBoton === 'function') revisarBoton();
@@ -109,6 +111,8 @@
 
   // ---------- Horario (lo publica la app; si no, el de config.js) ----------
   const hm = s => { const [h, m] = String(s).split(':').map(Number); return h * 60 + (m || 0); };
+  const bloqueTxt = m => { const a = ap(m), b = ap(m + 60); return `${hNum(m)}${a !== b ? ' ' + a : ''} a ${hNum(m + 60)} ${b}`; }; // "7 a 8 pm"
+  const horaTxt = (m, tipo = tipoEnt) => tipo === 'domicilio' ? bloqueTxt(m) : hora12(m);
   const hora12 = min => { const h = Math.floor(min / 60) % 24, m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`; };
   const hCorta = min => { const h = Math.floor(min / 60) % 24, m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')}`; };
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -133,9 +137,13 @@
   const cierreFinal = d => Math.max(...dia(d).t.map(t => t.c));
   const abiertoEn = (d, m) => abiertoDia(d) && dia(d).t.some(t => m >= t.a && m < t.c);
 
-  function horasDe(fecha) {
+  function horasDe(fecha, tipo = tipoEnt) {
     const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
     if (!abiertoDia(d)) return [];
+    // A domicilio: bloques de 1 hora en punto (7 a 8 pm, 8 a 9 pm…). Hoy, el primer bloque empieza al menos DOM_ANT min después de ahora.
+    if (tipo === 'domicilio') { const out = [], hoyD = fecha === ymd(new Date()), min = hoyD ? minAhora() + Math.max(H.prepMin ?? 45, DOM_ANT) : 0;
+      for (const t of dia(d).t) for (let m = Math.ceil(Math.max(t.a, min) / 60) * 60; m + 60 <= t.c; m += 60) if (!out.includes(m)) out.push(m);
+      return out.sort((a, b) => a - b); }
     // Otros días: cada 30 min hasta media hora antes de cerrar.
     // Hoy: cada 15 min desde (ahora + preparación) y hasta 15 min antes de cerrar, para que "último pedido" (p. ej. 15 min antes) sí se respete
     const out = [], hoy = fecha === ymd(new Date()), paso = 15, min = Math.ceil((minAhora() + (H.prepMin ?? 45)) / paso) * paso;
@@ -383,6 +391,7 @@
     const cuando = `${et === 'mañana' ? 'mañana' : 'el ' + et}${h != null ? ' a las ' + hora12(h) : ''}`;
     av.replaceChildren(el('b', null, abiertoAhora ? '⏰ Por hoy ya no alcanzamos a preparar más pedidos.' : '🌙 Ahora estamos cerrados,'),
       (abiertoAhora ? ' Puedes' : ' pero puedes') + ' dejar tu pedido programado desde ahorita. Lo más pronto: ', el('b', null, cuando + '.'));
+    { const b = el('button', 'btn-av-agendar', '📅 Agendar mi pedido'); b.type = 'button'; b.onclick = () => abrirAgenda(); av.append(' ', b); }
     av.hidden = false;
     np.textContent = `📅 Tu pedido quedará programado. Lo más pronto es ${cuando}; elige el día y la hora que prefieras.`; np.hidden = false;
   }
@@ -524,7 +533,7 @@
   function pintarCuando() {
     const box = $('#cuando'); if (!box) return;
     const fs = fechasDisponibles(), f = fechaPedido(), hoy = hoyYmd(), esHoy = f === hoy;
-    box.hidden = !fs.length || pausa;
+    box.hidden = true; // 21/11/2026: el día y la hora se eligen en el carrito (paso 2)
     const bh = $('#cu-hoy'), ba = $('#cu-agendar');
     bh.disabled = !hayHoyDisponible(); bh.title = bh.disabled ? (haySobre() ? 'Tu pedido lleva productos sobre pedido' : 'Por hoy ya no recibimos pedidos') : '';
     bh.classList.toggle('on', esHoy); ba.classList.toggle('on', !esHoy);
@@ -604,14 +613,14 @@
     $('#ag-horario').textContent = `${DIAS[d.getDay()][0].toUpperCase() + DIAS[d.getDay()].slice(1)} ${d.getDate()} ${MESES[d.getMonth()]} · ${tramos}${quedan}`;
     if (!hs.length) box.append(el('p', 'muted small', 'No hay horas disponibles ese día.'));
     for (const mnt of hs) {
-      const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), hora12(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
+      const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), horaTxt(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
       b.onclick = () => { agH = v; pintarHorasAg(); };
       box.append(b);
     }
     const ok = $('#ag-ok'), cur = fechasDisponibles().find(o => o.f === agF);
-    ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? 'Agendar' : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${hora12(hm(agH))}`;
+    ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? 'Agendar' : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${horaTxt(hm(agH))}`;
   }
-  $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}, ${hora12(hm(agH))}`); };
+  $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
   $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
   $('#cal-prev').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() - 1, 1); pintarCal(); };
   $('#cal-next').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() + 1, 1); pintarCal(); };
@@ -620,7 +629,7 @@
 
   function llenarHoras() {
     const sel = $('#sel-hora'); sel.replaceChildren();
-    for (const m of horasDe($('#sel-fecha').value)) { const op = el('option', null, hora12(m)); op.value = minTxt(m); sel.append(op); }
+    for (const m of horasDe($('#sel-fecha').value)) { const op = el('option', null, horaTxt(m)); op.value = minTxt(m); sel.append(op); }
     const h = $('#sel-fecha').value === fechaPedido() ? horaPedido() : ''; if ([...sel.options].some(o => o.value === h)) sel.value = h;
     pintarDiaHora();
   }
@@ -635,12 +644,13 @@
     const tipo = form.entregaTipo.value, dom = tipo === 'domicilio';
     $('#cr-hora-lbl').textContent = tipo === 'recoge' ? 'Hora para recoger' : dom ? 'Hora de entrega' : 'Hora';
     const ch = $('#cr-hora'); ch.classList.toggle('pend', !tipo);
-    ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sh.value ? hora12(hm(sh.value)) : 'Elige una hora';
-    $('#dr-hora').hidden = !tipo;
+    const sinHoras = !!tipo && !sh.options.length; ch.classList.toggle('pend', !tipo || !horaElegida || sinHoras);
+    ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sinHoras ? (dom ? 'Ya no hay horarios a domicilio este día · cambia el día' : 'Ya no hay horarios este día · cambia el día') : !horaElegida || !sh.value ? (dom ? 'Elige un horario de entrega' : 'Elige una hora') : dom ? 'De ' + bloqueTxt(hm(sh.value)) : hora12(hm(sh.value));
+    $('#dr-hora').hidden = !tipo || sinHoras; $('#dr-hora').textContent = horaElegida ? 'Cambiar hora' : 'Elegir hora'; $('#dr-hora').classList.toggle('activo', !!tipo && !horaElegida);
     $('#hd-t').textContent = dom ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
-    $('#hd-sub').textContent = `${diaTxt} · de 15 en 15 minutos`;
+    $('#hd-sub').textContent = dom ? `${diaTxt} · horarios de entrega de 1 hora` : `${diaTxt} · de 15 en 15 minutos`;
     $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
-      b.onclick = () => { sh.value = o.value; horaSel = o.value; $('#cuando-res').classList.remove('bad'); pintarCuando(); pintarDiaHora(); cerrarHoras(true); }; return b; }));
+      b.onclick = () => { sh.value = o.value; horaSel = o.value; horaElegida = true; revisarBoton(); $('#cuando-res').classList.remove('bad'); pintarCuando(); pintarDiaHora(); cerrarHoras(true); }; return b; }));
   }
   function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on') || $('#dr-horas .hora'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } }
   // Al elegir la hora se cierra sola y el cliente sigue con sus datos (primer campo vacío)
@@ -651,6 +661,10 @@
   horasDlg.addEventListener('cancel', e => { e.preventDefault(); cerrarHoras(false); });
   horasDlg.addEventListener('click', e => { if (e.target === horasDlg) cerrarHoras(false); });
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
+  // Al elegir recoger/domicilio: cambian las horas (cada 15 min o bloques de 1 h) y hay que volver a escoger la hora. Ya no se abre sola la ventanita.
+  function cambiaTipo() { const f0 = fechaPedido(); tipoEnt = form.entregaTipo.value; horaElegida = false; horaSel = '';
+    const f1 = fechaPedido(); llenarFechas(); if (f1 !== f0 && f0 === hoyYmd() && tipoEnt === 'domicilio') toast('🛵 Por hoy ya no alcanzamos a llevar pedidos a domicilio: elige otro día o pasa a recoger.');
+    pintarCarrito(); }
   const TIENDA = Object.assign({ direccion: 'Av. Colinas de San Patricio 505, Colinas de San Patricio, C.P. 20196, Aguascalientes, Ags.', mapa: 'https://www.google.com/maps/dir/?api=1&destination=21.8865077%2C-102.2344649' }, C.tienda || {});
   const ponDir = () => { const t = form.entregaTipo.value; $('#campo-dir').hidden = t !== 'domicilio'; $('#recoge-box').hidden = t !== 'recoge';
     $('#recoge-dir').textContent = TIENDA.direccion; $('#recoge-mapa').href = TIENDA.mapa; pintarDiaHora(); };
@@ -663,11 +677,11 @@
   form.addEventListener('change', e => { if (e.target.name === 'pago' || e.target.name === 'entregaTipo') pintaTransf(); });
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
-    if (e.target.name === 'entregaTipo' && $('#sel-hora').options.length) setTimeout(abrirHoras, 120); });
+    if (e.target.name === 'entregaTipo') cambiaTipo(); });
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago
-  const faltantes = () => { const f = []; if (!form.entregaTipo.value) f.push('si recoges o te lo enviamos'); if (!(form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10)) f.push('tu nombre y tu WhatsApp'); if (!form.pago.value) f.push('la forma de pago'); return f; };
+  const faltantes = () => { const f = []; if (!form.entregaTipo.value) f.push('si recoges o te lo enviamos'); if (!(form.nombre.value.trim().length > 0 && form.tel.value.replace(/\D/g, '').length === 10)) f.push('tu nombre y tu WhatsApp'); if (form.entregaTipo.value && (!horaElegida || !$('#sel-hora').value)) f.push(form.entregaTipo.value === 'domicilio' ? 'el horario de entrega' : 'la hora'); if (!form.pago.value) f.push('la forma de pago'); return f; };
   const listoParaPedir = () => faltantes().length === 0;
   function revisarBoton() {
     const falta = faltantes(), ok = falta.length === 0, cq = capQueda(), exCap = cq < 0, ex = excedidos().length > 0 || exCap;
@@ -689,6 +703,7 @@
       if (c.referencias) form.referencias.value = c.referencias;
     }
     if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = '';
+    if (tipoEnt !== form.entregaTipo.value) { tipoEnt = form.entregaTipo.value; horaElegida = false; llenarHoras(); }
     ponDir(); pintaTransf();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
     if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
@@ -707,7 +722,7 @@
     return {
       nombre: f.nombre.value.replace(/\s+/g, ' ').trim(), tel: f.tel.value.replace(/\D/g, '').slice(-10),
       entregaTipo: f.entregaTipo.value, ...dirForm(),
-      fecha: f.fecha.value, hora: f.hora.value, pago: f.pago.value, notas: f.notas.value.replace(/\s+/g, ' ').trim(), web: f.web.value,
+      fecha: f.fecha.value, hora: f.hora.value, horaFin: f.entregaTipo.value === 'domicilio' && HHMM.test(f.hora.value) ? minTxt(hm(f.hora.value) + 60) : '', pago: f.pago.value, notas: f.notas.value.replace(/\s+/g, ' ').trim(), web: f.web.value,
       items: [...cart].map(([id, cant]) => ({ id, cant, nombre: prod(id).nombre, precio: prod(id).precio }))
     };
   }
@@ -734,7 +749,7 @@
     if (!d.fecha) return mal(form.fecha, 'Elige el día.');
     if (limitaHoy() && d.fecha === hoyYmd()) { const c = conflictosHoy([...cart])[0]; if (c) return textoConflicto(c) + '. Cambia la cantidad o elige otro día.'; }
     { const lib = libreDia(d.fecha), pz = d.items.reduce((a, i) => a + i.cant, 0); if (pz > lib) return textoCap(lib); }
-    if (!d.hora) return mal(form.hora, 'Elige la hora.');
+    if (!d.hora || !horaElegida) return mal(form.hora, d.entregaTipo === 'domicilio' ? 'Elige el horario de entrega.' : 'Elige la hora.');
     if (!d.pago) return 'Elige la forma de pago.';
     return '';
   }
@@ -750,7 +765,7 @@
     const L = [`Hola 👋 Soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
     if (dom) { L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`); if (d.referencias) L.push(`• *Referencias:* ${d.referencias}`); L.push('• *Envío:* por cotizar ⏳'); }
     else L.push('• *Entrega:* paso a recoger en la tienda');
-    L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
+    L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${d.horaFin ? 'de ' + bloqueTxt(hm(d.hora)) : hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
     if (d.notas) L.push(`• *Nota:* ${d.notas}`);
     if (porConfirmar) L.push('• *Disponibilidad:* por confirmar ⏳');
     L.push('', dom ? 'Quedo pendiente de la cotización del envío y del total. ¡Gracias!' : '¿Me confirman, por favor? ¡Gracias!');

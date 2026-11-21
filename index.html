@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=108">
+<link rel="stylesheet" href="styles.css?v=109">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -151,59 +151,79 @@
       <form id="form-pedido" class="form" novalidate hidden>
         <div class="total-row"><span>Total de productos</span><strong id="cart-total">$0</strong></div>
 
-        <fieldset>
-          <legend>¿Recoges o te lo enviamos?</legend>
-          <div class="seg" role="radiogroup">
-            <label><input type="radio" name="entregaTipo" value="recoge"><span>🏠 Paso a recoger</span></label>
-            <label id="op-domicilio"><input type="radio" name="entregaTipo" value="domicilio"><span>🛵 A domicilio</span></label>
-          </div>
-        </fieldset>
-
-        <p class="saludo" id="saludo" hidden><span id="saludo-t"></span><button type="button" class="saludo-no" id="saludo-no">No soy yo</button></p>
-        <div class="campos">
-          <label class="f"><span>Tu nombre</span><input name="nombre" autocomplete="name" maxlength="60" required></label>
-          <label class="f"><span>Tu WhatsApp (10 dígitos)</span><input name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" required></label>
-          <fieldset class="full dir-box" id="campo-dir" hidden>
-            <legend class="lbl-fila">Dirección de entrega <em class="cotiza">🛵 Te confirmamos el costo del envío por WhatsApp</em></legend>
-            <div class="dir-grid">
-              <label class="f d-calle"><span>Calle</span><input name="calle" autocomplete="address-line1" maxlength="90" placeholder="Ej. Av. Colinas de San Patricio"></label>
-              <label class="f d-num"><span>Núm. exterior</span><input name="numExt" maxlength="12" placeholder="105"></label>
-              <label class="f d-int"><span>Int. <span class="muted">(opcional)</span></span><input name="numInt" maxlength="12" placeholder="B"></label>
-              <label class="f d-col"><span>Colonia o fraccionamiento</span><input name="colonia" autocomplete="address-level3" maxlength="80" placeholder="Ej. Colinas de San Patricio"></label>
-              <label class="f d-cp"><span>C.P. <span class="muted">(opcional)</span></span><input name="cp" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="20196"></label>
-              <label class="f d-ref"><span>Referencias <span class="muted">(opcional)</span></span><input name="referencias" maxlength="120" placeholder="Ej. casa blanca, portón negro, frente a la tienda"></label>
-            </div>
-          </fieldset>
-          <div class="full recoge-box" id="recoge-box" hidden>
-            <span class="rb-ico" aria-hidden="true">📍</span>
-            <div><b>Recoges en nuestra tienda</b><div id="recoge-dir"></div><a class="link-flecha" id="recoge-mapa" href="#" target="_blank" rel="noopener">Cómo llegar <span aria-hidden="true">↗</span></a></div>
-          </div>
-          <div class="full cuando-res" id="cuando-res">
-            <div class="cr-fila">
-              <span class="cr-ico" aria-hidden="true">📅</span>
-              <div class="cr-txt"><small>Día de tu pedido</small><b id="cr-dia">—</b></div>
-              <button type="button" class="btn-agendar" id="dr-agendar" aria-haspopup="dialog" aria-controls="agenda">Cambiar día</button>
-            </div>
-            <div class="cr-fila">
-              <span class="cr-ico" aria-hidden="true">🕐</span>
-              <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
-              <button type="button" class="btn-agendar" id="dr-hora" hidden aria-haspopup="dialog" aria-controls="horas-dlg">Cambiar hora</button>
-            </div>
-            <div class="sr-sel"><select name="fecha" id="sel-fecha" required aria-label="Día" tabindex="-1"></select><select name="hora" id="sel-hora" required aria-label="Hora" tabindex="-1"></select></div>
-          </div>
-          <p class="nota-prog full" id="nota-prog" hidden></p>
-          <p class="nota-prog full" id="stk-dia" hidden></p>
-          <fieldset class="full">
-            <legend>Forma de pago</legend>
+        <section class="paso" aria-labelledby="paso1-t">
+          <h3 class="paso-t" id="paso1-t"><span class="paso-n">1</span>¿Cómo lo recibes?</h3>
+          <fieldset>
+            <legend class="sr-only">¿Recoges o te lo enviamos?</legend>
             <div class="seg" role="radiogroup">
-              <label><input type="radio" name="pago" value="Efectivo"><span>💵 Efectivo</span></label>
-              <label><input type="radio" name="pago" value="Transferencia"><span>🏦 Transferencia</span></label>
+              <label><input type="radio" name="entregaTipo" value="recoge"><span>🏠 Paso a recoger</span></label>
+              <label id="op-domicilio"><input type="radio" name="entregaTipo" value="domicilio"><span>🛵 A domicilio</span></label>
             </div>
           </fieldset>
-          <div class="full aviso-transf" id="aviso-transf" role="status" hidden></div>
-          <label class="f full"><span>Notas <span class="muted">(opcional)</span></span><textarea name="notas" rows="2" maxlength="300"></textarea></label>
-          <label class="trampa" aria-hidden="true">No llenar<input name="web" tabindex="-1" autocomplete="off"></label>
+          <div class="campos">
+            <fieldset class="full dir-box" id="campo-dir" hidden>
+              <legend class="lbl-fila">Dirección de entrega <em class="cotiza">🛵 Te confirmamos el costo del envío por WhatsApp</em></legend>
+              <div class="dir-grid">
+                <label class="f d-calle"><span>Calle</span><input name="calle" autocomplete="address-line1" maxlength="90" placeholder="Ej. Av. Colinas de San Patricio"></label>
+                <label class="f d-num"><span>Núm. exterior</span><input name="numExt" maxlength="12" placeholder="105"></label>
+                <label class="f d-int"><span>Int. <span class="muted">(opcional)</span></span><input name="numInt" maxlength="12" placeholder="B"></label>
+                <label class="f d-col"><span>Colonia o fraccionamiento</span><input name="colonia" autocomplete="address-level3" maxlength="80" placeholder="Ej. Colinas de San Patricio"></label>
+                <label class="f d-cp"><span>C.P. <span class="muted">(opcional)</span></span><input name="cp" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="20196"></label>
+                <label class="f d-ref"><span>Referencias <span class="muted">(opcional)</span></span><input name="referencias" maxlength="120" placeholder="Ej. casa blanca, portón negro, frente a la tienda"></label>
+              </div>
+            </fieldset>
+            <div class="full recoge-box" id="recoge-box" hidden>
+              <span class="rb-ico" aria-hidden="true">📍</span>
+              <div><b>Recoges en nuestra tienda</b><div id="recoge-dir"></div><a class="link-flecha" id="recoge-mapa" href="#" target="_blank" rel="noopener">Cómo llegar <span aria-hidden="true">↗</span></a></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="paso" aria-labelledby="paso2-t">
+          <h3 class="paso-t" id="paso2-t"><span class="paso-n">2</span>¿Cuándo?</h3>
+          <div class="campos">
+            <div class="full cuando-res" id="cuando-res">
+              <div class="cr-fila">
+                <span class="cr-ico" aria-hidden="true">📅</span>
+                <div class="cr-txt"><small>Día de tu pedido</small><b id="cr-dia">—</b></div>
+                <button type="button" class="btn-agendar" id="dr-agendar" aria-haspopup="dialog" aria-controls="agenda">Cambiar día</button>
+              </div>
+              <div class="cr-fila">
+                <span class="cr-ico" aria-hidden="true">🕐</span>
+                <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
+                <button type="button" class="btn-agendar" id="dr-hora" hidden aria-haspopup="dialog" aria-controls="horas-dlg">Cambiar hora</button>
+              </div>
+              <div class="sr-sel"><select name="fecha" id="sel-fecha" required aria-label="Día" tabindex="-1"></select><select name="hora" id="sel-hora" required aria-label="Hora" tabindex="-1"></select></div>
+            </div>
+            <p class="nota-prog full" id="nota-prog" hidden></p>
+            <p class="nota-prog full" id="stk-dia" hidden></p>
+          </div>
+        </section>
+
+        <section class="paso" aria-labelledby="paso3-t">
+          <h3 class="paso-t" id="paso3-t"><span class="paso-n">3</span>Tus datos</h3>
+          <p class="saludo" id="saludo" hidden><span id="saludo-t"></span><button type="button" class="saludo-no" id="saludo-no">No soy yo</button></p>
+          <div class="campos">
+            <label class="f"><span>Tu nombre</span><input name="nombre" autocomplete="name" maxlength="60" required></label>
+            <label class="f"><span>Tu WhatsApp (10 dígitos)</span><input name="tel" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" required></label>
+          </div>
+        </section>
+
+        <section class="paso" aria-labelledby="paso4-t">
+          <h3 class="paso-t" id="paso4-t"><span class="paso-n">4</span>¿Cómo pagas?</h3>
+          <div class="campos">
+            <fieldset class="full">
+              <legend class="sr-only">Forma de pago</legend>
+              <div class="seg" role="radiogroup">
+                <label><input type="radio" name="pago" value="Efectivo"><span>💵 Efectivo</span></label>
+                <label><input type="radio" name="pago" value="Transferencia"><span>🏦 Transferencia</span></label>
+              </div>
+            </fieldset>
+            <div class="full aviso-transf" id="aviso-transf" role="status" hidden></div>
+            <label class="f full"><span>Notas <span class="muted">(opcional)</span></span><textarea name="notas" rows="2" maxlength="300"></textarea></label>
+            <label class="trampa" aria-hidden="true">No llenar<input name="web" tabindex="-1" autocomplete="off"></label>
         </div>
+        </section>
         <p class="error" id="stk-aviso" role="status" hidden></p>
         <p class="error" id="form-error" role="alert" hidden></p>
         <div class="envio-falla" id="envio-falla" role="alert" hidden>
@@ -289,6 +309,6 @@
 
 <script src="config.js?v=95"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=106"></script>
+<script src="app.js?v=107"></script>
 </body>
 </html>
