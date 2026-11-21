@@ -711,3 +711,7 @@ legend { font-weight: 600; margin-bottom: 8px; }
 #dr-hora.activo { border-color: var(--ink); background: var(--ink); color: var(--paper); animation: tmPulso 1.6s ease-in-out 3; }
 @keyframes tmPulso { 0%, 100% { box-shadow: 0 0 0 0 rgba(56, 34, 29, .35); } 50% { box-shadow: 0 0 0 6px rgba(56, 34, 29, 0); } }
 .btn-av-agendar { display: inline-block; margin-top: 10px; font: inherit; font-weight: 700; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--ink); color: var(--paper); cursor: pointer; }
+
+/* 21/11/2026: notas más bajitas para que se vea el botón "Realiza tu pedido"; sin botón en la portada */
+textarea[name="notas"] { min-height: 44px; height: 44px; resize: vertical; }
+.hero-desc { margin-bottom: 0; }

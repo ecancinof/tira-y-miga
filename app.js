@@ -227,13 +227,9 @@
     const grupos = new Map();
     for (const p of [...menu].sort((a, b) => a.orden - b.orden)) { if (!grupos.has(p.seccion)) grupos.set(p.seccion, []); grupos.get(p.seccion).push(p); }
     const claves = [...grupos.keys()].sort((a, b) => (ORDEN_SEC.indexOf(a) + 99) % 99 - (ORDEN_SEC.indexOf(b) + 99) % 99 || a.localeCompare(b));
-    // ⭐ Las favoritas (las marcas en la app): van primero
-    // Solo entran las que sí se pueden pedir hoy (no agotadas y con stock); si ninguna, la sección no se muestra
-    const hayHoy = p => !p.agotado && !(paraHoy() && maxHoy(p.id, []) <= 0);
-    const favs = menu.filter(p => p.destacado && hayHoy(p)).sort((a, b) => a.orden - b.orden);
-    const favIds = new Set(favs.map(p => p.id));
+    // 21/11/2026: ya no hay sección "Favoritas"; las que marcas como favoritas en la app solo llevan su etiqueta ★ en su propia sección
+    const favIds = new Set(menu.filter(p => p.destacado).map(p => p.id));
     const lista = claves.map(s => ({ s, info: K.secciones[s] || { eyebrow: '', titulo: s, texto: '' }, prods: grupos.get(s), pre: '' }));
-    if (favs.length) lista.unshift({ s: 'Favoritas', info: { eyebrow: 'Lo más pedido', titulo: 'Las favoritas', texto: 'Las que más se piden. Si no sabes cuál elegir, empieza por aquí.' }, prods: favs, pre: 'fav-', fav: true });
     const tabs = [];
     for (const { s, info, prods, pre, fav } of lista) {
       const sec = el('section', 'sec' + (fav ? ' sec-fav' : '')); sec.setAttribute('aria-label', info.titulo); sec.id = 'sec-' + slug(s);
@@ -678,6 +674,8 @@
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
     if (e.target.name === 'entregaTipo') cambiaTipo(); });
+  // Al tocar "Paso a recoger" o "A domicilio" se abre la ventanita de horarios (cada 15 min o bloques de 1 h); al elegir la hora se cierra sola
+  form.querySelectorAll('input[name="entregaTipo"]').forEach(r => r.addEventListener('click', () => setTimeout(() => { if ($('#sel-hora').options.length && !horasDlg.open) abrirHoras(); }, 160)));
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago
