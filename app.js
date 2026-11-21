@@ -141,8 +141,10 @@
     const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
     if (!abiertoDia(d)) return [];
     // A domicilio: bloques de 1 hora en punto (7 a 8 pm, 8 a 9 pm…). Hoy, el primer bloque empieza al menos DOM_ANT min después de ahora.
-    if (tipo === 'domicilio') { const out = [], hoyD = fecha === ymd(new Date()), min = hoyD ? minAhora() + Math.max(H.prepMin ?? 45, DOM_ANT) : 0;
-      for (const t of dia(d).t) for (let m = Math.ceil(Math.max(t.a, min) / 60) * 60; m + 60 <= t.c; m += 60) if (!out.includes(m)) out.push(m);
+    // Los bloques arrancan a la hora de apertura que pusiste en la app (abre 5 pm → 5 a 6, 6 a 7…; abre 5:30 → 5:30 a 6:30…).
+    // Si el cliente pide ANTES de abrir, el primer bloque del día (el de apertura) sí se ofrece.
+    if (tipo === 'domicilio') { const out = [], hoyD = fecha === ymd(new Date()), ahora = minAhora(), min = ahora + Math.max(H.prepMin ?? 45, DOM_ANT);
+      for (const t of dia(d).t) for (let m = t.a; m + 60 <= t.c; m += 60) { if (hoyD && m < min && !(ahora < t.a && m === t.a)) continue; if (!out.includes(m)) out.push(m); }
       return out.sort((a, b) => a - b); }
     // Otros días: cada 30 min hasta media hora antes de cerrar.
     // Hoy: cada 15 min desde (ahora + preparación) y hasta 15 min antes de cerrar, para que "último pedido" (p. ej. 15 min antes) sí se respete
@@ -651,7 +653,7 @@
   function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on') || $('#dr-horas .hora'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } }
   // Al elegir la hora se cierra sola y el cliente sigue con sus datos (primer campo vacío)
   function cerrarHoras(elegida) { if (!horasDlg.open) return; horasDlg.classList.add('sale');
-    setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { const sig = [form.nombre, form.tel, form.calle, form.numExt, form.colonia].find(c => c && !c.closest('[hidden]') && !c.value.trim()); if (sig) sig.focus(); else $('#cuando-res').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, 170); }
+    setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); $('#cuando-res').scrollIntoView({ block: 'center', behavior: 'smooth' }); } /* sin abrir el teclado: el cliente ve su día y hora; el teclado sale hasta que toque una casilla */ }, 170); }
   $('#dr-hora').onclick = abrirHoras;
   $('#hd-x').onclick = () => cerrarHoras(false);
   horasDlg.addEventListener('cancel', e => { e.preventDefault(); cerrarHoras(false); });
