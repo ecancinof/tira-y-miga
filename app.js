@@ -654,17 +654,13 @@
   const TIENDA = Object.assign({ direccion: 'Av. Colinas de San Patricio 505, Colinas de San Patricio, C.P. 20196, Aguascalientes, Ags.', mapa: 'https://www.google.com/maps/dir/?api=1&destination=21.8865077%2C-102.2344649' }, C.tienda || {});
   const ponDir = () => { const t = form.entregaTipo.value; $('#campo-dir').hidden = t !== 'domicilio'; $('#recoge-box').hidden = t !== 'recoge';
     $('#recoge-dir').textContent = TIENDA.direccion; $('#recoge-mapa').href = TIENDA.mapa; pintarDiaHora(); };
-  // Ubicación del celular del cliente (opcional): se manda como link de Google Maps para cotizar y para el repartidor
-  let ubicacion = '';
-  const pintaUbi = (txt, ok) => { $('#ubi-est').textContent = txt; $('#btn-ubi').classList.toggle('ok', !!ok); $('#btn-ubi').textContent = ok ? '✓ Ubicación agregada' : '📍 Compartir mi ubicación'; };
-  $('#btn-ubi').onclick = () => {
-    if (ubicacion) { ubicacion = ''; pintaUbi('Quitamos tu ubicación. Puedes volver a compartirla.', false); return; }
-    if (!navigator.geolocation) { pintaUbi('Tu navegador no permite compartir la ubicación; con la dirección basta.', false); return; }
-    pintaUbi('Buscando tu ubicación…', false);
-    navigator.geolocation.getCurrentPosition(p => { const la = p.coords.latitude.toFixed(6), lo = p.coords.longitude.toFixed(6), acc = Math.round(p.coords.accuracy || 0);
-      ubicacion = `https://www.google.com/maps?q=${la},${lo}`; pintaUbi(acc > 150 ? `Ubicación aproximada (±${acc} m). Revisa que la dirección esté completa. Toca de nuevo para quitarla.` : 'Listo, la mandamos con tu pedido. Toca de nuevo para quitarla.', true); },
-      e => pintaUbi(e && e.code === 1 ? 'No diste permiso de ubicación; con la dirección basta.' : 'No pudimos obtener tu ubicación; con la dirección basta.', false), { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
-  };
+  // Pago por transferencia: aviso visible (antes de pedir) de que los datos bancarios llegan por WhatsApp al confirmar
+  const pintaTransf = () => { const a = $('#aviso-transf'); if (!a) return; const on = form.pago.value === 'Transferencia'; a.hidden = !on; if (!on) return;
+    const dom = form.entregaTipo.value === 'domicilio'; a.replaceChildren(el('span', 'at-ico', '🏦'));
+    const t = el('div'); t.append(el('b', null, 'Los datos para transferir te los mandamos por WhatsApp.'), el('span', null, dom
+      ? ' Primero te cotizamos el envío para que nos digas si aceptas la tarifa; ya que la aceptes, te enviamos los datos bancarios y el monto total (productos + envío). No transfieras antes de recibir nuestro mensaje.'
+      : ' Cuando confirmemos tu pedido te enviamos los datos bancarios y el monto exacto. No transfieras antes de recibir nuestro mensaje.')); a.append(t); };
+  form.addEventListener('change', e => { if (e.target.name === 'pago' || e.target.name === 'entregaTipo') pintaTransf(); });
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
     if (e.target.name === 'entregaTipo' && $('#sel-hora').options.length) setTimeout(abrirHoras, 120); });
@@ -693,7 +689,7 @@
       if (c.referencias) form.referencias.value = c.referencias;
     }
     if (!conEnvio && form.entregaTipo.value === 'domicilio') form.entregaTipo.value = '';
-    ponDir();
+    ponDir(); pintaTransf();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
     if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
     revisarBoton();
@@ -701,7 +697,7 @@
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
   $('#saludo-no').onclick = () => {
     try { localStorage.removeItem('tm-cliente'); localStorage.removeItem('tm-ultimo'); } catch (e) {}
-    form.nombre.value = form.tel.value = ''; ['calle', 'numExt', 'numInt', 'colonia', 'cp', 'referencias'].forEach(k => { form[k].value = ''; }); ubicacion = ''; pintaUbi('Recomendado: así el repartidor llega directo.', false); form.pago.value = ''; form.entregaTipo.value = ''; ponDir();
+    form.nombre.value = form.tel.value = ''; ['calle', 'numExt', 'numInt', 'colonia', 'cp', 'referencias'].forEach(k => { form[k].value = ''; }); form.pago.value = ''; pintaTransf(); form.entregaTipo.value = ''; ponDir();
     $('#saludo').hidden = true; revisarBoton(); form.nombre.focus();
   };
 
@@ -719,7 +715,7 @@
     const v = k => form[k].value.replace(/\s+/g, ' ').trim();
     const dir = { calle: v('calle'), num: v('numExt'), int: v('numInt'), col: v('colonia'), cp: v('cp').replace(/\D/g, '') };
     const direccion = [`${dir.calle}${dir.num ? ' ' + dir.num : ''}${dir.int ? ' Int. ' + dir.int : ''}`, dir.col ? (/^(col\.?|colonia|fracc\.?|fraccionamiento)\s/i.test(dir.col) ? dir.col : 'Col. ' + dir.col) : '', dir.cp ? 'C.P. ' + dir.cp : ''].filter(Boolean).join(', ');
-    return { dir, direccion, referencias: v('referencias'), ubicacion };
+    return { dir, direccion, referencias: v('referencias') };
   }
   function validar(d) {
     form.querySelectorAll('.bad').forEach(x => x.classList.remove('bad'));
@@ -752,7 +748,7 @@
     [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, ...its.map(i => `• ${i.cant}  ${i.nombre} - ${m2(i.cant * i.precio)}`)); });
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
     const L = [`Hola 👋 Soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
-    if (dom) { L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`); if (d.referencias) L.push(`• *Referencias:* ${d.referencias}`); if (d.ubicacion) L.push(`• *Ubicación:* ${d.ubicacion}`); L.push('• *Envío:* por cotizar ⏳'); }
+    if (dom) { L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`); if (d.referencias) L.push(`• *Referencias:* ${d.referencias}`); L.push('• *Envío:* por cotizar ⏳'); }
     else L.push('• *Entrega:* paso a recoger en la tienda');
     L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
     if (d.notas) L.push(`• *Nota:* ${d.notas}`);
@@ -792,15 +788,16 @@
     const telTxt = d.tel.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1\u00a0$2\u00a0$3');
     // A domicilio el pedido no es definitivo hasta que el cliente acepta el costo de envío
     $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
-    $('#ok-txt').textContent = dom ? `Te enviaremos por WhatsApp al ${telTxt} el costo de envío. Tu pedido queda confirmado cuando lo aceptes.` : `Te escribiremos por WhatsApp al ${telTxt} para confirmarlo.`;
+    $('#ok-txt').textContent = dom ? `Te escribiremos por WhatsApp al ${telTxt} con el costo del envío.` : `Te escribiremos por WhatsApp al ${telTxt} para confirmarlo.`;
     if (porConfirmar) $('#ok-txt').textContent += ' Como es para hoy, primero revisamos que haya piezas disponibles y te confirmamos en un momento.';
     // Recoger: dirección de la tienda. Transferencia: qué sigue con el pago.
     const ex = $('#ok-extra'); ex.replaceChildren();
     const caja = (ic, tit, txt, cls, link) => { const b = el('div', cls || null), t = el('div'); b.append(el('span', 'rb-ico', ic)); t.append(el('b', null, tit), el('span', null, txt)); if (link) { const a = el('a', 'link-flecha'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Cómo llegar ↗'; t.append(el('br'), a); } b.append(t); ex.append(b); };
     if (!dom) caja('📍', 'Recoges en nuestra tienda', TIENDA.direccion, '', TIENDA.mapa);
-    if (d.pago === 'Transferencia') caja('🏦', 'Pago por transferencia', dom
-      ? `Cuando aceptes el costo del envío te mandaremos por WhatsApp los datos bancarios y el monto exacto a transferir, ya con el envío incluido. Al transferir, envíanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`
-      : `Al confirmar tu pedido te mandaremos por WhatsApp los datos bancarios y el monto exacto a transferir. Espera nuestro mensaje antes de pagar y, al transferir, envíanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`, 'pago-t');
+    if (dom) caja('🛵', 'Te cotizamos el envío', `Te mandaremos por WhatsApp el costo del envío a tu domicilio para que nos confirmes si aceptas la tarifa. Tu pedido queda confirmado cuando la aceptes.`, 'envio-t');
+    if (d.pago === 'Transferencia') caja('🏦', 'Los datos para transferir te los mandamos por WhatsApp', dom
+      ? `Cuando aceptes la tarifa del envío te enviamos los datos bancarios y el monto total (productos + envío). No transfieras antes de recibir nuestro mensaje; al pagar, mándanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`
+      : `Cuando confirmemos tu pedido te enviamos los datos bancarios y el monto exacto. No transfieras antes de recibir nuestro mensaje; al pagar, mándanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`, 'pago-t');
     ex.hidden = !ex.children.length;
     const ul = $('#ok-resumen'); ul.replaceChildren();
     [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
