@@ -21,7 +21,7 @@
   // Al entrar siempre empieza en "Para hoy" (o el primer día disponible): no se recuerda el día de la visita anterior
   let fechaSel = '', horaSel = '', fechaElegida = false; // fechaElegida = el cliente escogió el día (con "Para hoy", Agendar o la casilla Día) try { localStorage.removeItem('tm-fecha'); localStorage.removeItem('tm-hora'); } catch (e) {}
   let tipoEnt = '', horaElegida = false; // tipo de entrega elegido (recoge/domicilio) y si el cliente ya escogió la hora a propósito
-  const DOM_ANT = Math.max(0, Number(C.domicilioAnticipacionMin ?? 60)); // a domicilio, mínimo de anticipación para pedidos de hoy (minutos)
+  const domAnt = () => Math.max(0, Number(H.domMin ?? C.domicilioAnticipacionMin ?? 0)); // a domicilio: minutos mínimos antes de que empiece el bloque (se configura en la app; 0 = hasta que empiece) // a domicilio, mínimo de anticipación para pedidos de hoy (minutos)
   const fechaPedido = () => { const fs = fechasDisponibles(); if (!fs.length) return ''; if (!fechaElegida || !fs.some(o => o.f === fechaSel)) fechaSel = fs[0].f; return fechaSel; }; // mientras no elija, siempre el primer día disponible (se recalcula al llegar el horario de la app)
   const paraHoy = () => limitaHoy() && fechaPedido() === hoyYmd(); // true = el pedido es para hoy y aplica el stock del día
   const minTxt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; // 630 → "10:30"
@@ -140,11 +140,11 @@
   function horasDe(fecha, tipo = tipoEnt) {
     const [y, mo, da] = fecha.split('-').map(Number), d = new Date(y, mo - 1, da);
     if (!abiertoDia(d)) return [];
-    // A domicilio: bloques de 1 hora en punto (7 a 8 pm, 8 a 9 pm…). Hoy, el primer bloque empieza al menos DOM_ANT min después de ahora.
+    // A domicilio: bloques de 1 hora en punto (7 a 8 pm, 8 a 9 pm…). Hoy se ofrecen los bloques que aún no empiezan (con la anticipación que pongas en la app).
     // Los bloques arrancan a la hora de apertura que pusiste en la app (abre 5 pm → 5 a 6, 6 a 7…; abre 5:30 → 5:30 a 6:30…).
     // Si el cliente pide ANTES de abrir, el primer bloque del día (el de apertura) sí se ofrece.
-    if (tipo === 'domicilio') { const out = [], hoyD = fecha === ymd(new Date()), ahora = minAhora(), min = ahora + Math.max(H.prepMin ?? 45, DOM_ANT);
-      for (const t of dia(d).t) for (let m = t.a; m + 60 <= t.c; m += 60) { if (hoyD && m < min && !(ahora < t.a && m === t.a)) continue; if (!out.includes(m)) out.push(m); }
+    if (tipo === 'domicilio') { const out = [], hoyD = fecha === ymd(new Date()), ahora = minAhora(), ant = domAnt();
+      for (const t of dia(d).t) for (let m = t.a; m + 60 <= t.c; m += 60) { if (hoyD && !(m > ahora && m >= ahora + ant)) continue; if (!out.includes(m)) out.push(m); }
       return out.sort((a, b) => a - b); }
     // Otros días: cada 30 min hasta media hora antes de cerrar.
     // Hoy: cada 15 min desde (ahora + preparación) y hasta 15 min antes de cerrar, para que "último pedido" (p. ej. 15 min antes) sí se respete
@@ -189,7 +189,7 @@
   }
   function usarHorario(h) {
     if (!h || !Array.isArray(h.dias) || h.dias.length !== 7) return;
-    H = { dias: h.dias.map(x => ({ a: !!(x && x.a), t: tramosDe(x || {}) })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45) };
+    H = { dias: h.dias.map(x => ({ a: !!(x && x.a), t: tramosDe(x || {}) })), ultimoMin: Number(h.ultimoMin ?? 60), prepMin: Number(h.prepMin ?? 45), domMin: h.domMin != null ? Number(h.domMin) : undefined };
   }
 
   // ---------- Menú ----------
