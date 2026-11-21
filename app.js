@@ -644,7 +644,7 @@
     ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sinHoras ? (dom ? 'Ya no hay horarios a domicilio este día · cambia el día' : 'Ya no hay horarios este día · cambia el día') : !horaElegida || !sh.value ? (dom ? 'Elige un horario de entrega' : 'Elige una hora') : dom ? 'De ' + bloqueTxt(hm(sh.value)) : hora12(hm(sh.value));
     $('#dr-hora').hidden = !tipo || sinHoras; $('#dr-hora').textContent = horaElegida ? 'Cambiar hora' : 'Elegir hora'; $('#dr-hora').classList.toggle('activo', !!tipo && !horaElegida);
     $('#hd-t').textContent = dom ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
-    $('#hd-sub').textContent = dom ? `${diaTxt} · horarios de entrega de 1 hora` : `${diaTxt} · de 15 en 15 minutos`;
+    $('#hd-sub').textContent = ''; $('#hd-sub').hidden = true;
     $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
       b.onclick = () => { sh.value = o.value; horaSel = o.value; horaElegida = true; revisarBoton(); $('#cuando-res').classList.remove('bad'); pintarCuando(); pintarDiaHora(); cerrarHoras(true); }; return b; }));
   }
@@ -667,9 +667,7 @@
   // Pago por transferencia: aviso visible (antes de pedir) de que los datos bancarios llegan por WhatsApp al confirmar
   const pintaTransf = () => { const a = $('#aviso-transf'); if (!a) return; const on = form.pago.value === 'Transferencia'; a.hidden = !on; if (!on) return;
     const dom = form.entregaTipo.value === 'domicilio'; a.replaceChildren(el('span', 'at-ico', '🏦'));
-    const t = el('div'); t.append(el('b', null, 'Los datos para transferir te los mandamos por WhatsApp.'), el('span', null, dom
-      ? ' Primero te cotizamos el envío para que nos digas si aceptas la tarifa; ya que la aceptes, te enviamos los datos bancarios y el monto total (productos + envío). No transfieras antes de recibir nuestro mensaje.'
-      : ' Cuando confirmemos tu pedido te enviamos los datos bancarios y el monto exacto. No transfieras antes de recibir nuestro mensaje.')); a.append(t); };
+    const t = el('div'); t.append(el('b', null, 'Los datos para transferir te los mandamos por WhatsApp junto con la confirmación de tu pedido 😉'), el('span', null, 'No transfieras antes de recibir nuestro mensaje. ¡Gracias!')); a.append(t); };
   form.addEventListener('change', e => { if (e.target.name === 'pago' || e.target.name === 'entregaTipo') pintaTransf(); });
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
