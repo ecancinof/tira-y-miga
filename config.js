@@ -6,6 +6,8 @@
 window.TM_CONFIG = {
   api: 'https://script.google.com/macros/s/AKfycbxJoiLIrP0w5jGY5XmA9HV8pPzUvM-hOyqrVAi8kzXPOtFOXshEVTj-YCAMd-tBGOYk/exec',
   whatsapp: '523341016194',
+  // Tienda para "Paso a recoger" (se muestra al cliente al elegir recoger y al terminar su pedido)
+  tienda: { direccion: 'Av. Colinas de San Patricio 505, Colinas de San Patricio, C.P. 20196, Aguascalientes, Ags.', mapa: 'https://www.google.com/maps/dir/?api=1&destination=21.8865077%2C-102.2344649' },
   // Datos para transferencia (los que pongas en la app los reemplazan)
   datosPago: 'CLABE: 170180019435675074\nBanco: REVOLUT\nA nombre: Esteban Cancino',
   // Días: 0 = domingo, 1 = lunes, 2 = martes … 6 = sábado

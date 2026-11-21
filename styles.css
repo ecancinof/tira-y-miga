@@ -684,3 +684,19 @@ legend { font-weight: 600; margin-bottom: 8px; }
 .hd-cuerpo .horas { grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: min(52dvh, 360px); }
 .hd-cuerpo .hora { padding: 11px 4px; font-size: var(--fs-base); }
 .cr-fila .btn-agendar { flex-shrink: 0; }
+
+/* ---- Dirección por casillas, ubicación y tienda (21/11/2026) ---- */
+.dir-box { border: 0; padding: 0; margin: 0; }
+.dir-box legend { width: 100%; font-size: var(--fs-sm); font-weight: 600; margin-bottom: 6px; }
+.dir-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.d-calle { grid-column: span 4; } .d-num { grid-column: span 1; } .d-int { grid-column: span 1; }
+.d-col { grid-column: span 4; } .d-cp { grid-column: span 2; } .d-ref { grid-column: 1 / -1; }
+@media (max-width: 560px) { .d-calle, .d-col, .d-ref { grid-column: 1 / -1; } .d-num, .d-int, .d-cp { grid-column: span 2; } }
+.ubi-fila { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.btn-ubi { font: inherit; font-size: var(--fs-sm); font-weight: 700; padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--ink); background: #fff; color: var(--ink); cursor: pointer; }
+.btn-ubi.ok { background: #e7f6ec; border-color: #2f8f55; color: #14532d; }
+.recoge-box, .ok-extra > div { display: flex; gap: 10px; align-items: flex-start; text-align: left; background: var(--cream, #f7f0e4); border-radius: 12px; padding: 12px 14px; font-size: var(--fs-sm); line-height: 1.45; }
+.recoge-box .rb-ico, .ok-extra .rb-ico { font-size: 20px; line-height: 1; }
+.recoge-box b, .ok-extra b { display: block; margin-bottom: 2px; }
+.ok-extra { display: grid; gap: 10px; grid-column: 1 / -1; }
+.ok-extra .pago-t { background: #fff7e6; border: 1px solid #f1d39a; color: #5a3a00; }
