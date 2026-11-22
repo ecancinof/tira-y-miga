@@ -6,7 +6,8 @@
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const money = v => '$' + Math.round(Number(v) || 0).toLocaleString('es-MX');
   const MAXQ = 99;
-  const ORDEN_SEC = ['Rellenas', 'Tradicionales', 'Especiales'];
+  let ORDEN_SEC = ['Rellenas', 'Tradicionales', 'Especiales'];
+  let SEC_INFO = {}; // 21/11/2026: secciones que configuras en la app (nombre, orden, frase de arriba y texto)
 
   // ---------- Estado ----------
   let menu = [];               // [{ id, nombre, precio, seccion, orden, agotado, desc, foto }]
@@ -231,7 +232,7 @@
     const claves = [...grupos.keys()].sort((a, b) => (ORDEN_SEC.indexOf(a) + 99) % 99 - (ORDEN_SEC.indexOf(b) + 99) % 99 || a.localeCompare(b));
     // 21/11/2026: ya no hay sección "Favoritas"; las que marcas como favoritas en la app solo llevan su etiqueta ★ en su propia sección
     const favIds = new Set(menu.filter(p => p.destacado).map(p => p.id));
-    const lista = claves.map(s => ({ s, info: K.secciones[s] || { eyebrow: '', titulo: s, texto: '' }, prods: grupos.get(s), pre: '' }));
+    const lista = claves.map(s => ({ s, info: SEC_INFO[s] || K.secciones[s] || { eyebrow: '', titulo: s, texto: '' }, prods: grupos.get(s), pre: '' }));
     const tabs = [];
     for (const { s, info, prods, pre, fav } of lista) {
       const sec = el('section', 'sec' + (fav ? ' sec-fav' : '')); sec.setAttribute('aria-label', info.titulo); sec.id = 'sec-' + slug(s);
@@ -443,6 +444,8 @@
       const av = $('#aviso-pausa'); av.hidden = !pausa; av.textContent = avisoPausa || 'Por ahora no estamos recibiendo pedidos en línea. Escríbenos por WhatsApp.';
       $('#op-domicilio').hidden = !conEnvio;
       usarHorario(d.horario); pintarHorario(); if (d.datosPago) datosPago = d.datosPago;
+      if (Array.isArray(d.secciones) && d.secciones.length) { ORDEN_SEC = d.secciones.map(x => String(x.nombre || '')).filter(Boolean);
+        SEC_INFO = Object.fromEntries(d.secciones.filter(x => x && x.nombre).map(x => [String(x.nombre), { eyebrow: String(x.eyebrow || ''), titulo: String(x.titulo || x.nombre), texto: String(x.texto || ''), corto: String(x.nombre) }])); }
       STK = d.stock && typeof d.stock === 'object' ? d.stock : {}; stockFecha = d.stockFecha || '';
       stockModo = d.stockModo === 'capacidad' ? 'capacidad' : 'stock';
       capDia = Math.max(0, Math.floor(Number(d.capDia) || 0)); capLibre = d.capLibre && typeof d.capLibre === 'object' ? d.capLibre : {};
