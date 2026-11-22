@@ -740,3 +740,20 @@ textarea[name="notas"] { min-height: 44px; height: 44px; resize: vertical; }
 .dir-grid { grid-template-columns: minmax(0, 1fr) 86px 104px; }
 .dir-grid .opc { font-size: 11px; font-weight: 500; }
 @media (max-width: 560px) { .dir-grid { grid-template-columns: minmax(0, 1fr) 66px 92px; } }
+
+/* ===== Botón flotante de dudas por WhatsApp ===== */
+.wa-flot { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: bottom .25s ease, opacity .2s; }
+.wa-flot-ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: #25D366; color: #FFFFFF; box-shadow: 0 6px 18px -4px rgba(0, 0, 0, .35); transition: transform .15s; }
+.wa-flot-lbl { background: #FFFFFF; color: #1A1210; font-size: var(--fs-sm); font-weight: 700; padding: 7px 12px; border-radius: 999px; box-shadow: 0 4px 14px -4px rgba(0, 0, 0, .3); white-space: nowrap; transition: opacity .4s, transform .4s; }
+.wa-flot.sin-lbl .wa-flot-lbl { opacity: 0; transform: translateX(8px); pointer-events: none; }
+@media (hover: hover) { .wa-flot:hover .wa-flot-ico { transform: scale(1.06); } .wa-flot:hover .wa-flot-lbl { opacity: 1; transform: none; } }
+.wa-flot:active .wa-flot-ico { transform: scale(.92); }
+/* Se oculta mientras hay una ventana abierta (resumen del pedido, minicalendario, horarios, confirmación) */
+body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
+/* En el celular va encima de la barra "Ver mi pedido" cuando esta aparece */
+@media (max-width: 900px) {
+  .wa-flot { right: 14px; bottom: 14px; }
+  .wa-flot-ico { width: 52px; height: 52px; }
+  body:has(.barra-pedido:not([hidden])) .wa-flot { bottom: var(--wa-sobre-barra, 96px); }
+}
+@media (max-width: 900px) { body:has(.barra-pedido:not([hidden])) .wa-flot-lbl { opacity: 0; pointer-events: none; } }

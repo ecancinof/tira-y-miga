@@ -774,6 +774,12 @@
     return L.join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
+  // Botón flotante de dudas por WhatsApp: mensaje ya escrito (avisa si es fuera de horario) y la etiqueta "¿Dudas?" se oculta a los pocos segundos
+  { const wf = $('#wa-flot'); if (wf) {
+    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA(abierto ? 'Hola, tengo una duda sobre las conchas 😊' : 'Hola, tengo una duda sobre las conchas 😊 (te escribo fuera de horario)'); };
+    ponLink(); wf.addEventListener('pointerdown', ponLink); wf.addEventListener('focus', ponLink);
+    setTimeout(() => wf.classList.add('sin-lbl'), 6000);
+  } }
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -840,7 +846,7 @@
   })();
 
   // ---------- Inicio ----------
-  $('#wa-contacto').href = linkWA('Hola, Tira & Miga. Me gustaría hacer un pedido de conchas. ¿Qué sabores tienen disponibles?');
+  // (la sección "Contacto" del pie se quitó: las dudas van por el botón flotante de WhatsApp)
   leerCarrito(); aplicarCliente(); pintarHorario(); pintarProgramar(); cargarMenu(); pintarCuando(); evento('visita');
   setInterval(() => { pintarProgramar(); pintarCuando(); }, 60000);
   setInterval(refrescarMenu, 60000);
