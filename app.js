@@ -746,7 +746,7 @@
       if (d.dir.calle.length < 3) return mal(form.calle, 'Escribe la calle de entrega.');
       if (!d.dir.num) return mal(form.numExt, 'Escribe el número exterior (si no tiene, pon “S/N”).');
       if (d.dir.col.length < 3) return mal(form.colonia, 'Escribe la colonia o fraccionamiento.');
-      if (d.dir.cp && d.dir.cp.length !== 5) return mal(form.cp, 'El código postal tiene 5 dígitos (o déjalo vacío).');
+      if (d.dir.cp.length !== 5) return mal(form.cp, 'Escribe tu código postal (5 dígitos).');
     }
     if (!d.fecha) return mal(form.fecha, 'Elige el día.');
     if (limitaHoy() && d.fecha === hoyYmd()) { const c = conflictosHoy([...cart])[0]; if (c) return textoConflicto(c) + '. Cambia la cantidad o elige otro día.'; }

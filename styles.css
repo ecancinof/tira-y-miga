@@ -728,3 +728,15 @@ textarea[name="notas"] { min-height: 44px; height: 44px; resize: vertical; }
 
 /* Al volver de elegir la hora, la dirección queda visible con un poco de aire arriba */
 #campo-dir { scroll-margin-top: 70px; }
+
+/* Dirección: Calle | Núm. ext. | Int. en una fila, Colonia | C.P. en otra y Referencias abajo (celular y PC) */
+.dir-grid { display: grid; grid-template-columns: minmax(0, 1fr) 86px 74px; gap: 10px; align-items: end; }
+.d-calle, .d-col { grid-column: 1; } .d-num { grid-column: 2; } .d-int { grid-column: 3; }
+.d-cp { grid-column: 2 / 4; } .d-ref { grid-column: 1 / -1; }
+.dir-grid .f > span { white-space: nowrap; }
+.dir-grid .d-num input, .dir-grid .d-int input, .dir-grid .d-cp input { padding-left: 10px; padding-right: 10px; }
+@media (max-width: 560px) { .d-calle, .d-col { grid-column: 1; } .d-num { grid-column: 2; } .d-int { grid-column: 3; } .d-cp { grid-column: 2 / 4; } .d-ref { grid-column: 1 / -1; } .dir-grid { grid-template-columns: minmax(0, 1fr) 72px 60px; gap: 8px; } }
+/* "Int. (opcional)" en un solo renglón: columna un poco más ancha y "(opcional)" más pequeño */
+.dir-grid { grid-template-columns: minmax(0, 1fr) 86px 104px; }
+.dir-grid .opc { font-size: 11px; font-weight: 500; }
+@media (max-width: 560px) { .dir-grid { grid-template-columns: minmax(0, 1fr) 66px 92px; } }

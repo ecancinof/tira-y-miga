@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=113">
+<link rel="stylesheet" href="styles.css?v=115">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -163,11 +163,11 @@
             <fieldset class="full dir-box" id="campo-dir" hidden>
               <legend class="lbl-fila">Dirección de entrega</legend>
               <div class="dir-grid">
-                <label class="f d-calle"><span>Calle</span><input name="calle" autocomplete="address-line1" maxlength="90"></label>
-                <label class="f d-num"><span>Núm. exterior</span><input name="numExt" maxlength="12"></label>
-                <label class="f d-int"><span>Int. <span class="muted">(opcional)</span></span><input name="numInt" maxlength="12"></label>
-                <label class="f d-col"><span>Colonia o fraccionamiento</span><input name="colonia" autocomplete="address-level3" maxlength="80"></label>
-                <label class="f d-cp"><span>C.P. <span class="muted">(opcional)</span></span><input name="cp" inputmode="numeric" autocomplete="postal-code" maxlength="5"></label>
+                <label class="f d-calle"><span>Calle</span><input name="calle" autocomplete="address-line1" maxlength="90" required></label>
+                <label class="f d-num"><span>Núm. ext.</span><input name="numExt" maxlength="12" required></label>
+                <label class="f d-int"><span>Int. <span class="muted opc">(opcional)</span></span><input name="numInt" maxlength="12"></label>
+                <label class="f d-col"><span>Colonia o fraccionamiento</span><input name="colonia" autocomplete="address-level3" maxlength="80" required></label>
+                <label class="f d-cp"><span>C.P.</span><input name="cp" inputmode="numeric" autocomplete="postal-code" maxlength="5" required></label>
                 <label class="f d-ref"><span>Referencias <span class="muted">(opcional)</span></span><input name="referencias" maxlength="120"></label>
               </div>
             </fieldset>
@@ -308,6 +308,6 @@
 
 <script src="config.js?v=95"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=117"></script>
+<script src="app.js?v=119"></script>
 </body>
 </html>
