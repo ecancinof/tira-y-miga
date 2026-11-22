@@ -774,9 +774,9 @@
     return L.join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
-  // Botón flotante de dudas por WhatsApp: mensaje ya escrito (avisa si es fuera de horario) y la etiqueta "¿Dudas?" se oculta a los pocos segundos
+  // Botón flotante de dudas por WhatsApp (mensaje sin emojis: en WhatsApp de PC salían como signos raros): mensaje ya escrito (avisa si es fuera de horario) y la etiqueta "¿Dudas?" se oculta a los pocos segundos
   { const wf = $('#wa-flot'); if (wf) {
-    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA(abierto ? 'Hola, tengo una duda sobre las conchas 😊' : 'Hola, tengo una duda sobre las conchas 😊 (te escribo fuera de horario)'); };
+    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA(abierto ? 'Hola, Tira & Miga. Tengo una pregunta.' : 'Hola, Tira & Miga. Tengo una pregunta (les escribo fuera de horario).'); };
     ponLink(); wf.addEventListener('pointerdown', ponLink); wf.addEventListener('focus', ponLink);
     setTimeout(() => wf.classList.add('sin-lbl'), 6000);
   } }
