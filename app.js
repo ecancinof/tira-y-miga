@@ -780,7 +780,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
   // Botón flotante de dudas por WhatsApp (mensaje sin emojis: en WhatsApp de PC salían como signos raros): mensaje ya escrito (avisa si es fuera de horario) y la etiqueta "¿Dudas?" se oculta a los pocos segundos
   { const wf = $('#wa-flot'); if (wf) {
-    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA(abierto ? 'Hola, Tira & Miga. Tengo una pregunta.' : 'Hola, Tira & Miga. Tengo una pregunta (les escribo fuera de horario).'); };
+    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA('Hola \u{1F44B}, Tira & Miga. Tengo una duda sobre un producto'); };
     ponLink(); wf.addEventListener('pointerdown', ponLink); wf.addEventListener('focus', ponLink);
   } }
 
