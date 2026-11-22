@@ -804,20 +804,15 @@
     const telTxt = d.tel.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1\u00a0$2\u00a0$3');
     // A domicilio el pedido no es definitivo hasta que el cliente acepta el costo de envío
     $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
-    $('#ok-txt').textContent = dom ? `Te escribiremos por WhatsApp al ${telTxt} con el costo del envío.` : `Te escribiremos por WhatsApp al ${telTxt} para confirmarlo.`;
-    if (porConfirmar) $('#ok-txt').textContent += ' Como es para hoy, primero revisamos que haya piezas disponibles y te confirmamos en un momento.';
-    // Recoger: dirección de la tienda. Transferencia: qué sigue con el pago.
-    const ex = $('#ok-extra'); ex.replaceChildren();
-    const caja = (ic, tit, txt, cls, link) => { const b = el('div', cls || null), t = el('div'); b.append(el('span', 'rb-ico', ic)); t.append(el('b', null, tit), el('span', null, txt)); if (link) { const a = el('a', 'link-flecha'); a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Cómo llegar ↗'; t.append(el('br'), a); } b.append(t); ex.append(b); };
-    if (!dom) caja('📍', 'Recoges en nuestra tienda', TIENDA.direccion, '', TIENDA.mapa);
-    if (dom) caja('🛵', 'Te cotizamos el envío', `Te mandaremos por WhatsApp el costo del envío a tu domicilio para que nos confirmes si aceptas la tarifa. Tu pedido queda confirmado cuando la aceptes.`, 'envio-t');
-    if (d.pago === 'Transferencia') caja('🏦', 'Los datos para transferir te los mandamos por WhatsApp', dom
-      ? `Cuando aceptes la tarifa del envío te enviamos los datos bancarios y el monto total (productos + envío). No transfieras antes de recibir nuestro mensaje; al pagar, mándanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`
-      : `Cuando confirmemos tu pedido te enviamos los datos bancarios y el monto exacto. No transfieras antes de recibir nuestro mensaje; al pagar, mándanos tu comprobante${folio ? ' con tu folio ' + folio : ''}.`, 'pago-t');
-    ex.hidden = !ex.children.length;
+    // Un solo mensaje corto y claro (el envío y los datos para transferir se mandan por WhatsApp)
+    const queMandamos = [dom && 'el costo del envío', d.pago === 'Transferencia' && 'los datos para transferir'].filter(Boolean);
+    $('#ok-txt').textContent = `Te escribiremos por WhatsApp al ${telTxt}${porConfirmar ? ' en unos minutos' : ''} ${queMandamos.length ? 'con ' + queMandamos.join(' y ') : 'para confirmar tu pedido'}.`;
+    const ex = $('#ok-extra'); ex.replaceChildren(); ex.hidden = true;
     const ul = $('#ok-resumen'); ul.replaceChildren();
     [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
       .forEach(([ic, tx]) => { const li = el('li'); li.append(el('span', null, ic), el('span', null, tx)); ul.append(li); });
+    // Recoger: la dirección de la tienda como un renglón más del resumen, con su liga a Maps
+    if (!dom && TIENDA.direccion) { const li = el('li'), t = el('span', null, TIENDA.direccion + ' '); if (TIENDA.mapa) { const a = el('a', 'link-flecha', 'Cómo llegar ↗'); a.href = TIENDA.mapa; a.target = '_blank'; a.rel = 'noopener'; t.append(a); } li.append(el('span', null, '📍'), t); ul.append(li); }
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton();
     cerrar(); setTimeout(() => { const ok = $('#confirmado'); if (!ok.open) ok.showModal(); }, 200);
   });
