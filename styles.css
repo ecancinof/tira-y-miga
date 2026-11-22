@@ -756,4 +756,4 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
   .wa-flot-ico { width: 52px; height: 52px; }
   body:has(.barra-pedido:not([hidden])) .wa-flot { bottom: var(--wa-sobre-barra, 96px); }
 }
-@media (max-width: 900px) { body:has(.barra-pedido:not([hidden])) .wa-flot-lbl { opacity: 0; pointer-events: none; } }
+/* El texto ¿Dudas? se queda siempre visible, también con la barra del carrito */

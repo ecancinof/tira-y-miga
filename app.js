@@ -1,3 +1,7 @@
+// Al refrescar, la página siempre abre desde arriba (el navegador ya no regresa a donde se había quedado).
+try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
+if (location.hash && location.hash !== '#menu') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0); });
 /* ===== Tira & Miga — página de pedidos ===== */
 (() => {
   'use strict';
@@ -778,7 +782,6 @@
   { const wf = $('#wa-flot'); if (wf) {
     const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA(abierto ? 'Hola, Tira & Miga. Tengo una pregunta.' : 'Hola, Tira & Miga. Tengo una pregunta (les escribo fuera de horario).'); };
     ponLink(); wf.addEventListener('pointerdown', ponLink); wf.addEventListener('focus', ponLink);
-    setTimeout(() => wf.classList.add('sin-lbl'), 6000);
   } }
 
   form.addEventListener('submit', async e => {
