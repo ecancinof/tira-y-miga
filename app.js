@@ -656,7 +656,8 @@
   function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on') || $('#dr-horas .hora'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } }
   // Al elegir la hora se cierra sola y el cliente sigue con sus datos (primer campo vacío)
   function cerrarHoras(elegida) { if (!horasDlg.open) return; horasDlg.classList.add('sale');
-    setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); $('#cuando-res').scrollIntoView({ block: 'center', behavior: 'smooth' }); } /* sin abrir el teclado: el cliente ve su día y hora; el teclado sale hasta que toque una casilla */ }, 170); }
+    setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); const cd = $('#campo-dir'), faltaDir = cd && !cd.hidden && [...cd.querySelectorAll('input[name=calle],input[name=numExt],input[name=colonia]')].some(i => !i.value.trim());
+        (faltaDir ? cd : $('#cuando-res')).scrollIntoView({ block: faltaDir ? 'start' : 'center', behavior: 'smooth' }); } /* a domicilio sin dirección: se queda en las casillas del domicilio */ /* sin abrir el teclado: el cliente ve su día y hora; el teclado sale hasta que toque una casilla */ }, 170); }
   $('#dr-hora').onclick = abrirHoras;
   $('#hd-x').onclick = () => cerrarHoras(false);
   horasDlg.addEventListener('cancel', e => { e.preventDefault(); cerrarHoras(false); });
