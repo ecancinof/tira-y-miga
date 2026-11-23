@@ -892,3 +892,9 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
   @media (hover: hover) { .card-acc .stepper.en-ped button:hover:not(:disabled) { background: rgba(217, 93, 57, .1); } }
   .sk-card .card-img { aspect-ratio: 1 / 1; }
 }
+/* 22/11/2026: botón flotante de WhatsApp más grande (PC y celular) */
+.wa-flot-ico { width: 64px; height: 64px; }
+.wa-flot-ico svg { width: 38px; height: 38px; }
+.wa-flot-lbl { font-size: var(--fs-base); padding: 8px 14px; }
+@media (max-width: 900px) { .wa-flot-ico { width: 60px; height: 60px; } .wa-flot-ico svg { width: 36px; height: 36px; } }
+@media (max-width: 900px) { body:has(.barra-pedido:not([hidden])) .wa-flot { bottom: var(--wa-sobre-barra, 100px); } }

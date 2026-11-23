@@ -592,7 +592,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const f0 = fechaPedido(), hoy = hoyYmd();
     // Si el pedido está "para hoy", propone el siguiente día disponible; si no, el que ya tiene
     const prop = f0 !== hoy ? f0 : (fs.find(o => o.f !== hoy) || fs[0]).f;
-    agF = prop; agH = f0 === prop ? horaPedido() : (horasDe(prop).map(minTxt)[0] || '');
+    agF = prop; agH = f0 === prop && horaElegida ? horaPedido() : ''; // sin hora marcada hasta que el cliente elija
     const d = fechaDeYmd(agF); agMes = new Date(d.getFullYear(), d.getMonth(), 1);
     pintarCal(); pintarHorasAg();
     if (!agenda.open) agenda.showModal();
@@ -615,7 +615,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       if (f === ymd(hoy)) b.classList.add('hoy');
       if (f === agF) { b.classList.add('sel'); b.setAttribute('aria-selected', 'true'); }
       if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : libreDia(f) <= 0 ? 'Ese día ya está lleno' : 'Fuera del plazo para agendar'; if (abiertoDia(dd) && libreDia(f) <= 0) b.classList.add('lleno'); }
-      b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = hs[0] || ''; pintarCal(); pintarHorasAg(); };
+      b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = ''; pintarCal(); pintarHorasAg(); };
       if (b.classList.contains('lleno')) b.setAttribute('aria-label', `${d}: día lleno`);
       g.append(b);
     }
@@ -634,7 +634,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       box.append(b);
     }
     const ok = $('#ag-ok'), cur = fechasDisponibles().find(o => o.f === agF);
-    ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? 'Agendar' : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${horaTxt(hm(agH))}`;
+    ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? (agF && hs.length ? 'Elige una hora' : 'Agendar') : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${horaTxt(hm(agH))}`;
   }
   $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
   $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
@@ -665,10 +665,10 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     $('#dr-hora').hidden = !tipo || sinHoras; $('#dr-hora').textContent = horaElegida ? 'Cambiar hora' : 'Elegir hora'; $('#dr-hora').classList.toggle('activo', !!tipo && !horaElegida);
     $('#hd-t').textContent = dom ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
     $('#hd-sub').textContent = ''; $('#hd-sub').hidden = true;
-    $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const b = el('button', 'hora' + (o.value === sh.value ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', o.value === sh.value);
+    $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const on = horaElegida && o.value === sh.value; const b = el('button', 'hora' + (on ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', on);
       b.onclick = () => { sh.value = o.value; horaSel = o.value; horaElegida = true; revisarBoton(); $('#cuando-res').classList.remove('bad'); pintarCuando(); pintarDiaHora(); cerrarHoras(true); }; return b; }));
   }
-  function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on') || $('#dr-horas .hora'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } }
+  function abrirHoras() { pintarDiaHora(); if (!horasDlg.open) horasDlg.showModal(); const on = $('#dr-horas .hora.on'); if (on) { on.focus({ preventScroll: true }); on.scrollIntoView({ block: 'center' }); } else { const bx = $('#dr-horas'); bx.scrollTop = 0; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } } // 22/11/2026: sin hora marcada hasta que el cliente elija
   // Al elegir la hora se cierra sola y el cliente sigue con sus datos (primer campo vacío)
   function cerrarHoras(elegida) { if (!horasDlg.open) return; horasDlg.classList.add('sale');
     setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); const cd = $('#campo-dir'), dom = cd && !cd.hidden;
