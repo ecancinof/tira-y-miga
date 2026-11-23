@@ -654,9 +654,13 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   }
   $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
   $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
-  $('#cal-hoy').onclick = () => { const h = new Date(), hy = hoyYmd(); agMes = new Date(h.getFullYear(), h.getMonth(), 1);
-    if (fechasDisponibles().some(o => o.f === hy)) { if (agF !== hy) agH = ''; agF = hy; pintarHorasAg(); } else toast(haySobre() ? '📦 Tu pedido lleva productos sobre pedido: elige otro día' : 'Por hoy ya no hay horarios disponibles: elige otro día');
-    pintarCal(); };
+  // Botón "Hoy": regresa al mes actual y marca HOY. Si hoy no se puede (cerrado, ya sin horarios o lleva productos sobre pedido),
+  // marca el día disponible más próximo y avisa por qué.
+  $('#cal-hoy').onclick = () => { const hy = hoyYmd(), fs = fechasDisponibles(); if (!fs.length) return;
+    const o = fs.find(x => x.f === hy) || fs[0], f = o.f;
+    if (f !== hy) { const dh = new Date(), cerr = !abiertoDia(dh); toast(haySobre() ? `📦 Tu pedido lleva productos sobre pedido: lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : cerr ? `Hoy no abrimos · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : `Por hoy ya no hay horarios · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}`); }
+    if (agF !== f) agH = ''; agF = f; const d = fechaDeYmd(f); agMes = new Date(d.getFullYear(), d.getMonth(), 1);
+    pintarCal(); pintarHorasAg(); };
   $('#cal-prev').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() - 1, 1); pintarCal(); };
   $('#cal-next').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() + 1, 1); pintarCal(); };
   agenda.addEventListener('cancel', e => { e.preventDefault(); cerrarAgenda(); });
