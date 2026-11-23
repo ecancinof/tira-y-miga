@@ -543,7 +543,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   }
   // Si el pedido es "Para hoy", el Día no se cambia desde el resumen (solo la hora); para otro día se usa "Agendar"
   // La casilla Día solo muestra el día elegido; se cambia únicamente con el botón "Agendar"
-  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = true; sel.title = 'Para cambiar el día usa "Agendar".'; const b = $('#dr-agendar'); if (b) b.classList.toggle('activo', !hoy); }
+  function bloquearDia() { const sel = $('#sel-fecha'); if (!sel) return; const hoy = sel.value === hoyYmd(); sel.disabled = true; sel.title = 'Para cambiar el día usa "Agendar".'; void hoy; }
   // ---------- "Para hoy | Agendar" (barra de pestañas) ----------
   const hayHoyDisponible = () => fechasDisponibles().some(o => o.f === hoyYmd());
   function pintarCuando() {
@@ -587,15 +587,31 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   // Ventana flotante: minicalendario + hora (respeta el horario que se publica desde la app)
   const agenda = $('#agenda'); let agF = '', agH = '', agMes = null; // selección provisional y mes visible
   const fechaDeYmd = f => { const [y, m, d] = f.split('-').map(Number); return new Date(y, m - 1, d); };
+  // 23/11/2026: UNA sola ventana para el día y la hora. Se abre al tocar "Paso a recoger" / "A domicilio" o "Cambiar" (paso 2).
+  // Las horas respetan la entrega (cada 15 min para recoger, bloques de 1 h a domicilio). Al tocar la hora se guarda y se cierra sola.
   function abrirAgenda() {
     const fs = fechasDisponibles(); if (!fs.length) { toast('Por ahora no hay días disponibles'); return; }
-    const f0 = fechaPedido(), hoy = hoyYmd();
-    // Si el pedido está "para hoy", propone el siguiente día disponible; si no, el que ya tiene
-    const prop = f0 !== hoy ? f0 : (fs.find(o => o.f !== hoy) || fs[0]).f;
-    agF = prop; agH = f0 === prop && horaElegida ? horaPedido() : ''; // sin hora marcada hasta que el cliente elija
+    const f0 = fechaPedido(), t = form.entregaTipo.value;
+    agF = fs.some(o => o.f === f0) ? f0 : fs[0].f;
+    agH = horaElegida && agF === f0 && horasDe(agF).map(minTxt).includes(horaSel) ? horaSel : '';
+    $('#ag-t').textContent = t === 'domicilio' ? '¿Cuándo te lo llevamos?' : t === 'recoge' ? '¿Cuándo pasas por tu pedido?' : '¿Para cuándo es tu pedido?';
+    $('#ag-sub').textContent = 'Toca el día y después la hora';
+    $('#ag-hlbl').textContent = t === 'domicilio' ? 'Horario de entrega' : 'Hora para recoger';
     const d = fechaDeYmd(agF); agMes = new Date(d.getFullYear(), d.getMonth(), 1);
     pintarCal(); pintarHorasAg();
     if (!agenda.open) agenda.showModal();
+    const on = $('#ag-horas .hora.on'); if (on) on.scrollIntoView({ block: 'nearest' }); else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  // Día y hora elegidos: se guardan, se cierra la ventana y el cliente sigue (a domicilio, con su dirección)
+  function elegirAgenda() {
+    if (!agF || !agH) return;
+    ponFecha(agF, null, agH);
+    const sh = $('#sel-hora'); if ([...sh.options].some(o => o.value === agH)) sh.value = agH; horaSel = agH; horaElegida = true;
+    pintarDiaHora(); pintarCuando(); if (typeof revisarBoton === 'function') revisarBoton(); $('#cuando-res').classList.remove('bad');
+    if (!agenda.open) return; agenda.classList.add('sale');
+    setTimeout(() => { agenda.close(); agenda.classList.remove('sale'); pintarCuando();
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      const cd = $('#campo-dir'), dom = cd && !cd.hidden; (dom ? cd : $('#cuando-res')).scrollIntoView({ block: dom ? 'start' : 'center', behavior: 'smooth' }); }, 170);
   }
   function cerrarAgenda() { if (!agenda.open) return; agenda.classList.add('sale'); setTimeout(() => { agenda.close(); agenda.classList.remove('sale'); pintarCuando(); }, 170); } // al cerrar, la burbuja refleja la fecha real (hoy o la agendada)
   function pintarCal() {
@@ -615,7 +631,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       if (f === ymd(hoy)) b.classList.add('hoy');
       if (f === agF) { b.classList.add('sel'); b.setAttribute('aria-selected', 'true'); }
       if (!ok) { const dd = new Date(y, m, d); b.title = dd < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) ? '' : !abiertoDia(dd) ? 'Cerrado' : f === ymd(hoy) ? 'Por hoy ya no recibimos pedidos' : libreDia(f) <= 0 ? 'Ese día ya está lleno' : 'Fuera del plazo para agendar'; if (abiertoDia(dd) && libreDia(f) <= 0) b.classList.add('lleno'); }
-      b.onclick = () => { agF = f; const hs = horasDe(f).map(minTxt); if (!hs.includes(agH)) agH = ''; pintarCal(); pintarHorasAg(); };
+      b.onclick = () => { if (agF !== f) agH = ''; agF = f; pintarCal(); pintarHorasAg(); };
       if (b.classList.contains('lleno')) b.setAttribute('aria-label', `${d}: día lleno`);
       g.append(b);
     }
@@ -630,7 +646,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     if (!hs.length) box.append(el('p', 'muted small', 'No hay horas disponibles ese día.'));
     for (const mnt of hs) {
       const v = minTxt(mnt), b = el('button', 'hora' + (v === agH ? ' on' : ''), horaTxt(mnt)); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', v === agH);
-      b.onclick = () => { agH = v; pintarHorasAg(); };
+      b.onclick = () => { agH = v; pintarHorasAg(); elegirAgenda(); };
       box.append(b);
     }
     const ok = $('#ag-ok'), cur = fechasDisponibles().find(o => o.f === agF);
@@ -638,6 +654,9 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   }
   $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
   $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
+  $('#cal-hoy').onclick = () => { const h = new Date(), hy = hoyYmd(); agMes = new Date(h.getFullYear(), h.getMonth(), 1);
+    if (fechasDisponibles().some(o => o.f === hy)) { if (agF !== hy) agH = ''; agF = hy; pintarHorasAg(); } else toast(haySobre() ? '📦 Tu pedido lleva productos sobre pedido: elige otro día' : 'Por hoy ya no hay horarios disponibles: elige otro día');
+    pintarCal(); };
   $('#cal-prev').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() - 1, 1); pintarCal(); };
   $('#cal-next').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() + 1, 1); pintarCal(); };
   agenda.addEventListener('cancel', e => { e.preventDefault(); cerrarAgenda(); });
@@ -662,7 +681,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const ch = $('#cr-hora'); ch.classList.toggle('pend', !tipo);
     const sinHoras = !!tipo && !sh.options.length; ch.classList.toggle('pend', !tipo || !horaElegida || sinHoras);
     ch.textContent = !tipo ? 'Primero elige si recoges o te lo enviamos' : sinHoras ? (dom ? 'Ya no hay horarios a domicilio este día · cambia el día' : 'Ya no hay horarios este día · cambia el día') : !horaElegida || !sh.value ? (dom ? 'Elige un horario de entrega' : 'Elige una hora') : dom ? 'De ' + bloqueTxt(hm(sh.value)) : hora12(hm(sh.value));
-    $('#dr-hora').hidden = !tipo || sinHoras; $('#dr-hora').textContent = horaElegida ? 'Cambiar hora' : 'Elegir hora'; $('#dr-hora').classList.toggle('activo', !!tipo && !horaElegida);
+    { const bc = $('#dr-agendar'); bc.hidden = !tipo; bc.textContent = horaElegida && !sinHoras ? 'Cambiar' : 'Elegir'; bc.classList.toggle('activo', !!tipo && (!horaElegida || sinHoras)); }
     $('#hd-t').textContent = dom ? '¿A qué hora lo quieres recibir?' : '¿A qué hora pasas por tu pedido?';
     $('#hd-sub').textContent = ''; $('#hd-sub').hidden = true;
     $('#dr-horas').replaceChildren(...[...sh.options].map(o => { const on = horaElegida && o.value === sh.value; const b = el('button', 'hora' + (on ? ' on' : ''), o.textContent); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', on);
@@ -673,7 +692,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   function cerrarHoras(elegida) { if (!horasDlg.open) return; horasDlg.classList.add('sale');
     setTimeout(() => { horasDlg.close(); horasDlg.classList.remove('sale'); if (elegida) { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); const cd = $('#campo-dir'), dom = cd && !cd.hidden;
         (dom ? cd : $('#cuando-res')).scrollIntoView({ block: dom ? 'start' : 'center', behavior: 'smooth' }); } /* a domicilio se queda en la dirección (vacía o guardada) para llenarla o revisarla */ /* sin abrir el teclado: el cliente ve su día y hora; el teclado sale hasta que toque una casilla */ }, 170); }
-  $('#dr-hora').onclick = abrirHoras;
+  $('#dr-hora').onclick = abrirAgenda;
   $('#hd-x').onclick = () => cerrarHoras(false);
   horasDlg.addEventListener('cancel', e => { e.preventDefault(); cerrarHoras(false); });
   horasDlg.addEventListener('click', e => { if (e.target === horasDlg) cerrarHoras(false); });
@@ -694,7 +713,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
     if (e.target.name === 'entregaTipo') cambiaTipo(); });
   // Al tocar "Paso a recoger" o "A domicilio" se abre la ventanita de horarios (cada 15 min o bloques de 1 h); al elegir la hora se cierra sola
-  form.querySelectorAll('input[name="entregaTipo"]').forEach(r => r.addEventListener('click', () => setTimeout(() => { if ($('#sel-hora').options.length && !horasDlg.open) abrirHoras(); }, 160)));
+  form.querySelectorAll('input[name="entregaTipo"]').forEach(r => r.addEventListener('click', () => setTimeout(() => { if (!agenda.open && fechasDisponibles().length) abrirAgenda(); }, 160)));
   const esParaHoy = paraHoy; // misma regla en el carrito que en el menú
   const excedidos = () => esParaHoy() ? [...new Set(conflictosHoy([...cart]).flatMap(c => c.ids))] : [];
   // Nada viene preseleccionado: el cliente elige entrega y forma de pago

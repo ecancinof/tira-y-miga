@@ -898,3 +898,21 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 .wa-flot-lbl { font-size: var(--fs-base); padding: 8px 14px; }
 @media (max-width: 900px) { .wa-flot-ico { width: 60px; height: 60px; } .wa-flot-ico svg { width: 36px; height: 36px; } }
 @media (max-width: 900px) { body:has(.barra-pedido:not([hidden])) .wa-flot { bottom: var(--wa-sobre-barra, 100px); } }
+/* 23/11/2026: Paso 2 con un solo botón "Cambiar" (día y hora a la vez), centrado a la derecha de los dos renglones */
+.cuando-res { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+.cuando-res .cr-fila { grid-column: 1; }
+.cuando-res .cr-cambiar { grid-column: 2; grid-row: 1 / span 2; align-self: center; padding: 10px 16px; }
+.cuando-res .cr-cambiar[hidden] { display: none; }
+#dr-hora { display: none !important; }
+/* Ventana de día + hora: sin botones abajo (se cierra sola al tocar la hora) */
+#agenda .ag-acc { display: none; }
+/* Botón "Hoy" del minicalendario y marca "hoy" debajo del número */
+.cal-nav { gap: 6px; }
+.cal-mes { flex: 1; text-align: center; }
+.cal-hoy { order: 0; border: 1.5px solid #D95D39; background: #fff; color: #D95D39; font-weight: 700; font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer; margin-left: 4px; }
+@media (hover: hover) { .cal-hoy:hover { background: #D95D39; color: #fff; } }
+.cal-hoy:active { transform: scale(.95); }
+.cal-d { position: relative; }
+.cal-d.hoy { box-shadow: inset 0 0 0 1.5px #D95D39; }
+.cal-d.hoy::after { content: 'hoy'; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); font-size: 8.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #D95D39; pointer-events: none; }
+.cal-dias { row-gap: 10px; }

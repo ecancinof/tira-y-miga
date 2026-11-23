@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=129">
+<link rel="stylesheet" href="styles.css?v=130">
 </head>
 <body>
 <a class="skip" href="#menu">Saltar al menú</a>
@@ -181,13 +181,15 @@
               <div class="cr-fila">
                 <span class="cr-ico" aria-hidden="true">📅</span>
                 <div class="cr-txt"><small>Día de tu pedido</small><b id="cr-dia">—</b></div>
-                <button type="button" class="btn-agendar" id="dr-agendar" aria-haspopup="dialog" aria-controls="agenda">Cambiar día</button>
+                
               </div>
               <div class="cr-fila">
                 <span class="cr-ico" aria-hidden="true">🕐</span>
                 <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
-                <button type="button" class="btn-agendar" id="dr-hora" hidden aria-haspopup="dialog" aria-controls="horas-dlg">Cambiar hora</button>
+                
               </div>
+              <button type="button" class="btn-agendar cr-cambiar" id="dr-agendar" hidden aria-haspopup="dialog" aria-controls="agenda">Cambiar</button>
+              <button type="button" id="dr-hora" hidden tabindex="-1" aria-hidden="true"></button>
               <div class="sr-sel"><select name="fecha" id="sel-fecha" required aria-label="Día" tabindex="-1"></select><select name="hora" id="sel-hora" required aria-label="Hora" tabindex="-1"></select></div>
             </div>
             <p class="nota-prog full" id="nota-prog" hidden></p>
@@ -271,13 +273,14 @@
       <button class="cal-flecha" id="cal-prev" type="button" aria-label="Mes anterior">‹</button>
       <b class="cal-mes" id="cal-mes" aria-live="polite"></b>
       <button class="cal-flecha" id="cal-next" type="button" aria-label="Mes siguiente">›</button>
+      <button class="cal-hoy" id="cal-hoy" type="button" aria-label="Ir a hoy">Hoy</button>
     </div>
     <div class="cal-sem" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
     <div class="cal-dias" id="cal-dias" role="grid" aria-label="Días disponibles"></div>
     <p class="cal-ley" id="cal-ley" hidden><span class="cal-lleno-ic" aria-hidden="true"></span>Día lleno: ya no tenemos lugar para más pedidos</p>
   </div>
   <div class="ag-horas">
-    <p class="ag-lbl"><b>Horario comercial</b><span class="small" id="ag-horario"></span></p>
+    <p class="ag-lbl"><b id="ag-hlbl">Elige la hora</b><span class="small" id="ag-horario"></span></p>
     <div class="horas" id="ag-horas" role="radiogroup" aria-label="Hora"></div>
   </div>
   </div>
@@ -309,6 +312,6 @@
 
 <script src="config.js?v=95"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=132"></script>
+<script src="app.js?v=133"></script>
 </body>
 </html>
