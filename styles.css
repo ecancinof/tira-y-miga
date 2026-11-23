@@ -821,3 +821,22 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 /* Texto de "Hoy quedan…" en blanco puro y más grueso, sobre un caramelo un poco más oscuro para que se lea bien */
 .stk-tag { color: #FFFFFF !important; font-weight: 800; background: #A8602F; }
 .stk-tag.cero { background: var(--ink); }
+/* 22/11/2026: en celular, letra más grande en la tarjeta (como Uber Eats): nombre, precio y descripción a 2 renglones */
+@media (max-width: 600px) {
+  .card h3 { font-size: 20px; line-height: 1.2; }
+  .precio { font-size: 17px; font-weight: 700; }
+  .card-desc { font-size: 14.5px; line-height: 1.38; -webkit-line-clamp: 2; }
+  .card-body { gap: 4px; padding-top: 10px; }
+  .card-sp { font-size: 12.5px; }
+}
+/* 22/11/2026: mismo estilo "blanco con coral" en el carrito (resumen de la orden) y en la vista ampliada del producto */
+.ci .stepper, .det-acc .stepper { background: #FFFFFF; border: 0; color: #D95D39; box-shadow: 0 2px 8px -3px rgba(26, 18, 16, .35), inset 0 0 0 1px rgba(217, 93, 57, .28); }
+.ci .stepper button, .det-acc .stepper button { color: #D95D39; font-weight: 700; }
+.ci .stepper input, .det-acc .stepper output { color: #D95D39; font-weight: 800; }
+.ci .stepper button:disabled, .det-acc .stepper button:disabled { opacity: .35; }
+@media (hover: hover) { .ci .stepper button:hover:not(:disabled), .det-acc .stepper button:hover:not(:disabled) { background: rgba(217, 93, 57, .1); } }
+.ci.excede .stepper { box-shadow: inset 0 0 0 1.5px var(--err); }
+#det-add:not(:disabled) { background: #D95D39; color: #FFFFFF; font-weight: 800; box-shadow: none; }
+@media (hover: hover) { #det-add:not(:disabled):hover { background: #C24E2C; } }
+/* Etiqueta "Agotado" cuando ya lo tiene en su pedido y no quedan más: coral con letra blanca en negritas */
+.stk-tag.enped { background: #D95D39; color: #FFFFFF !important; font-weight: 800; animation: none; }

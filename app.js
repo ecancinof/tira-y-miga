@@ -309,7 +309,8 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       const enP = (cart.get(p.id) || 0) > 0; // ya está en su pedido: no se ve en gris aunque ya no queden más
       c.classList.toggle('sin-hoy', sinHoy && !enP);
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) { ad.disabled = p.agotado || pausa || sinHoy; ad.textContent = p.agotado ? 'Agotado' : sinHoy ? (hs ? 'Agotado hoy' : 'Agotado ese día') : 'Añadir'; }
-      if (sinHoy) { t.hidden = false; t.textContent = enP ? 'Ya no quedan más' : hs ? 'Agotado hoy' : 'Agotado ese día'; t.classList.toggle('cero', !enP); t.classList.toggle('uno', enP); return; }
+      t.classList.remove('enped');
+      if (sinHoy) { t.hidden = false; t.textContent = enP ? 'Agotado' : hs ? 'Agotado hoy' : 'Agotado ese día'; t.classList.toggle('cero', !enP); t.classList.remove('uno'); t.classList.toggle('enped', enP); return; } // en su pedido y ya no quedan más: "Agotado" en coral
       t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `${hs ? 'Hoy ' : ''}${r === 1 ? (hs ? 'queda 1' : 'Queda 1') : (hs ? 'quedan ' : 'Quedan ') + r}`; t.classList.remove('cero'); t.classList.toggle('uno', r === 1); }
     });
   }
