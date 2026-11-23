@@ -289,8 +289,8 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     mas.onclick = () => {
       const t = topeHoy(p); if (pausa) return;
       if (t <= 0) { toast(`Ya no quedan más ${p.nombre} para ${cuandoTxt()}`); return; }
-      cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + 1)); guardarCarrito(); pintarCarrito(); sync(); popCuenta();
-      const r = quedanHoy(p.id); if (isFinite(r) && r <= 2) toast(r <= 0 ? `Ya no quedan más para ${cuandoTxt()}` : `${r === 1 ? 'Queda 1' : 'Quedan ' + r} para ${cuandoTxt()}`);
+      cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + 1)); guardarCarrito(); pintarCarrito(); sync(); evento('agrega');
+      if (sinMov || !img.animate) popCuenta(); else volarAlCarrito(img); // cada + hace volar la foto a la barra de abajo (sin texto)
     };
     st.append(menos, out, mas); sync();
     acc.append(add, st); b.append(acc);
@@ -326,7 +326,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const fDesp = fechaPedido();
     if (p.sobre && fDesp !== fAntes) { const o = fechasDisponibles().find(x => x.f === fDesp); toast(`📦 ${p.nombre} es sobre pedido · tu pedido quedó para ${o ? o.txt.split(' · ')[0].toLowerCase() : 'otro día'}`); return; }
     if (q > r) { const tot = Math.max(0, r + (cart.get(p.id) || 0) - q); toast(tot <= 0 ? `${p.nombre} · Agotada hoy. Agregada para pedir otro día.` : `${p.nombre} · Disponible hoy: ${enLetra(tot)}`); }
-    else { const rq = quedanHoy(p.id); toast(isFinite(rq) && rq <= 5 ? `${q} × ${p.nombre} en tu pedido · ${rq <= 0 ? `ya no quedan más para ${cuandoTxt()}` : `${rq === 1 ? 'queda 1' : 'quedan ' + rq} para ${cuandoTxt()}`}` : `${q} × ${p.nombre} en tu pedido`); pintarStockTags(); }
+    else pintarStockTags(); // 22/11/2026: sin aviso de texto al agregar; basta la animación de la foto hacia el carrito
   }
   const slug = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
