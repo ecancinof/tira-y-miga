@@ -793,3 +793,14 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
   .card-acc .stepper.en-ped output { min-width: 22px; flex: none; width: auto; font-size: 16px; }
   .sk-card .card-img { aspect-ratio: 1 / 1; min-height: 0; }
 }
+/* 22/11/2026: en celular el "+" y la cápsula − N + van en coral #D05636 con signos blancos en negritas (se ven mejor sobre la foto) */
+@media (max-width: 600px) {
+  .card-acc .add { background: #D05636; box-shadow: 0 3px 10px -2px rgba(26, 18, 16, .45); }
+  .card-acc .add::before { content: '+'; color: #fff; font-size: 34px; font-weight: 700; margin-top: -2px; }
+  .card-acc .add:disabled, .card.sin-hoy .card-acc .add { background: rgba(255, 255, 255, .85); box-shadow: none; }
+  .card-acc .add:disabled::before { color: #c4b5ad; }
+  .card-acc .stepper.en-ped { background: #D05636; color: #fff; }
+  .card-acc .stepper.en-ped button { font-size: 26px; font-weight: 700; }
+  .card-acc .stepper.en-ped output { font-size: 17px; font-weight: 800; }
+  .card-acc .stepper.en-ped button:disabled { opacity: .45; }
+}
