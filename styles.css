@@ -840,3 +840,11 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 @media (hover: hover) { #det-add:not(:disabled):hover { background: #C24E2C; } }
 /* Etiqueta "Agotado" cuando ya lo tiene en su pedido y no quedan más: coral con letra blanca en negritas */
 .stk-tag.enped { background: #D95D39; color: #FFFFFF !important; font-weight: 800; animation: none; }
+/* 22/11/2026: bote de basura del carrito en coral, mismo alto que la cápsula − / + (círculo blanco con el mismo borde suave) */
+.ci-del.ci-del-q { width: 34px; height: 34px; background: #FFFFFF; color: #D95D39; box-shadow: 0 2px 8px -3px rgba(26, 18, 16, .35), inset 0 0 0 1px rgba(217, 93, 57, .28); }
+.ci-del.ci-del-q svg { width: 19px; height: 19px; }
+@media (hover: hover) { .ci-del.ci-del-q:hover { background: rgba(217, 93, 57, .1); color: #D95D39; } }
+.ci-del.ci-del-q:active, .ci-del.ci-del-q.on { background: #FBE3DA; color: #C24E2C; }
+@media (max-width: 420px) { .ci-del.ci-del-q { width: 34px; height: 34px; } }
+/* En celular angosto: un poco menos de espacio entre foto, píldora, precio y bote para que todo quepa sin salirse del margen */
+@media (max-width: 420px) { .ci { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; } .ci img { width: 52px; height: 52px; } .ci .stepper button { width: 30px; } .ci .stepper input { width: 30px; min-width: 26px; } .ci-r { gap: 6px; } }
