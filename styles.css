@@ -804,3 +804,20 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
   .card-acc .stepper.en-ped output { font-size: 17px; font-weight: 800; }
   .card-acc .stepper.en-ped button:disabled { opacity: .45; }
 }
+/* 22/11/2026: en celular el botón es BLANCO con el signo en coral #D95D39. El "+" se dibuja con dos barras
+   (no con la letra "+", que en algunas fuentes queda un poco arriba del centro): así queda exacto al centro. */
+@media (max-width: 600px) {
+  .card-acc .add { position: relative; background: #FFFFFF; box-shadow: 0 3px 10px -2px rgba(26, 18, 16, .4); }
+  .card-acc .add::before, .card-acc .add::after { content: ''; position: absolute; left: 50%; top: 50%; width: 18px; height: 3.5px; margin: 0; border-radius: 2px; background: #D95D39; transform: translate(-50%, -50%); font-size: 0; }
+  .card-acc .add::after { width: 3.5px; height: 18px; }
+  .card-acc .add:disabled, .card.sin-hoy .card-acc .add { background: rgba(255, 255, 255, .85); box-shadow: none; }
+  .card-acc .add:disabled::before, .card-acc .add:disabled::after { background: #c9bbb3; }
+  .card-acc .stepper.en-ped { background: #FFFFFF; color: #D95D39; box-shadow: 0 3px 10px -2px rgba(26, 18, 16, .4); }
+  @media (hover: hover) { .card-acc .stepper.en-ped button:hover:not(:disabled) { background: rgba(217, 93, 57, .1); } }
+  .card.es-fav .stk-tag { top: 8px; left: 8px; }
+}
+/* Si el producto es favorito y aparece "Hoy quedan…", la etiqueta de favorito se quita y su lugar lo toma la de cantidad */
+.stk-tag:not([hidden]) ~ .fav-tag { display: none !important; }
+/* Texto de "Hoy quedan…" en blanco puro y más grueso, sobre un caramelo un poco más oscuro para que se lea bien */
+.stk-tag { color: #FFFFFF !important; font-weight: 800; background: #A8602F; }
+.stk-tag.cero { background: var(--ink); }
