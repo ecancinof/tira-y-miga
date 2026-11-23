@@ -853,3 +853,6 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 .det-acc .stepper button { width: 42px; height: 46px; }
 .det-acc .stepper output { font-size: 18px; font-weight: 800; min-width: 28px; }
 .ci .stepper input { font-size: 17px; font-weight: 800; }
+/* Etiqueta de cantidad en la foto ampliada (mismos colores que en las tarjetas) */
+#det-tag { top: 14px; left: 14px; z-index: 2; }
+#det-ag:not([hidden]) + #det-tag { display: none; }

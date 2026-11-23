@@ -369,6 +369,10 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   // ---------- Vista de detalle del producto ----------
   const det = $('#detalle'); let detP = null, detQ = 1;
   const detUpd = () => { const t = topeHoy(detP), mi = minQ(detP); if (detQ > t) detQ = Math.max(mi, t); $('#det-q').textContent = detQ; $('#det-menos').disabled = detQ <= mi; $('#det-mas').disabled = detQ >= t;
+    // 22/11/2026: etiqueta sobre la foto ampliada, igual que en las tarjetas: "Hoy quedan 3" / "Hoy queda 1" / "Agotado" (al llegar al tope con la cantidad elegida)
+    { const tg = $('#det-tag'); if (tg) { const lim = detP && !detP.agotado && !det.dataset.sinHoy && hayLimite() && isFinite(quedanHoy(detP.id)), r = lim ? Math.max(0, t - detQ) : Infinity, hs = esHoySel();
+      tg.hidden = !(r <= 5); tg.classList.remove('uno', 'cero', 'enped');
+      if (!tg.hidden) { if (r <= 0) { tg.textContent = 'Agotado'; tg.classList.add('enped'); } else { tg.textContent = `${hs ? 'Hoy ' : ''}${r === 1 ? (hs ? 'queda 1' : 'Queda 1') : (hs ? 'quedan ' : 'Quedan ') + r}`; if (r === 1) tg.classList.add('uno'); } } } }
     const a = $('#det-add'); a.disabled = !detP || detP.agotado || pausa || !!det.dataset.sinHoy; a.textContent = detP && detP.agotado ? 'Agotado' : pausa ? 'Pedidos en pausa' : det.dataset.sinHoy ? 'Agotado hoy' : `Agregar · ${money(detQ * (detP ? detP.precio : 0))}`;
   };
   function abrirDetalle(p) {
@@ -379,7 +383,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     $('#det-sec').textContent = p.seccion; $('#det-n').textContent = p.nombre; $('#det-p').textContent = money(p.precio);
     $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
     const r = !p.agotado ? quedanHoy(p.id) : Infinity, ds = $('#det-stk');
-    ds.hidden = !(r > 0 && r <= 5); if (!ds.hidden) ds.textContent = `Para ${cuandoTxt()} ${r === 1 ? 'queda 1 pieza' : 'quedan ' + r + ' piezas'}`;
+    ds.hidden = true; void r; // la cantidad que queda ya se ve en la etiqueta sobre la foto
     ds.classList.toggle('sp', !!p.sobre); if (p.sobre && !p.agotado) { ds.hidden = false; ds.textContent = '📦 ' + spTxt(); } // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
     detUpd();
     if (!det.open) det.showModal();
