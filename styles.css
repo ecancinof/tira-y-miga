@@ -757,3 +757,12 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
   body:has(.barra-pedido:not([hidden])) .wa-flot { bottom: var(--wa-sobre-barra, 96px); }
 }
 /* El texto ¿Dudas? se queda siempre visible, también con la barra del carrito */
+
+/* 22/11/2026: en la tarjeta, "Añadir" se vuelve el contador del pedido (− N +) a todo lo ancho */
+.card-acc [hidden] { display: none !important; }
+.card-acc .stepper.en-ped { flex: 1; justify-content: space-between; background: var(--b-sel); color: var(--b-sel-txt, #fff); border: 0; animation: okPop .3s ease; }
+.card-acc .stepper.en-ped button { color: inherit; width: 44px; }
+.card-acc .stepper.en-ped output { flex: 1; width: auto; font-size: var(--fs-base); font-weight: 700; }
+@media (hover: hover) { .card-acc .stepper.en-ped button:hover:not(:disabled) { background: rgba(255, 255, 255, .14); } }
+.card-acc .stepper.en-ped button:active:not(:disabled) { transform: scale(.88); }
+.card-acc .stepper.en-ped button:disabled { opacity: .35; }

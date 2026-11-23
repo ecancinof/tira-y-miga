@@ -269,26 +269,31 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     if (desc(p)) b.append(el('p', 'card-desc', desc(p)));
     if (p.sobre) b.append(el('p', 'card-sp', spTxt()));
     const acc = el('div', 'card-acc');
-    const mi = minQ(p); let q = mi;
-    const st = el('div', 'stepper'), menos = el('button', null, '−'), out = el('output', null, String(mi)), mas = el('button', null, '+');
-    menos.type = mas.type = 'button'; menos.setAttribute('aria-label', 'Una pieza menos de ' + p.nombre); mas.setAttribute('aria-label', 'Una pieza más de ' + p.nombre);
-    const upd = () => { const t = topeHoy(p); if (q > t) q = Math.max(mi, t); out.textContent = q; menos.disabled = q <= mi || t <= 0; mas.disabled = q >= t; mas.title = t < MAXQ && t > 0 && q >= t ? `Disponible ${cuandoTxt()}: ${enLetraT(t)}` : ''; };
-    c._upd = upd; // se vuelve a revisar cuando cambia el carrito o el stock
-    menos.onclick = () => { q = Math.max(mi, q - 1); upd(); };
-    mas.onclick = () => { const t = topeHoy(p); if (q >= t) { toast(t <= 0 ? `${p.nombre} · Agotada para ${cuandoTxt()}` : `${p.nombre} · Disponible ${cuandoTxt()}: ${enLetraT(t)}`); return; } q = Math.min(t, q + 1); upd(); };
-    st.append(menos, out, mas); upd();
+    // 22/11/2026: "Añadir" se convierte en el contador del carrito (como en Uber Eats / DiDi). Cada − / + cambia el pedido al momento:
+    // ya no hay piezas "elegidas pero sin añadir", que confundían cuando varios sabores comparten la misma concha.
+    const st = el('div', 'stepper en-ped'), menos = el('button', null, '−'), out = el('output'), mas = el('button', null, '+');
+    menos.type = mas.type = 'button'; mas.setAttribute('aria-label', 'Una pieza más de ' + p.nombre);
     const add = el('button', 'add', p.agotado ? 'Agotado' : 'Añadir');
     add.type = 'button'; add.disabled = p.agotado || pausa;
-    let ocupado = false;
-    add.onclick = () => {
-      const t = topeHoy(p);
-      if (ocupado || pausa || p.agotado || t <= 0) return; // mientras dice "Añadido" no vuelve a sumar; con tope 0 no agrega
-      ocupado = true;
-      add.textContent = '✓ Añadido'; add.classList.add('ok'); add.setAttribute('aria-disabled', 'true');
-      setTimeout(() => { add.classList.remove('ok'); add.removeAttribute('aria-disabled'); ocupado = false; pintarStockTags(); }, 1300);
-      agregar(p, Math.min(q, t), img); q = mi; upd();
+    const sync = () => {
+      const q = cart.get(p.id) || 0, t = topeHoy(p), enP = q > 0;
+      st.hidden = !enP; add.hidden = enP; if (!enP) return;
+      out.textContent = q; out.setAttribute('aria-label', `${q} en tu pedido`);
+      menos.setAttribute('aria-label', q <= minQ(p) ? 'Quitar ' + p.nombre + ' del pedido' : 'Una pieza menos de ' + p.nombre);
+      mas.disabled = pausa || t <= 0 || q >= MAXQ; mas.title = t <= 0 ? `Ya no quedan más para ${cuandoTxt()}` : '';
     };
-    acc.append(st, add); b.append(acc);
+    c._upd = sync; // se vuelve a revisar cuando cambia el carrito o el stock (también desde el carrito)
+    const popCuenta = () => { const k = $('#cart-count'); if (k) { k.classList.remove('pop'); void k.offsetWidth; k.classList.add('pop'); } };
+    add.onclick = () => { if (pausa || p.agotado || topeHoy(p) <= 0) return; agregar(p, minQ(p), img); sync(); };
+    menos.onclick = () => { const q = cart.get(p.id) || 0; if (q - 1 < minQ(p)) cart.delete(p.id); else cart.set(p.id, q - 1); guardarCarrito(); pintarCarrito(); sync(); popCuenta(); };
+    mas.onclick = () => {
+      const t = topeHoy(p); if (pausa) return;
+      if (t <= 0) { toast(`Ya no quedan más ${p.nombre} para ${cuandoTxt()}`); return; }
+      cart.set(p.id, Math.min(MAXQ, (cart.get(p.id) || 0) + 1)); guardarCarrito(); pintarCarrito(); sync(); popCuenta();
+      const r = quedanHoy(p.id); if (isFinite(r) && r <= 2) toast(r <= 0 ? `Ya no quedan más para ${cuandoTxt()}` : `${r === 1 ? 'Queda 1' : 'Quedan ' + r} para ${cuandoTxt()}`);
+    };
+    st.append(menos, out, mas); sync();
+    acc.append(add, st); b.append(acc);
     c.append(fi, b);
     return c;
   }
@@ -301,9 +306,10 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       // Sin stock para hoy: se ve en gris y ya NO se puede agregar (el cliente puede cambiar el día)
       const sinHoy = hoy && !p.agotado && r <= 0; // sin stock, o el carrito ya tiene las últimas
       if (c._upd) c._upd();
-      c.classList.toggle('sin-hoy', sinHoy);
+      const enP = (cart.get(p.id) || 0) > 0; // ya está en su pedido: no se ve en gris aunque ya no queden más
+      c.classList.toggle('sin-hoy', sinHoy && !enP);
       const ad = c.querySelector('.add'); if (ad && !ad.classList.contains('ok')) { ad.disabled = p.agotado || pausa || sinHoy; ad.textContent = p.agotado ? 'Agotado' : sinHoy ? (hs ? 'Agotado hoy' : 'Agotado ese día') : 'Añadir'; }
-      if (sinHoy) { t.hidden = false; t.textContent = hs ? 'Agotado hoy' : 'Agotado ese día'; t.classList.add('cero'); return; }
+      if (sinHoy) { t.hidden = false; t.textContent = enP ? 'Ya no quedan más' : hs ? 'Agotado hoy' : 'Agotado ese día'; t.classList.toggle('cero', !enP); t.classList.toggle('uno', enP); return; }
       t.hidden = !(r <= 5); if (!t.hidden) { t.textContent = `${hs ? 'Hoy ' : ''}${r === 1 ? (hs ? 'queda 1' : 'Queda 1') : (hs ? 'quedan ' : 'Quedan ') + r}`; t.classList.remove('cero'); t.classList.toggle('uno', r === 1); }
     });
   }
