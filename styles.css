@@ -848,3 +848,8 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 @media (max-width: 420px) { .ci-del.ci-del-q { width: 34px; height: 34px; } }
 /* En celular angosto: un poco menos de espacio entre foto, píldora, precio y bote para que todo quepa sin salirse del margen */
 @media (max-width: 420px) { .ci { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; } .ci img { width: 52px; height: 52px; } .ci .stepper button { width: 30px; } .ci .stepper input { width: 30px; min-width: 26px; } .ci-r { gap: 6px; } }
+/* 22/11/2026: la cápsula de la vista ampliada y la del carrito, igual que la del menú: signos − / + grandes y número en negritas */
+.det-acc .stepper button, .ci .stepper button { font-size: 26px; font-weight: 700; line-height: 1; }
+.det-acc .stepper button { width: 42px; height: 46px; }
+.det-acc .stepper output { font-size: 18px; font-weight: 800; min-width: 28px; }
+.ci .stepper input { font-size: 17px; font-weight: 800; }
