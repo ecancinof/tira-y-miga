@@ -986,3 +986,11 @@ button, a, label { -webkit-tap-highlight-color: transparent; }
 
 /* 25/11/2026: el saludo con el mismo tamaño que la fecha del pedido */
 .saludo #saludo-t { font-size: var(--fs-base); font-weight: 700; }
+
+/* 25/11/2026: en celular la confirmación es una hoja desde abajo a todo lo ancho (antes quedaba recorrida a la izquierda) */
+@media (max-width: 600px) { .confirmado { width: 100%; max-width: 100%; margin: auto 0 0; } }
+@media (min-width: 601px) { .confirmado { margin: auto; } }
+/* Resumen de la confirmación: texto e íconos un poco más grandes */
+.confirmado .ok-resumen { font-size: var(--fs-base); gap: 10px; padding: 14px 16px; }
+.confirmado .ok-resumen li { gap: 12px; }
+.confirmado .ok-resumen .ico { width: 24px; height: 24px; }
