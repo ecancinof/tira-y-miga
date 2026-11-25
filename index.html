@@ -30,9 +30,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap">
-<link rel="stylesheet" href="styles.css?v=134">
+<link rel="stylesheet" href="styles.css?v=136">
 </head>
 <body>
+<!-- Íconos de línea (un solo color, toman el color del texto o el café de la marca) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
+  <symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5" cy="16" r="3"/><circle cx="19" cy="16" r="3"/><path d="M7.5 14h5l4-4H6"/><path d="M8 14l4-4"/><path d="M13 6h2l1.5 3 2 4"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/><path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2-3 2"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 9.5v.01M17.5 14.5v.01"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6.3 8h11.4l-1 12H7.3z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></symbol>
+</svg>
 <a class="skip" href="#menu">Saltar al menú</a>
 
 <header class="header" id="inicio">
@@ -79,7 +91,7 @@
       <div class="cuando" id="cuando" role="group" aria-label="¿Para cuándo es tu pedido?" hidden>
         <span class="cu-bubble" id="cu-bubble" aria-hidden="true"></span>
         <button class="cu-btn" id="cu-hoy" type="button">Para hoy</button>
-        <button class="cu-btn" id="cu-agendar" type="button" aria-haspopup="dialog" aria-controls="agenda"><span aria-hidden="true">📅</span> <span id="cu-agendar-t">Agendar pedido</span></button>
+        <button class="cu-btn" id="cu-agendar" type="button" aria-haspopup="dialog" aria-controls="agenda"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> <span id="cu-agendar-t">Agendar pedido</span></button>
       </div>
       <div class="tabs-in" id="tabs-in"></div>
     </nav>
@@ -121,7 +133,7 @@
     <div class="drawer-top">
       <h2 id="drawer-t">Tu pedido</h2>
       <div class="drawer-der">
-        <span class="chip-pz" id="drawer-count" aria-live="polite"><span class="chip-ico" aria-hidden="true">🥐</span><b id="drawer-n">0</b><span id="drawer-pz">piezas</span></span>
+        <span class="chip-pz" id="drawer-count" aria-live="polite"><span class="chip-ico" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-bag"/></svg></span><b id="drawer-n">0</b><span id="drawer-pz">piezas</span></span>
         <button class="icon-btn" id="drawer-close" type="button" aria-label="Cerrar">×</button>
       </div>
     </div>
@@ -152,8 +164,8 @@
           <fieldset>
             <legend class="sr-only">¿Recoges o te lo enviamos?</legend>
             <div class="seg" role="radiogroup">
-              <label><input type="radio" name="entregaTipo" value="recoge"><span>🏠 Paso a recoger</span></label>
-              <label id="op-domicilio"><input type="radio" name="entregaTipo" value="domicilio"><span>🛵 A domicilio</span></label>
+              <label><input type="radio" name="entregaTipo" value="recoge"><span><svg class="ico" aria-hidden="true"><use href="#i-store"/></svg> Paso a recoger</span></label>
+              <label id="op-domicilio"><input type="radio" name="entregaTipo" value="domicilio"><span><svg class="ico" aria-hidden="true"><use href="#i-moto"/></svg> A domicilio</span></label>
             </div>
           </fieldset>
           <div class="campos">
@@ -169,7 +181,7 @@
               </div>
             </fieldset>
             <div class="full recoge-box" id="recoge-box" hidden>
-              <span class="rb-ico" aria-hidden="true">📍</span>
+              <span class="rb-ico" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg></span>
               <div><b>Recoges en nuestra tienda</b><div id="recoge-dir"></div><a class="link-flecha" id="recoge-mapa" href="#" target="_blank" rel="noopener">Cómo llegar <span aria-hidden="true">↗</span></a></div>
             </div>
           </div>
@@ -180,12 +192,12 @@
           <div class="campos">
             <div class="full cuando-res" id="cuando-res">
               <div class="cr-fila">
-                <span class="cr-ico" aria-hidden="true">📅</span>
+                <span class="cr-ico" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg></span>
                 <div class="cr-txt"><small>Día de tu pedido</small><b id="cr-dia">—</b></div>
                 
               </div>
               <div class="cr-fila">
-                <span class="cr-ico" aria-hidden="true">🕐</span>
+                <span class="cr-ico" aria-hidden="true"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></span>
                 <div class="cr-txt"><small id="cr-hora-lbl">Hora</small><b id="cr-hora" class="pend">Primero elige si recoges o te lo enviamos</b></div>
                 
               </div>
@@ -213,8 +225,8 @@
             <fieldset class="full">
               <legend class="sr-only">Forma de pago</legend>
               <div class="seg" role="radiogroup">
-                <label><input type="radio" name="pago" value="Efectivo"><span>💵 Efectivo</span></label>
-                <label><input type="radio" name="pago" value="Transferencia"><span>🏦 Transferencia</span></label>
+                <label><input type="radio" name="pago" value="Efectivo"><span><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg> Efectivo</span></label>
+                <label><input type="radio" name="pago" value="Transferencia"><span><svg class="ico" aria-hidden="true"><use href="#i-bank"/></svg> Transferencia</span></label>
               </div>
             </fieldset>
             <div class="full aviso-transf" id="aviso-transf" role="status" hidden></div>
@@ -313,6 +325,6 @@
 
 <script src="config.js?v=95"></script>
 <script src="catalogo.js?v=94"></script>
-<script src="app.js?v=136"></script>
+<script src="app.js?v=139"></script>
 </body>
 </html>

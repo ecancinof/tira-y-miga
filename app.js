@@ -19,7 +19,9 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
 (() => {
   'use strict';
   const C = window.TM_CONFIG || {}, K = window.TM_CATALOGO || { productos: {}, secciones: {}, menuRespaldo: [] };
-  const $ = s => document.querySelector(s);
+  // 25/11/2026: íconos de línea (sin emojis); usan los símbolos dibujados al inicio del index.html
+const ico = n => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('class', 'ico'); s.setAttribute('aria-hidden', 'true'); const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#i-' + n); s.append(u); return s; };
+const $ = s => document.querySelector(s);
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const money = v => '$' + Math.round(Number(v) || 0).toLocaleString('es-MX');
   const MAXQ = 99;
@@ -253,7 +255,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const tabs = [];
     for (const { s, info, prods, pre, fav } of lista) {
       const sec = el('section', 'sec' + (fav ? ' sec-fav' : '')); sec.setAttribute('aria-label', info.titulo); sec.id = 'sec-' + slug(s);
-      tabs.push({ id: sec.id, txt: fav ? '⭐ Favoritas' : (info.corto || s) });
+      tabs.push({ id: sec.id, txt: fav ? 'Favoritas' : (info.corto || s) });
       const h = el('div', 'sec-head');
       if (info.eyebrow) h.append(el('p', 'eyebrow', info.eyebrow));
       h.append(el('h2', null, info.titulo));
@@ -270,7 +272,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const c = el('article', 'card' + (p.agotado ? ' agotado' : '')); c.dataset.id = p.id;
     const fi = el('div', 'card-img'), img = el('img');
     img.src = foto(p); img.alt = p.nombre; img.loading = 'lazy'; img.width = 560; img.height = 420;
-    fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy')); else if (p.sobre) fi.append(el('span', 'sp-tag', '📦 Sobre pedido'));
+    fi.append(img); if (p.agotado) fi.append(el('span', 'agotado-tag', 'Agotado hoy')); else if (p.sobre) fi.append(el('span', 'sp-tag', 'Sobre pedido'));
     const stg = el('span', 'agotado-tag stk-tag'); stg.hidden = true; fi.append(stg);
     const fv = el('span', 'fav-tag', '★ Favorita'); fv.title = 'Una de las más pedidas'; fi.append(fv);
     fi.append(el('span', 'ver-mas', 'Ver')); fi.tabIndex = 0; fi.setAttribute('role', 'button'); fi.setAttribute('aria-label', 'Ver detalles de ' + p.nombre);
@@ -337,7 +339,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     // "Disponible hoy: dos" (en palabras del 1 al 10)
     const enLetra = n => ['ninguna', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'][n] || String(n);
     const fDesp = fechaPedido();
-    if (p.sobre && fDesp !== fAntes) { const o = fechasDisponibles().find(x => x.f === fDesp); toast(`📦 ${p.nombre} es sobre pedido · tu pedido quedó para ${o ? o.txt.split(' · ')[0].toLowerCase() : 'otro día'}`); return; }
+    if (p.sobre && fDesp !== fAntes) { const o = fechasDisponibles().find(x => x.f === fDesp); toast(`${p.nombre} es sobre pedido · tu pedido quedó para ${o ? o.txt.split(' · ')[0].toLowerCase() : 'otro día'}`); return; }
     if (q > r) { const tot = Math.max(0, r + (cart.get(p.id) || 0) - q); toast(tot <= 0 ? `${p.nombre} · Agotada hoy. Agregada para pedir otro día.` : `${p.nombre} · Disponible hoy: ${enLetra(tot)}`); }
     else pintarStockTags(); // 22/11/2026: sin aviso de texto al agregar; basta la animación de la foto hacia el carrito
   }
@@ -397,7 +399,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     $('#det-d').textContent = desc(p); $('#det-d').hidden = !desc(p);
     const r = !p.agotado ? quedanHoy(p.id) : Infinity, ds = $('#det-stk');
     ds.hidden = true; void r; // la cantidad que queda ya se ve en la etiqueta sobre la foto
-    ds.classList.toggle('sp', !!p.sobre); if (p.sobre && !p.agotado) { ds.hidden = false; ds.textContent = '📦 ' + spTxt(); } // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
+    ds.classList.toggle('sp', !!p.sobre); if (p.sobre && !p.agotado) { ds.hidden = false; ds.textContent = spTxt(); } // agotado: sin texto, basta la etiqueta y el botón "Agotado hoy"
     detUpd();
     if (!det.open) det.showModal();
   }
@@ -416,11 +418,11 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     if (pausa || !prox || prox.f === hoy) { av.hidden = true; np.hidden = true; return; }
     const h = horasDe(prox.f)[0], et = prox.txt.split(' · ')[0].toLowerCase();
     const cuando = `${et === 'mañana' ? 'mañana' : 'el ' + et}${h != null ? ' a las ' + hora12(h) : ''}`;
-    av.replaceChildren(el('b', null, abiertoAhora ? '⏰ Por hoy ya no alcanzamos a preparar más pedidos.' : '🌙 Ahora estamos cerrados,'),
+    av.replaceChildren(el('b', null, abiertoAhora ? 'Por hoy ya no alcanzamos a preparar más pedidos.' : 'Ahora estamos cerrados,'),
       (abiertoAhora ? ' Puedes' : ' pero puedes') + ' dejar tu pedido programado desde ahorita. Lo más pronto: ', el('b', null, cuando + '.'));
-    { const b = el('button', 'btn-av-agendar', '📅 Agendar mi pedido'); b.type = 'button'; b.onclick = () => abrirAgenda(); av.append(' ', b); }
+    { const b = el('button', 'btn-av-agendar', ' Agendar mi pedido'); b.prepend(ico('calendar')); b.type = 'button'; b.onclick = () => abrirAgenda(); av.append(' ', b); }
     av.hidden = false;
-    np.textContent = `📅 Tu pedido quedará programado. Lo más pronto es ${cuando}; elige el día y la hora que prefieras.`; np.hidden = false;
+    np.textContent = `Tu pedido quedará programado. Lo más pronto es ${cuando}; elige el día y la hora que prefieras.`; np.hidden = false;
   }
 
   // La página se actualiza sola (stock, agotados, precios) cada minuto y al volver a la pestaña; solo redibuja si algo cambió
@@ -490,9 +492,9 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     for (const [id, q] of cart) {
       const p = prod(id), li = el('li', 'ci' + (p.agotado ? ' agot' : ''));
       const img = el('img'); img.src = foto(p); img.alt = '';
-      const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`)); if (p.sobre) mid.append(el('div', 'ci-sp', `📦 Sobre pedido${minQ(p) > 1 ? ' · mín. ' + minQ(p) : ''}`));
+      const mid = el('div'); mid.append(el('div', 'ci-n', p.nombre), el('div', 'ci-p', `${money(p.precio)} c/u`)); if (p.sobre) mid.append(el('div', 'ci-sp', `Sobre pedido${minQ(p) > 1 ? ' · mín. ' + minQ(p) : ''}`));
       let conflicto = null; // producto que no alcanza para hoy: aviso corto, foto en gris y botón para cambiar el día
-      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { conflicto = c; li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.disp <= 0 ? '⚠️ Agotado para hoy' : `⚠️ Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
+      if (drawer.open && esParaHoy()) { const c = conflictosHoy([...cart]).find(x => x.ids.includes(id)); if (c) { conflicto = c; li.classList.add('excede'); mid.append(el('div', 'ci-stk', c.disp <= 0 ? 'Agotado para hoy' : `Para hoy solo ${c.disp === 1 ? 'queda 1' : 'quedan ' + c.disp}`)); } }
       // Una sola píldora: [🗑 o −] [N ×] [+]. Con 1 pieza el botón izquierdo es el bote (quita el producto); con más, es −
       const st = el('div', 'stepper'), a = el('button', null), inp = el('input'), b = el('button', null, '+');
       a.type = b.type = 'button'; b.setAttribute('aria-label', 'Más ' + p.nombre);
@@ -509,7 +511,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
       const r = el('div', 'ci-r'), ctrl = el('div', 'ci-ctrl');
       ctrl.append(st);
       // Agotado para hoy: la píldora − / + se sustituye por "Cambiar" (quita el producto y vuelve al catálogo)
-      if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', '🔄 Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb);
+      if (conflicto && conflicto.disp <= 0) { const cb = el('button', 'ci-cambiar', 'Cambiar'); cb.type = 'button'; cb.title = 'Quitar este producto y elegir otro del catálogo'; cb.onclick = () => { cart.delete(id); guardarCarrito(); pintarCarrito(); cerrar(); location.hash = '#menu'; toast(`${p.nombre} se quitó de tu pedido · elige otro sabor`); }; st.replaceWith(cb);
       } // (para quitarlo sin ir al catálogo está el bote de basura de la derecha)
       // Bote de basura después del precio: quita el producto completo de un clic (sin bajar con − hasta llegar al bote)
       const del = el('button', 'ci-del ci-del-q'); del.type = 'button'; del.setAttribute('aria-label', 'Quitar ' + p.nombre + ' del pedido'); del.title = 'Quitar del pedido'; del.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg>'; del.onclick = () => { del.classList.add('on'); quitar(); }; // rojo mientras se va (en celular no hay "pasar el mouse")
@@ -586,7 +588,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     cu.addEventListener('click', () => { clearTimeout(tAv); cu.classList.remove('llama'); });
     if ('IntersectionObserver' in window) new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) setTimeout(llamar, 350); }), { threshold: .9 }).observe(cu);
   }
-  $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) { if (haySobre()) toast(`📦 Tu pedido lleva productos sobre pedido (${spDias() === 1 ? '1 día' : spDias() + ' días'} de anticipación)`); return; } const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
+  $('#cu-hoy').onclick = () => { if (!hayHoyDisponible()) { if (haySobre()) toast(`Tu pedido lleva productos sobre pedido (${spDias() === 1 ? '1 día' : spDias() + ' días'} de anticipación)`); return; } const ya = fechaPedido() === hoyYmd(); ponFecha(hoyYmd()); if (!ya) toast('Tu pedido es para hoy'); };
   // Al tocar "Agendar pedido": primero la burbuja se desliza al botón (animación), después se abre el minicalendario.
   // Si el cliente cierra sin elegir, la burbuja regresa sola a "Para hoy" (pintarCuando al cerrar)
   $('#cu-agendar').onclick = () => {
@@ -668,13 +670,13 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const ok = $('#ag-ok'), cur = fechasDisponibles().find(o => o.f === agF);
     ok.disabled = !agF || !agH; ok.textContent = ok.disabled ? (agF && hs.length ? 'Elige una hora' : 'Agendar') : `Agendar para ${cur ? cur.txt.split(' · ')[0].toLowerCase() : agF} · ${horaTxt(hm(agH))}`;
   }
-  $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`📅 Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
+  $('#ag-ok').onclick = () => { if (!agF || !agH) return; const cur = fechasDisponibles().find(o => o.f === agF); ponFecha(agF, null, agH); cerrarAgenda(); if (!tipoEnt) horaElegida = false; toast(`Pedido agendado para ${cur ? cur.txt.toLowerCase() : agF}${tipoEnt ? ', ' + horaTxt(hm(agH)) : ''}`); revisarBoton(); };
   $('#ag-x').onclick = $('#ag-cancel').onclick = cerrarAgenda;
   // Botón "Hoy": regresa al mes actual y marca HOY. Si hoy no se puede (cerrado, ya sin horarios o lleva productos sobre pedido),
   // marca el día disponible más próximo y avisa por qué.
   $('#cal-hoy').onclick = () => { const hy = hoyYmd(), fs = fechasDisponibles(); if (!fs.length) return;
     const o = fs.find(x => x.f === hy) || fs[0], f = o.f;
-    if (f !== hy) { const dh = new Date(), cerr = !abiertoDia(dh); toast(haySobre() ? `📦 Tu pedido lleva productos sobre pedido: lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : cerr ? `Hoy no abrimos · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : `Por hoy ya no hay horarios · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}`); }
+    if (f !== hy) { const dh = new Date(), cerr = !abiertoDia(dh); toast(haySobre() ? `Tu pedido lleva productos sobre pedido: lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : cerr ? `Hoy no abrimos · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}` : `Por hoy ya no hay horarios · lo más pronto es ${o.txt.split(' · ')[0].toLowerCase()}`); }
     if (agF !== f) agH = ''; agF = f; const d = fechaDeYmd(f); agMes = new Date(d.getFullYear(), d.getMonth(), 1);
     pintarCal(); pintarHorasAg(); };
   $('#cal-prev').onclick = () => { agMes = new Date(agMes.getFullYear(), agMes.getMonth() - 1, 1); pintarCal(); };
@@ -719,15 +721,16 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   $('#sel-fecha').onchange = () => { $('#stk-dia').hidden = true; ponFecha($('#sel-fecha').value, 'drawer'); llenarHoras(); pintarCarrito(); };
   // Al elegir recoger/domicilio: cambian las horas (cada 15 min o bloques de 1 h) y hay que volver a escoger la hora. Ya no se abre sola la ventanita.
   function cambiaTipo() { const f0 = fechaPedido(); tipoEnt = form.entregaTipo.value; horaElegida = false; horaSel = '';
-    const f1 = fechaPedido(); llenarFechas(); if (f1 !== f0 && f0 === hoyYmd() && tipoEnt === 'domicilio') toast('🛵 Por hoy ya no alcanzamos a llevar pedidos a domicilio: elige otro día o pasa a recoger.');
+    const f1 = fechaPedido(); llenarFechas(); if (f1 !== f0 && f0 === hoyYmd() && tipoEnt === 'domicilio') toast('Por hoy ya no alcanzamos a llevar pedidos a domicilio: elige otro día o pasa a recoger.');
     pintarCarrito(); }
   const TIENDA = Object.assign({ direccion: 'Av. Colinas de San Patricio 505, Colinas de San Patricio, C.P. 20196, Aguascalientes, Ags.', mapa: 'https://www.google.com/maps/dir/?api=1&destination=21.8865077%2C-102.2344649' }, C.tienda || {});
   const ponDir = () => { const t = form.entregaTipo.value; $('#campo-dir').hidden = t !== 'domicilio'; $('#recoge-box').hidden = t !== 'recoge';
     $('#recoge-dir').textContent = TIENDA.direccion; $('#recoge-mapa').href = TIENDA.mapa; pintarDiaHora(); };
   // Pago por transferencia: aviso visible (antes de pedir) de que los datos bancarios llegan por WhatsApp al confirmar
   const pintaTransf = () => { const a = $('#aviso-transf'); if (!a) return; const on = form.pago.value === 'Transferencia'; a.hidden = !on; if (!on) return;
-    const dom = form.entregaTipo.value === 'domicilio'; a.replaceChildren(el('span', 'at-ico', '🏦'));
-    const t = el('div'); t.append(el('b', null, 'Los datos para transferir te los mandamos por WhatsApp junto con la confirmación de tu pedido 😉'), el('span', null, 'No transfieras antes de recibir nuestro mensaje. ¡Gracias!')); a.append(t); };
+    const dom = form.entregaTipo.value === 'domicilio'; const ai = el('span', 'at-ico'); ai.append(ico('bank')); a.replaceChildren(ai);
+    // 25/11/2026: un solo renglón; a domicilio los datos llegan hasta que acepta el envío
+    a.append(el('div', null, dom ? 'Te daremos los datos para transferir cuando aceptes el costo de envío.' : 'Te daremos los datos para transferir al confirmar tu pedido.')); };
   form.addEventListener('change', e => { if (e.target.name === 'pago' || e.target.name === 'entregaTipo') pintaTransf(); });
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') ponDir(); if (e.target.name === 'entregaTipo' || e.target.name === 'pago') revisarBoton();
     // Al elegir "Paso a recoger" (o "A domicilio") se abre la ventanita de horarios
@@ -762,7 +765,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     if (tipoEnt !== form.entregaTipo.value) { tipoEnt = form.entregaTipo.value; horaElegida = false; llenarHoras(); }
     ponDir(); pintaTransf();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
-    if (!sal.hidden) $('#saludo-t').textContent = `👋 ¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
+    if (!sal.hidden) $('#saludo-t').textContent = `¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
     revisarBoton();
   }
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
@@ -818,19 +821,19 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const lineas = [];
     [...grupos].forEach(([c, its], n) => { if (n) lineas.push(''); lineas.push(`*${c}*`, ...its.map(i => `• ${i.cant}  ${i.nombre} - ${m2(i.cant * i.precio)}`)); });
     const tot = d.items.reduce((a, i) => a + i.cant * i.precio, 0), dom = d.entregaTipo === 'domicilio';
-    const L = [`Hola 👋 Soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
-    if (dom) { L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`); if (d.referencias) L.push(`• *Referencias:* ${d.referencias}`); L.push('• *Envío:* por cotizar ⏳'); }
+    const L = [`Hola, soy *${d.nombre}* y quiero hacer este pedido:`, '', ...lineas, dom ? `*Subtotal: ${m2(tot)}*` : `*Total: ${m2(tot)}*`, ''];
+    if (dom) { L.push('• *Entrega:* a domicilio', `• *Dirección:* ${d.direccion}`); if (d.referencias) L.push(`• *Referencias:* ${d.referencias}`); L.push('• *Envío:* por cotizar'); }
     else L.push('• *Entrega:* paso a recoger en la tienda');
     L.push(`• *Día:* ${fechaTexto(d.fecha)}, ${d.horaFin ? 'de ' + bloqueTxt(hm(d.hora)) : hora12(hm(d.hora))}`, `• *Pago:* ${String(d.pago).toLowerCase()}`);
     if (d.notas) L.push(`• *Nota:* ${d.notas}`);
-    if (porConfirmar) L.push('• *Disponibilidad:* por confirmar ⏳');
+    if (porConfirmar) L.push('• *Disponibilidad:* por confirmar');
     L.push('', dom ? 'Quedo pendiente de la cotización del envío y del total. ¡Gracias!' : '¿Me confirman, por favor? ¡Gracias!');
     return L.join('\n');
   }
   const linkWA = txt => `https://wa.me/${C.whatsapp || '523341016194'}?text=${encodeURIComponent(txt)}`;
   // Botón flotante de dudas por WhatsApp (mensaje sin emojis: en WhatsApp de PC salían como signos raros): mensaje ya escrito (avisa si es fuera de horario) y la etiqueta "¿Dudas?" se oculta a los pocos segundos
   { const wf = $('#wa-flot'); if (wf) {
-    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA('Hola \u{1F44B}, Tira & Miga. Tengo una duda sobre un producto'); };
+    const ponLink = () => { const abierto = abiertoEn(new Date(), minAhora()); wf.href = linkWA('Hola, Tira & Miga. Tengo una duda sobre un producto'); };
     ponLink(); wf.addEventListener('pointerdown', ponLink); wf.addEventListener('focus', ponLink);
   } }
 
@@ -865,14 +868,14 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     // A domicilio el pedido no es definitivo hasta que el cliente acepta el costo de envío
     $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
     // Un solo mensaje corto y claro (el envío y los datos para transferir se mandan por WhatsApp)
-    const queMandamos = [dom && 'el costo del envío', d.pago === 'Transferencia' && 'los datos para transferir'].filter(Boolean);
-    $('#ok-txt').textContent = `Te escribiremos por WhatsApp al ${telTxt}${porConfirmar ? ' en unos minutos' : ''} ${queMandamos.length ? 'con ' + queMandamos.join(' y ') : 'para confirmar tu pedido'}.`;
+    // 25/11/2026: dice solo el siguiente paso (los datos para transferir ya se explicaron en el aviso del pago)
+    $('#ok-txt').replaceChildren(`Te escribiremos por WhatsApp al ${telTxt}${porConfirmar ? ' en unos minutos' : ''} `, ...(dom ? ['con el ', el('b', null, 'costo de envío'), ' para que lo apruebes.'] : ['para ', el('b', null, 'confirmar tu pedido'), '.']));
     const ex = $('#ok-extra'); ex.replaceChildren(); ex.hidden = true;
     const ul = $('#ok-resumen'); ul.replaceChildren();
-    [['📅', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? '🛵' : '🏠', dom ? 'A domicilio' : 'Paso a recoger'], ['🧾', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? '🏦' : '💵', d.pago]]
-      .forEach(([ic, tx]) => { const li = el('li'); li.append(el('span', null, ic), el('span', null, tx)); ul.append(li); });
+    [['calendar', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? 'moto' : 'store', dom ? 'A domicilio' : 'Paso a recoger'], ['receipt', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? 'bank' : 'cash', d.pago]]
+      .forEach(([ic, tx]) => { const li = el('li'); li.append(ico(ic), el('span', null, tx)); ul.append(li); });
     // Recoger: la dirección de la tienda como un renglón más del resumen, con su liga a Maps
-    if (!dom && TIENDA.direccion) { const li = el('li'), t = el('span', null, TIENDA.direccion + ' '); if (TIENDA.mapa) { const a = el('a', 'link-flecha', 'Cómo llegar ↗'); a.href = TIENDA.mapa; a.target = '_blank'; a.rel = 'noopener'; t.append(a); } li.append(el('span', null, '📍'), t); ul.append(li); }
+    if (!dom && TIENDA.direccion) { const li = el('li'), t = el('span', null, TIENDA.direccion + ' '); if (TIENDA.mapa) { const a = el('a', 'link-flecha', 'Cómo llegar ↗'); a.href = TIENDA.mapa; a.target = '_blank'; a.rel = 'noopener'; t.append(a); } li.append(ico('pin'), t); ul.append(li); }
     cart.clear(); guardarCarrito(); pintarCarrito(); form.notas.value = ''; aplicarCliente(); revisarBoton();
     cerrar(); setTimeout(() => { const ok = $('#confirmado'); if (!ok.open) ok.showModal(); }, 200);
   });

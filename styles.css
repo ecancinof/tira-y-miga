@@ -967,3 +967,19 @@ button, a, label { -webkit-tap-highlight-color: transparent; }
 #agenda .cal-flecha { width: 36px; height: 36px; font-size: 24px; font-weight: 700; color: #D95D39; border: 1.5px solid #D95D39; background: #fff; display: grid; place-items: center; padding: 0 0 3px; }
 @media (hover: hover) { #agenda .cal-flecha:hover:not(:disabled) { background: #D95D39; color: #fff; } }
 #agenda .cal-flecha:disabled { opacity: 1; color: #d9ccc4; border-color: #e6dcd5; background: #fbf8f5; }
+/* 24/11/2026: si el producto está agotado (o no disponible), la etiqueta "Agotado" toma el lugar de "★ Favorita" (ya no se enciman) */
+.card.agotado .fav-tag, .card.sin-hoy .fav-tag { display: none !important; }
+.card .agotado-tag { top: 12px; left: 12px; right: auto; z-index: 2; }
+@media (max-width: 600px) { .card .agotado-tag { top: 8px; left: 8px; } }
+
+/* 25/11/2026: íconos de línea (en lugar de emojis). Un solo color: café de la marca, o el color del texto en botones seleccionados */
+.ico { width: 1.15em; height: 1.15em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.2em; color: var(--caramel-d); }
+.seg input:checked + span .ico, .cu-btn.on .ico, .cu-btn[aria-pressed="true"] .ico { color: inherit; }
+.ok-resumen .ico { width: 20px; height: 20px; }
+.cr-ico .ico { width: 21px; height: 21px; }
+.recoge-box .rb-ico .ico, .aviso-transf .at-ico .ico { width: 22px; height: 22px; }
+.aviso-transf .at-ico .ico { color: #a86a00; }
+.chip-ico { display: inline-flex; } .chip-ico .ico { width: 16px; height: 16px; }
+.btn-av-agendar .ico { color: inherit; margin-right: 2px; }
+.aviso-transf > div { padding-top: 1px; }
+.ok-txt b { font-weight: 800; }
