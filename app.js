@@ -765,7 +765,7 @@ const $ = s => document.querySelector(s);
     if (tipoEnt !== form.entregaTipo.value) { tipoEnt = form.entregaTipo.value; horaElegida = false; llenarHoras(); }
     ponDir(); pintaTransf();
     const sal = $('#saludo'); sal.hidden = !(c.nombre && c.tel);
-    if (!sal.hidden) $('#saludo-t').textContent = `¡Hola de nuevo, ${c.nombre.split(' ')[0]}!`;
+    if (!sal.hidden) $('#saludo-t').textContent = `¡Hola de nuevo, ${(n => n.charAt(0).toUpperCase() + n.slice(1))(c.nombre.split(' ')[0])}!`;
     revisarBoton();
   }
   form.addEventListener('change', e => { if (e.target.name === 'entregaTipo') form.dataset.tocado = '1'; });
@@ -869,7 +869,7 @@ const $ = s => document.querySelector(s);
     $('#ok-t').textContent = dom ? '¡Recibimos tu solicitud!' : '¡Recibimos tu pedido!';
     // Un solo mensaje corto y claro (el envío y los datos para transferir se mandan por WhatsApp)
     // 25/11/2026: dice solo el siguiente paso (los datos para transferir ya se explicaron en el aviso del pago)
-    $('#ok-txt').replaceChildren(`Te escribiremos por WhatsApp al ${telTxt}${porConfirmar ? ' en unos minutos' : ''} `, ...(dom ? ['con el ', el('b', null, 'costo de envío'), ' para que lo apruebes.'] : ['para ', el('b', null, 'confirmar tu pedido'), '.']));
+    $('#ok-txt').replaceChildren(`Te escribiremos por WhatsApp al ${telTxt}${porConfirmar ? ' en unos minutos' : ''} `, ...(dom ? ['con el ', el('b', null, 'costo de envío'), ' para tu aprobación.'] : ['para ', el('b', null, 'confirmar tu pedido'), '.']));
     const ex = $('#ok-extra'); ex.replaceChildren(); ex.hidden = true;
     const ul = $('#ok-resumen'); ul.replaceChildren();
     [['calendar', `${diaTxt.split(' · ')[0]}${diaTxt.includes('·') ? ' ' + diaTxt.split(' · ')[1] : ''} · ${horaTxt}`], [dom ? 'moto' : 'store', dom ? 'A domicilio' : 'Paso a recoger'], ['receipt', `${d.items.reduce((a, i) => a + i.cant, 0)} ${d.items.reduce((a, i) => a + i.cant, 0) === 1 ? 'pieza' : 'piezas'} · ${money(tot)}${dom ? ' + envío por confirmar' : ''}`], [d.pago === 'Transferencia' ? 'bank' : 'cash', d.pago]]

@@ -983,3 +983,6 @@ button, a, label { -webkit-tap-highlight-color: transparent; }
 .btn-av-agendar .ico { color: inherit; margin-right: 2px; }
 .aviso-transf > div { padding-top: 1px; }
 .ok-txt b { font-weight: 800; }
+
+/* 25/11/2026: el saludo con el mismo tamaño que la fecha del pedido */
+.saludo #saludo-t { font-size: var(--fs-base); font-weight: 700; }
