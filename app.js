@@ -1,3 +1,16 @@
+// 24/11/2026 · COMPATIBILIDAD: iPhone/iPad con iOS anterior a 15.4 (y navegadores viejos) no traen las ventanas <dialog>.
+// Este respaldo las hace funcionar igual: se abren encima de todo con fondo oscuro, y se cierran con la ✕, tocando afuera o con Esc.
+(function () {
+  if (typeof document === 'undefined' || 'showModal' in document.createElement('dialog')) return;
+  document.documentElement.classList.add('sin-dialog');
+  const P = HTMLElement.prototype; let tapa = null, abiertas = [];
+  const fondo = () => { if (!tapa) { tapa = document.createElement('div'); tapa.className = 'dlg-fondo'; tapa.onclick = () => { const d = abiertas[abiertas.length - 1]; if (d) cancelar(d); }; document.body.appendChild(tapa); } return tapa; };
+  const cancelar = d => { const ev = new Event('cancel', { cancelable: true }); if (d.dispatchEvent(ev)) d.close(); };
+  if (!('open' in P)) Object.defineProperty(P, 'open', { configurable: true, get() { return this.hasAttribute('open'); }, set(v) { if (v) this.setAttribute('open', ''); else this.removeAttribute('open'); } });
+  P.showModal = P.show = function () { if (this.hasAttribute('open')) return; this.setAttribute('open', ''); this.classList.add('dlg-pf'); abiertas.push(this); const f = fondo(); f.style.zIndex = 999 + abiertas.length * 2; this.style.zIndex = 1000 + abiertas.length * 2; f.hidden = false; };
+  P.close = function () { if (!this.hasAttribute('open')) return; this.removeAttribute('open'); abiertas = abiertas.filter(x => x !== this); if (tapa) { tapa.hidden = !abiertas.length; tapa.style.zIndex = 999 + abiertas.length * 2; } this.dispatchEvent(new Event('close')); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && abiertas.length) cancelar(abiertas[abiertas.length - 1]); });
+})();
 // Al refrescar, la página siempre abre desde arriba (el navegador ya no regresa a donde se había quedado).
 try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
 if (location.hash && location.hash !== '#menu') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
@@ -622,10 +635,13 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const ult = fechaDeYmd(fs[fs.length - 1].f), primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1), ultimo = new Date(ult.getFullYear(), ult.getMonth(), 1);
     $('#cal-prev').disabled = agMes <= primero; $('#cal-next').disabled = agMes >= ultimo;
     const g = $('#cal-dias'); g.replaceChildren();
-    const off = (new Date(y, m, 1).getDay() + 6) % 7; // lunes = 0
+    // 23/11/2026: en el mes actual no se muestran las semanas que ya pasaron (empieza en la semana de hoy): así cabe todo en pantalla
+    const lunesHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (hoy.getDay() + 6) % 7);
+    const d0 = y === hoy.getFullYear() && m === hoy.getMonth() && lunesHoy.getMonth() === m ? lunesHoy.getDate() : 1;
+    const off = (new Date(y, m, d0).getDay() + 6) % 7; // lunes = 0
     for (let i = 0; i < off; i++) g.append(el('span', 'cal-vacio'));
     const nd = new Date(y, m + 1, 0).getDate();
-    for (let d = 1; d <= nd; d++) {
+    for (let d = d0; d <= nd; d++) {
       const f = ymd(new Date(y, m, d)), b = el('button', 'cal-d', String(d)); b.type = 'button'; b.setAttribute('role', 'gridcell');
       const ok = disp.has(f); b.disabled = !ok;
       if (f === ymd(hoy)) b.classList.add('hoy');
@@ -638,7 +654,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
     const ley = $('#cal-ley'); if (ley) ley.hidden = !g.querySelector('.cal-d.lleno'); // leyenda solo si en este mes hay días llenos
   }
   function pintarHorasAg() {
-    const box = $('#ag-horas'); box.replaceChildren();
+    const box = $('#ag-horas'); box.replaceChildren(); box.classList.toggle('bloques', tipoEnt === 'domicilio'); // a domicilio los bloques ("4:30 a 5:30 pm") van en 2 columnas
     const d = fechaDeYmd(agF), hs = horasDe(agF);
     const tramos = abiertoDia(d) ? dia(d).t.map(t => `${hora12(t.a)} – ${hora12(t.c)}`).join(' y ') : 'cerrado';
     const lib = libreDia(agF), quedan = isFinite(lib) && lib < capDia ? ` · quedan ${lib} ${lib === 1 ? 'pieza' : 'piezas'}` : '';
@@ -726,7 +742,7 @@ window.addEventListener('load', () => { if (!location.hash) window.scrollTo(0, 0
   function revisarBoton() {
     const falta = faltantes(), ok = falta.length === 0, cq = capQueda(), exCap = cq < 0, ex = excedidos().length > 0 || exCap;
     $('#btn-enviar').disabled = !ok || ex; $('#falta-datos').hidden = ok;
-    if (!ok) $('#falta-datos').textContent = `Elige ${falta.length > 1 ? falta.slice(0, -1).join(', ') + ' y ' + falta.at(-1) : falta[0]} para continuar.`;
+    if (!ok) $('#falta-datos').textContent = `Elige ${falta.length > 1 ? falta.slice(0, -1).join(', ') + ' y ' + falta[falta.length - 1] : falta[0]} para continuar.`;
     // Por stock, cada producto muestra su aviso y el botón Cambiar; por capacidad (piezas totales del día) el aviso es general
     const a = $('#stk-aviso'); if (a) { a.hidden = !exCap; if (exCap) a.textContent = textoCap(cq + totales().pz); }
   }

@@ -916,3 +916,47 @@ body:has(dialog[open]) .wa-flot { opacity: 0; pointer-events: none; }
 .cal-d.hoy { box-shadow: inset 0 0 0 1.5px #D95D39; }
 .cal-d.hoy::after { content: 'hoy'; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); font-size: 8.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #D95D39; pointer-events: none; }
 .cal-dias { row-gap: 10px; }
+/* 23/11/2026: la ventana de día + hora se ve COMPLETA: calendario solo desde la semana de hoy y todas las horas sin barra de desplazamiento */
+#agenda .ag-cuerpo { overflow: auto; padding-bottom: 14px; }
+#agenda .horas { max-height: none; overflow: visible; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 0; }
+#agenda .horas.bloques { grid-template-columns: repeat(2, 1fr); }
+#agenda .horas .hora { padding: 9px 2px; font-size: 13.5px; white-space: nowrap; }
+#agenda .ag-lbl { margin-bottom: 6px; }
+#agenda .cal-nav { margin-bottom: 2px; }
+@media (min-width: 601px) { #agenda .horas { grid-template-columns: repeat(3, 1fr); } #agenda .horas.bloques { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 380px) { #agenda .horas .hora { font-size: 12.5px; padding: 8px 1px; } }
+@media (max-width: 600px) { #agenda .ag-cuerpo { padding-bottom: calc(14px + env(safe-area-inset-bottom)); } }
+
+/* ===== 24/11/2026 · COMPATIBILIDAD con todos los navegadores (Safari de iPhone/iPad, Chrome, Firefox, Edge, Samsung) ===== */
+/* Safari (iPhone) encogía a 0 el cuerpo de la ventana de día y hora ("flex: 1" dentro de una ventana sin alto fijo):
+   solo se veía el título. Con "1 1 auto" el contenido toma su alto real y, si no cabe, se desliza. */
+#agenda .ag-cuerpo, #agenda .ag-horas { flex: 1 1 auto; }
+#agenda .ag-top { flex-shrink: 0; }
+#agenda[open] { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* Navegadores sin "dvh" (iOS < 15.4 y otros): alto de pantalla normal */
+@supports not (height: 1dvh) {
+  .drawer { max-height: 100vh; }
+  .agenda, .detalle { max-height: calc(100vh - 24px); }
+  .det-img { max-height: max(180px, calc(100vh - 330px)); }
+  .hd-cuerpo .horas { max-height: min(52vh, 360px); }
+  @media (max-width: 600px) { .agenda, .detalle { max-height: 92vh; } }
+}
+/* Navegadores sin "cqw" (iOS < 16): el botón + / − va debajo de la descripción en vez de encima de la foto */
+@supports not (width: 1cqw) {
+  .card-acc { position: static !important; margin: 8px 0 0 !important; display: flex; justify-content: flex-end; }
+}
+/* Sin ":has()" (Firefox viejo, iOS < 15.4): el botón de WhatsApp sube sobre la barra usando una clase */
+@media (max-width: 900px) { body.con-barra .wa-flot { bottom: var(--wa-sobre-barra, 100px); } }
+/* Respaldo de ventanas para navegadores sin <dialog> */
+dialog:not([open]) { display: none; }
+.sin-dialog dialog.dlg-pf[open] { position: fixed; inset: 0; margin: auto; max-width: calc(100% - 24px); }
+@media (max-width: 600px) { .sin-dialog dialog.dlg-pf[open].agenda, .sin-dialog dialog.dlg-pf[open].detalle { top: auto; bottom: 0; max-width: 100%; margin: 0; } .sin-dialog dialog.dlg-pf[open].drawer { left: auto; } }
+.dlg-fondo { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30, 18, 14, .55); }
+.dlg-fondo[hidden] { display: none; }
+/* Safari: sin el destello gris al tocar y sin zoom automático en las casillas (letra de 16 px mínimo en celular) */
+button, a, label { -webkit-tap-highlight-color: transparent; }
+@media (max-width: 600px) { input, select, textarea { font-size: max(16px, 1em); } }
+.sin-dialog dialog.dlg-pf[open].drawer { margin: 0 0 0 auto; height: 100%; }
+
+/* 24/11/2026: la página siempre en sus colores claros, aunque el celular tenga activado el modo oscuro (Samsung Internet, Xiaomi, Chrome Android) */
+:root { color-scheme: only light; }
